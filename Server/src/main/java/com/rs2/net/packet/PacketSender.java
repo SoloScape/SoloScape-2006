@@ -68,19 +68,34 @@ public final class PacketSender {
     }
 
     public final void sendMusicTrack(MusicTrackDefinition musicTrackDefinition) {
+        if (ServerSettings.clientBuild == 443) {
+            sendRevision443MusicTrack(musicTrackDefinition.getName(),
+                    com.rs2.model.music.Music.assetForLegacyTrack(musicTrackDefinition.getTrackId()));
+            return;
+        }
         this.sendInterfaceText(musicTrackDefinition.getName(), 4439);
         int trackId = musicTrackDefinition.getTrackId();
-        if (ServerSettings.clientBuild == 443) {
-            trackId = AudioIds443.track(trackId);
-        }
         if (!this.player.isBot && this.player.currentMusicTrackId != trackId) {
             this.player.currentMusicTrackId = trackId;
-            if (trackId != -1 || ServerSettings.clientBuild == 443) {
+            if (trackId != -1) {
                 PacketWriter packetWriter = PacketBuffer.allocateWriter(3);
-                packetWriter.writeOpcode(this.player.getOutboundCipher(), ServerSettings.clientBuild == 443 ? 205 : 74);
+                packetWriter.writeOpcode(this.player.getOutboundCipher(), 74);
                 packetWriter.writeShort(trackId, ByteOrder.LITTLE);
                 this.player.writePacketBuffer(packetWriter.getBuffer());
             }
+        }
+    }
+
+    public final void sendRevision443MusicTrack(String name, int trackId) {
+        this.sendRevision443InterfaceText("AUTO", 239 << 16 | 183);
+        this.sendInterfaceText(name, 4439);
+        this.sendInterfaceTextColor(4439, Color.GREEN);
+        if (!this.player.isBot && this.player.currentMusicTrackId != trackId) {
+            this.player.currentMusicTrackId = trackId;
+            PacketWriter packetWriter = PacketBuffer.allocateWriter(3);
+            packetWriter.writeOpcode(this.player.getOutboundCipher(), 205);
+            packetWriter.writeShort(trackId, ByteOrder.LITTLE);
+            this.player.writePacketBuffer(packetWriter.getBuffer());
         }
     }
 
@@ -1401,10 +1416,12 @@ public final class PacketSender {
         if (ServerSettings.clientBuild == 443) {
             // InitialVarps owns the verified legacy-to-443 varp set.
             // Other callers still use 377 ids and must not mutate unrelated 443 varps.
-            boolean verified443Varp = InitialVarps.isVerified(value3);
+            boolean musicConfig = com.rs2.model.music.Music.isMusicConfig(value3);
+            boolean verified443Varp = InitialVarps.isVerified(value3) || musicConfig;
             PacketAudit.legacyVarp(value3, value22, verified443Varp);
             if (verified443Varp) {
-                VarpPacket.send(this.player, value3, value22);
+                VarpPacket.send(this.player, value3, musicConfig
+                        ? com.rs2.model.music.Music.configValue(this.player, value3) : value22);
             }
             return this;
         }
@@ -1462,14 +1479,7 @@ public final class PacketSender {
         if (ServerSettings.clientBuild == 443) {
             interfaceId2 = InterfaceBridge.translate(interfaceId2, "text=\"" + interfaceId + "\"");
             if (interfaceId2 == InterfaceBridge.UNMAPPED) return this;
-            PacketWriter packetWriter = PacketBuffer.allocateWriter(interfaceId.length() + 7);
-            packetWriter.startVariableShortPacket(this.player.getOutboundCipher(), 180);
-            // Revision 443 packet 180 is decoded as a little-endian component id.
-            packetWriter.writeInt(interfaceId2, ByteOrder.LITTLE);
-            packetWriter.writeJString(interfaceId);
-            packetWriter.finishVariableShortPacket();
-            this.player.writePacketBuffer(packetWriter.getBuffer());
-            return this;
+            return this.sendRevision443InterfaceText(interfaceId, interfaceId2);
         }
         if (interfaceId2 >= InterfaceDefinition.interfaceCount) {
             if (interfaceId2 == 12144) {
@@ -1496,6 +1506,18 @@ public final class PacketSender {
         packetWriter.startVariableShortPacket(this.player.getOutboundCipher(), 126);
         packetWriter.writeString(interfaceId);
         packetWriter.writeShort(interfaceId2, ByteTransform.ADD);
+        packetWriter.finishVariableShortPacket();
+        this.player.writePacketBuffer(packetWriter.getBuffer());
+        return this;
+    }
+
+    private PacketSender sendRevision443InterfaceText(String text, int packedId) {
+        if (this.player.isBot) return this;
+        PacketWriter packetWriter = PacketBuffer.allocateWriter(text.length() + 7);
+        packetWriter.startVariableShortPacket(this.player.getOutboundCipher(), 180);
+        // Revision 443 packet 180 is decoded as a little-endian component id.
+        packetWriter.writeInt(packedId, ByteOrder.LITTLE);
+        packetWriter.writeJString(text);
         packetWriter.finishVariableShortPacket();
         this.player.writePacketBuffer(packetWriter.getBuffer());
         return this;

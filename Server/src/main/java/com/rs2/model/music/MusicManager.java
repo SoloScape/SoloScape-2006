@@ -7,10 +7,12 @@ import com.rs2.model.music.MusicTrackDefinition;
 import com.rs2.model.player.Player;
 import com.rs2.ServerSettings;
 import com.rs2.net.packet.AudioIds443;
+import com.rs2.cache.js5.Interfaces;
 import com.rs2.util.CharacterFileManager;
 import com.rs2.util.GameUtil;
 import java.util.Arrays;
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 public final class MusicManager {
     private static List buttonlessTrackIds = Arrays.asList(648, 649, 650, 651, 652);
@@ -101,6 +103,7 @@ public final class MusicManager {
     public static void unlockTrack(Player player, int trackId) {
         int value;
         MusicTrackDefinition musicTrackDefinition = MusicTrackDefinition.forTrackId(trackId);
+        if (musicTrackDefinition.getUnlockConfigId() < 0) return;
         int unlockConfigId = player.configStates[musicTrackDefinition.getUnlockConfigId()];
         if ((unlockConfigId & (value = musicTrackDefinition.getUnlockBitMask())) == 0) {
             int value2;
@@ -131,13 +134,58 @@ public final class MusicManager {
             player2.packetSender.sendConfig(value4, player.configStates[value4]);
             ++index;
         }
+        if (ServerSettings.clientBuild == 443) Music.unlockAll(player);
     }
 
     public static boolean isTrackUnlocked(Player player, int trackId) {
         int value;
         MusicTrackDefinition musicTrackDefinition = MusicTrackDefinition.forTrackId(trackId);
+        if (musicTrackDefinition.getUnlockConfigId() < 0) return false;
         int unlockConfigId = player.configStates[musicTrackDefinition.getUnlockConfigId()];
         return (unlockConfigId & (value = musicTrackDefinition.getUnlockBitMask())) != 0 && value != -1;
+    }
+
+    public static boolean playManualTrack(Player player, int trackId) {
+        if (ServerSettings.clientBuild == 443) {
+            for (java.util.Map.Entry<Integer, Music.Track> entry : Music.tracks().entrySet()) {
+                if (entry.getValue().legacyId == trackId) {
+                    Music.Track nativeTrack = entry.getValue();
+                    if (!nativeTrack.isUnlocked(player) || nativeTrack.assetId < 0) {
+                        Music.play(player, entry.getKey());
+                        return false;
+                    }
+                    return Music.play(player, entry.getKey());
+                }
+            }
+        }
+        MusicTrackDefinition track = MusicTrackDefinition.forTrackId(trackId);
+        if (track.getUnlockConfigId() < 0 || !isTrackUnlocked(player, trackId)) {
+            player.packetSender.sendGameMessage("You haven't unlocked that song yet.");
+            return false;
+        }
+        player.packetSender.sendMusicTrack(track);
+        player.musicManagerTrackId = trackId;
+        player.automaticMusicEnabled = false;
+        return true;
+    }
+
+    public static int trackIdForRevision443Child(int child) {
+        Music.Track track = Music.tracks().get(child);
+        if (track != null) return track.legacyId;
+        Interfaces.Component component = Interfaces.forId(239, child);
+        if (component == null || component.type != 4 || component.actionType != 1) {
+            return -1;
+        }
+        // Song labels are NUL-terminated in the stock music tab. Match names
+        // from Songs.dat instead of assuming child IDs follow legacy order.
+        String data = new String(component.getData(), StandardCharsets.ISO_8859_1);
+        for (int trackId = 0; trackId < MusicTrackDefinition.trackCount; trackId++) {
+            String name = MusicTrackDefinition.forTrackId(trackId).getName();
+            if (name.length() > 1 && data.contains(name + "\0")) {
+                return trackId;
+            }
+        }
+        return -1;
     }
 }
 

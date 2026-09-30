@@ -60,6 +60,13 @@ public final class MusicTrackDefinition {
             }
             ++index;
         }
+        if (com.rs2.ServerSettings.clientBuild == 443) {
+            try {
+                Music.load();
+            } catch (java.io.IOException failure) {
+                throw new IllegalStateException("Cannot load revision 443 music", failure);
+            }
+        }
     }
 
     private MusicTrackDefinition(int trackId, String name, int buttonId, int unlockConfigId, int unlockBitMask) {
@@ -72,6 +79,11 @@ public final class MusicTrackDefinition {
 
     public final int getTrackId() {
         return this.trackId;
+    }
+
+    void setNativeUnlock(int configId, int bitMask) {
+        this.unlockConfigId = configId;
+        this.unlockBitMask = bitMask;
     }
 
     public final String getName() {

@@ -16,6 +16,7 @@ import com.rs2.model.skill.magic.SpellDefinition;
 import com.rs2.model.skill.magic.Spellbook;
 import com.rs2.net.packet.SpellWidgets;
 import com.rs2.util.GameplayTrace;
+import com.rs2.model.music.MusicManager;
 
 /**
  * Decodes revision 443 widget actions without feeding packed 443 widget ids into
@@ -23,6 +24,14 @@ import com.rs2.util.GameplayTrace;
  */
 public final class InterfaceActionPacketHandler implements PacketHandler {
     private final ButtonClickPacketHandler buttonHandler = new ButtonClickPacketHandler();
+
+    private boolean handleMusicTrack(Player player, int group, int child, int operation, int parameter) {
+        if (group != 239 || (operation != -1 && parameter != 0)
+                || !player.isInterfaceIdOpen(4439)) {
+            return false;
+        }
+        return com.rs2.model.music.Music.play(player, child);
+    }
 
     private boolean handleAdditionalSkillGuideButton(Player player, int packedWidgetId,
                                                      int operation, int parameter) {
@@ -273,6 +282,9 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
 
         int widgetGroup = packedWidgetId >>> 16;
         int widgetChild = packedWidgetId & 0xffff;
+        if (handleMusicTrack(player, widgetGroup, widgetChild, operation, parameter)) {
+            return;
+        }
         if (widgetGroup == 464 && widgetChild >= 1 && widgetChild <= 38
                 && (operation == -1 || parameter == 0)) {
             if (EmoteUnlockManager.isLockedChild(widgetChild)

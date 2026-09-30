@@ -134,13 +134,7 @@ implements PacketHandler {
             while (trackId < MusicTrackDefinition.trackCount) {
                 MusicTrackDefinition track = MusicTrackDefinition.forTrackId(trackId);
                 if (track.getButtonId() == buttonId) {
-                    if (MusicManager.isTrackUnlocked(player, trackId)) {
-                        player.packetSender.sendMusicTrack(track);
-                        player.musicManagerTrackId = trackId;
-                        player.automaticMusicEnabled = false;
-                        return;
-                    }
-                    player.packetSender.sendGameMessage("You haven't unlocked that song yet.");
+                    MusicManager.playManualTrack(player, trackId);
                     return;
                 }
                 ++trackId;

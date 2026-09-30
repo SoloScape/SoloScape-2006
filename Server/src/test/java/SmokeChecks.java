@@ -18,9 +18,12 @@ import com.rs2.model.World;
 import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.music.MusicTrackDefinition;
+import com.rs2.model.music.MusicManager;
+import com.rs2.model.music.Music;
 import com.rs2.model.player.Player;
 import com.rs2.net.packet.handler.CommandPacketHandler;
 import com.rs2.net.packet.handler.ItemActionPacketHandler;
+import com.rs2.net.packet.handler.InterfaceActionPacketHandler;
 import com.rs2.model.quest.QuestDefinition;
 import com.rs2.util.ChatTextCodec;
 import com.rs2.util.ChatCodec;
@@ -56,6 +59,9 @@ public final class SmokeChecks {
             }
             if ("assets".equals(args[0])) {
                 checkAssetsAndChat();
+            } else if ("music".equals(args[0])) {
+                Interfaces.load();
+                checkRevision443AudioIds();
             } else if ("startup".equals(args[0])) {
                 checkStartup();
             } else if ("timeouts".equals(args[0])) {
@@ -122,6 +128,90 @@ public final class SmokeChecks {
 
     private static void checkRevision443AudioIds() throws Exception {
         MusicTrackDefinition.loadDefinitions();
+        require(InterfaceBridge.translate(4439) == (239 << 16 | 177),
+                "443 playing-track label targets the AUTO control");
+        require(InterfaceBridge.toLegacyComponent(239 << 16 | 183) == InterfaceBridge.UNMAPPED,
+                "443 AUTO control was mapped as the playing-track label");
+        require(MusicManager.trackIdForRevision443Child(113) == 62,
+                "443 Newbie Melody click did not resolve to its track");
+        require(MusicManager.trackIdForRevision443Child(25) == 177,
+                "443 Adventure click did not resolve to its track");
+        require(MusicManager.trackIdForRevision443Child(177) == -1,
+                "443 AUTO control was mistaken for a song");
+        Player musicPlayer = new Player(null);
+        require(musicPlayer.isInterfaceIdOpen(4439),
+                "443 music sidebar was not recognized as open");
+        musicPlayer.isBot = true;
+        musicPlayer.automaticMusicEnabled = true;
+        require(!MusicManager.playManualTrack(musicPlayer, 177)
+                        && musicPlayer.automaticMusicEnabled,
+                "Locked music click changed playback mode");
+        MusicTrackDefinition newbieMelody = MusicTrackDefinition.forTrackId(62);
+        musicPlayer.configStates[newbieMelody.getUnlockConfigId()] |= newbieMelody.getUnlockBitMask();
+        require(MusicManager.playManualTrack(musicPlayer, 62)
+                        && musicPlayer.musicManagerTrackId == 62
+                        && !musicPlayer.automaticMusicEnabled,
+                "Unlocked Newbie Melody click did not select manual playback");
+        musicPlayer.automaticMusicEnabled = true;
+        musicPlayer.musicManagerTrackId = -1;
+        byte[] newbieClick = {0, (byte) 239, 0, 113};
+        new InterfaceActionPacketHandler().handle(musicPlayer,
+                new IncomingPacket(ClientPackets.INTERFACE_BUTTON, newbieClick.length,
+                        PacketBuffer.wrapReader(ByteBuffer.wrap(newbieClick))));
+        require(musicPlayer.musicManagerTrackId == 62 && !musicPlayer.automaticMusicEnabled,
+                "443 Newbie Melody button packet did not start manual playback");
+        require(Music.tracks().size() == 433, "Not every native song was mapped");
+        require(Music.tracks().get(427).assetId == 621,
+                "HomeScape native asset mapping is wrong");
+        byte[] homeClick = {0, (byte) 239, 1, (byte) 171};
+        musicPlayer.automaticMusicEnabled = true;
+        new InterfaceActionPacketHandler().handle(musicPlayer,
+                new IncomingPacket(ClientPackets.INTERFACE_BUTTON, homeClick.length,
+                        PacketBuffer.wrapReader(ByteBuffer.wrap(homeClick))));
+        require(!musicPlayer.automaticMusicEnabled && musicPlayer.musicManagerTrackId == 621,
+                "Always-green HomeScape packet did not select playback");
+        require(!Music.play(musicPlayer, 183), "AUTO was treated as a song");
+        for (int child : new int[] {113, 127, 262, 292, 318, 347, 427, 461}) {
+            require(Music.tracks().get(child).isUnlocked(musicPlayer),
+                    "Default-green song was locked: " + child);
+        }
+        for (java.util.Map.Entry<Integer, Music.Track> entry : Music.tracks().entrySet()) {
+            Arrays.fill(musicPlayer.configStates, 0);
+            Music.Track track = entry.getValue();
+            musicPlayer.automaticMusicEnabled = true;
+            musicPlayer.musicManagerTrackId = -999;
+            boolean unlocked = track.isUnlocked(musicPlayer);
+            require(Music.play(musicPlayer, entry.getKey()), "Song click was not consumed");
+            require(musicPlayer.automaticMusicEnabled == (!unlocked || track.assetId < 0),
+                    "Red/green playback mismatch: " + track.name);
+            if (!unlocked) require(musicPlayer.musicManagerTrackId == -999,
+                    "Red song changed selected track: " + track.name);
+        }
+        // Preserve saved legacy bit 30 while sending the native last-song bit 31.
+        MusicTrackDefinition dark = MusicTrackDefinition.forTrackId(MusicManager.trackIdForRevision443Child(56));
+        require("Dark".equals(dark.getName()), "Dark regression fixture changed");
+        Arrays.fill(musicPlayer.configStates, 0);
+        MusicManager.unlockTrack(musicPlayer, dark.getTrackId());
+        require((Music.configValue(musicPlayer, 20) & Integer.MIN_VALUE) != 0,
+                "Saved last-song bit was not translated to its green native label");
+        require(Music.tracks().get(56).isUnlocked(musicPlayer), "Unlocked Dark stayed locked");
+        MusicManager.unlockAllTracks(musicPlayer);
+        try (Js5CacheStore nativeCache = new Js5CacheStore(new File("cache"))) {
+            int available = 0;
+            for (Music.Track track : Music.tracks().values()) {
+                require(track.isUnlocked(musicPlayer), "Unlock-all missed " + track.name);
+                if (track.assetId >= 0) {
+                    require(!nativeCache.readFiles(6, track.assetId).isEmpty(),
+                            "Selected music asset missing: " + track.name);
+                    available++;
+                } else {
+                    require(track.name.equals("Dagannoth Dawn") || track.name.equals("Night of the Vampyre"),
+                            "Unexpected unavailable song: " + track.name);
+                }
+            }
+            require(available == 431, "Native audio coverage changed");
+        }
+        System.out.println("PASS: 433 native music buttons, locked/unlocked playback, HomeScape and unlock translation");
         require(MusicTrackDefinition.forTrackId(803).getTrackId() == 803,
                 "Out-of-range music area track crashed definition lookup");
         require(AudioIds443.sound(318) == 62, "443 door sound ID is wrong");
