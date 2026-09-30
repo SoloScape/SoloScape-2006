@@ -84,9 +84,9 @@ extends QuestScript {
         if (objectId == 3018 && value2 == 3072 && value32 == 3090) {
             if (value42 >= 21) {
                 Player player5 = player;
-                // 2006Scape PassDoor: face 2 -> 1, then step west.
+                // Swing east into the kitchen, clear of the wall south of the exit.
                 player5.packetSender.passThroughDoor(3018, 3072, 3090, 0,
-                        1, 2, 0, -1, 0);
+                        3, 2, 0, -1, 0);
                 if (value42 == 21) {
                     player5 = player;
                     player5.packetSender.sendEntityHintIcon(1, -1);
@@ -947,7 +947,13 @@ extends QuestScript {
                     return true;
                 }
                 if (value2 == 5) {
-                    player.getDialogueManager().showTwoItemMessage("The Cooking Guide gives you a @dbl@bucket of water @bla@and a", "@dbl@pot of flour@bla@!", new ItemStack(1929, 1), new ItemStack(1933, 1));
+                    player.getDialogueManager().showTwoItemMessage(
+                            "The Cooking Guide gives you a @blu@bucket of water@bla@ and a",
+                            "@blu@pot of flour@bla@!",
+                            new ItemStack(1929, 1), new ItemStack(1933, 1));
+                    return true;
+                }
+                if (value2 == 6) {
                     player.setInteractionTargetId(0);
                     Player player6 = player;
                     player6.packetSender.sendEntityHintIcon(1, -1);
@@ -959,14 +965,23 @@ extends QuestScript {
                     return true;
                 }
             }
-            if (!(value42 < 18 || value42 >= 20 || value2 != 1 || player.ownsItem(2307) || player.ownsItem(1933) && player.ownsItem(1929))) {
-                player.getDialogueManager().showTwoItemMessage("The Cooking Guide gives you a @dbl@bucket of water @bla@and a", "@dbl@pot of flour@bla@!", new ItemStack(1929, 1), new ItemStack(1933, 1));
-                player.setInteractionTargetId(0);
-                player.getInventoryManager().addOrDropItem(new ItemStack(1933, 1));
-                player.getInventoryManager().addOrDropItem(new ItemStack(1929, 1));
-                player.getDialogueManager().resetDialogueState();
-                player.getDialogueManager().finishDialogue();
-                return true;
+            if (value42 >= 18 && value42 < 20 && !player.ownsItem(2307)
+                    && !(player.ownsItem(1933) && player.ownsItem(1929))) {
+                if (value2 == 1) {
+                    player.getDialogueManager().showTwoItemMessage(
+                            "The Cooking Guide gives you a @blu@bucket of water@bla@ and a",
+                            "@blu@pot of flour@bla@!",
+                            new ItemStack(1929, 1), new ItemStack(1933, 1));
+                    return true;
+                }
+                if (value2 == 2) {
+                    player.setInteractionTargetId(0);
+                    player.getInventoryManager().addOrDropItem(new ItemStack(1933, 1));
+                    player.getInventoryManager().addOrDropItem(new ItemStack(1929, 1));
+                    player.getDialogueManager().resetDialogueState();
+                    player.getDialogueManager().finishDialogue();
+                    return true;
+                }
             }
         }
         if (npcId == 949) {
