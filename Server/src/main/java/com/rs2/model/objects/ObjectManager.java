@@ -358,7 +358,7 @@ public final class ObjectManager {
             case 3019: {
                 if (value2 == 3086 && value32 == 3126) {
                     player.interactionApproachX = 3086;
-                    player.interactionApproachY = 3127;
+                    player.interactionApproachY = 3126;
                     return;
                 }
                 break;

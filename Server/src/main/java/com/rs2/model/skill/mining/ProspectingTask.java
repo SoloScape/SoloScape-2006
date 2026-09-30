@@ -31,8 +31,9 @@ extends CycleEvent {
             } else if (MiningManager.getPlayer(this.manager).getQuestState(0) == 31 && this.oreName.contains("copper")) {
                 MiningManager.getPlayer(this.manager).advanceTutorialStage();
             }
-            MiningManager.getPlayer(this.manager).getDialogueManager().showOneLineStatement("This rock contains " + (this.rockObjectId == 2111 ? "gems" : (this.rockObjectId == 2491 ? "unbound Rune Stone essence" : String.valueOf(this.oreName) + ".")));
             MiningManager.getPlayer(this.manager).getQuestManager().refreshQuestJournal();
+            // Show the result last so the tutorial refresh does not replace it.
+            MiningManager.getPlayer(this.manager).getDialogueManager().showOneLineStatement("This rock contains " + (this.rockObjectId == 2111 ? "gems" : (this.rockObjectId == 2491 ? "unbound Rune Stone essence" : String.valueOf(this.oreName) + ".")));
             MiningManager.getPlayer(this.manager).setInteractionTargetId(0);
         }
         player = MiningManager.getPlayer(this.manager);

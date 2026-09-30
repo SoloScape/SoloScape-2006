@@ -124,7 +124,9 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
             expectedChild = group - 61; // player dialogue: children 3..6
         } else if (group >= 241 && group <= 244) {
             expectedChild = group - 238; // NPC dialogue: children 3..6
-        } else if (group >= 210 && group <= 214) {
+        } else if (group == 210) {
+            expectedChild = 1; // one-line statement Continue (native 443)
+        } else if (group >= 211 && group <= 214) {
             expectedChild = group - 208; // statements: children 2..6
         } else if (group == 102) {
             expectedChild = 3; // two-item hand-off dialogue
@@ -140,6 +142,12 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
 
         DialogueManager dialogue = player.getDialogueManager();
         if (dialogue.isDialogueInactive()) {
+            if (group == 210 && player.getOpenInterfaceId() == 356
+                    && (player.getQuestState(0) == 31 || player.getQuestState(0) == 32)) {
+                dialogue.resetDialogueState();
+                player.getQuestManager().refreshQuestJournal();
+                return true;
+            }
             return false;
         }
         int nextStep = dialogue.getDialogueStep() + 1;

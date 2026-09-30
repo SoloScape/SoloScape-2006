@@ -2357,11 +2357,14 @@ public final class PacketSender {
             }
         }
 
+        // Object expiry runs before movement too; allow one walking tick per
+        // tile and restore the closed model only after the crossing finishes.
+        int openTicks = Math.max(2, Math.max(Math.abs(deltaX), Math.abs(deltaY)) + 1);
         new DynamicObject(ServerSettings.placeholderObjectId, x, y, plane,
-                closedOrientation, objectType, objectId, 2,
+                closedOrientation, objectType, objectId, openTicks,
                 closedOrientation, x, y, false);
         new DynamicObject(objectId, openX, openY, plane, openOrientation,
-                objectType, ServerSettings.placeholderObjectId, 2,
+                objectType, ServerSettings.placeholderObjectId, openTicks,
                 0, openX, openY, false);
         this.queueRelativeMovementStep(deltaX, deltaY, true);
         this.sendSoundEffect(318, 1, 0);

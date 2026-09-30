@@ -97,19 +97,31 @@ extends QuestScript {
             return true;
         }
         if (objectId == 3019 && value2 == 3086 && value32 == 3126) {
-            if (value42 == 24) {
-                // 2006Scape PassDoor: face 3 -> 2, then step south.
+            if (value42 >= 24 && value42 <= 28) {
+                if (player.isStunned() || player.isMovementLocked()) {
+                    return true;
+                }
+                // Face 3 -> 0 swings south into the room at 3086, 3125.
+                // Face 2 would replace the neighbouring wall at 3085, 3126.
+                // The click approach is 3126: cross the boundary at 3126
+                // completely, including retries after stage 24 has advanced.
+                int destinationY = player.getPosition().getY() >= 3126 ? 3125 : 3126;
                 player.packetSender.passThroughDoor(3019, 3086, 3126,
-                        player.getPosition().getPlane(), 2, 3, 0, 0, -1);
-                player.advanceTutorialStage();
+                        player.getPosition().getPlane(), 0, 3, 0,
+                        3086 - player.getPosition().getX(),
+                        destinationY - player.getPosition().getY());
+                if (value42 == 24) {
+                    player.advanceTutorialStage();
+                }
                 return true;
             }
             return true;
         }
         if (objectId == 3029 && value2 == 3088 && value32 == 3119) {
             if (value42 == 28) {
-                AttackStyleDefinition.startDelayedObjectMove(player, new Position(3088, 9520, 0));
-                player.advanceTutorialStage();
+                // Teleport cleanup closes the chatbox; show the next instructions after arrival.
+                AttackStyleDefinition.startDelayedObjectMove(player, new Position(3088, 9520, 0),
+                        player::advanceTutorialStage);
                 return true;
             }
             return true;
@@ -148,8 +160,8 @@ extends QuestScript {
         }
         if (objectId == 3030 && value2 == 3111 && value32 == 9526) {
             if (value42 == 50) {
-                AttackStyleDefinition.startDelayedObjectMove(player, new Position(3111, 3125, 0));
-                player.advanceTutorialStage();
+                AttackStyleDefinition.startDelayedObjectMove(player, new Position(3111, 3125, 0),
+                        player::advanceTutorialStage);
                 return true;
             }
             return true;

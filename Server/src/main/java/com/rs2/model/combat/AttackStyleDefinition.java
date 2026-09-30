@@ -27,13 +27,21 @@ public class AttackStyleDefinition {
     private CombatType combatType;
 
     public static void startDelayedObjectMove(Player player, Position position) {
+        startDelayedObjectMove(player, position, null);
+    }
+
+    public static void startDelayedObjectMove(Player player, Position position, Runnable onArrival) {
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("object travel delayed-move scheduled player=" + GameplayTrace.describe(player) + " destination=" + formatPosition(position) + " targetObjectId=" + player.getInteractionTargetId() + " targetX=" + player.getInteractionTargetX() + " targetY=" + player.getInteractionTargetY());
         }
         player.setActionLocked(true);
         player.getUpdateState().setAnimation(828);
-        player.packetSender.closeInterfaces();
-        CycleEventHandler.getInstance().schedule(player, new DelayedObjectMoveEvent(player, position), 2);
+        // Tutorial travel replaces its instructions on arrival. Closing the
+        // panel here exposes the normal chatbox during the climb animation.
+        if (onArrival == null || player.getOpenInterfaceId() != 6179) {
+            player.packetSender.closeInterfaces();
+        }
+        CycleEventHandler.getInstance().schedule(player, new DelayedObjectMoveEvent(player, position, onArrival), 2);
     }
 
     public static void climbOneFloorAtCurrentTile(Player player, String text2) {

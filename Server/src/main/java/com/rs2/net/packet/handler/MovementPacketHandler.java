@@ -6,6 +6,7 @@ import com.rs2.model.gameplay.duel.DuelRule;
 import com.rs2.model.player.Player;
 import com.rs2.model.skill.firemaking.FiremakingTask;
 import com.rs2.model.skill.fishing.FishingTask;
+import com.rs2.model.skill.mining.MiningTask;
 import com.rs2.model.skill.woodcutting.WoodcuttingTask;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
@@ -53,6 +54,8 @@ implements PacketHandler {
                 && player.getActiveCycleEvent() instanceof FishingTask;
         boolean cancelledTutorialWoodcutting = player.getQuestState(0) == 8
                 && player.getActiveCycleEvent() instanceof WoodcuttingTask;
+        boolean cancelledTutorialMining = (player.getQuestState(0) == 33 || player.getQuestState(0) == 34)
+                && player.getActiveCycleEvent() instanceof MiningTask;
         if (opcode != 98 && (!revision443Movement || opcode != 81)) {
             player.resetInteractionState();
             if (player.getQuestState(0) != 1) {
@@ -74,7 +77,8 @@ implements PacketHandler {
         if (player.getQuestState(0) == 0) {
             player.setQuestState(0, 2);
         }
-        if (cancelledTutorialFiremaking || cancelledTutorialFishing || cancelledTutorialWoodcutting) {
+        if (cancelledTutorialFiremaking || cancelledTutorialFishing || cancelledTutorialWoodcutting
+                || cancelledTutorialMining) {
             player.getQuestManager().refreshQuestJournal();
         } else if (player.getQuestState(0) != 1 && !tutorialInstructionOverlayOpen) {
             player.getQuestManager().refreshQuestJournal();

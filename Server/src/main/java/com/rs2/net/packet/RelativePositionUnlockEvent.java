@@ -17,7 +17,10 @@ extends CycleEvent {
 
     @Override
     public final void execute(CycleEventContainer cycleEventContainer) {
-        if (this.delayElapsed) {
+        // Events run before movement. Keep clipping bypass active until every
+        // queued tile has been crossed, including multi-tile door approaches.
+        if (this.delayElapsed && (!this.clearForcedMovementFlag
+                || PacketSender.getPlayer(this.packetSender).getMovementQueue().getSteps().isEmpty())) {
             PacketSender.getPlayer(this.packetSender).setActionLocked(false);
             cycleEventContainer.stop();
         }

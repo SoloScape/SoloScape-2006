@@ -13,10 +13,16 @@ public final class DelayedObjectMoveEvent
 extends CycleEvent {
     private final Player player;
     private final Position destination;
+    private final Runnable onArrival;
 
     public DelayedObjectMoveEvent(Player player, Position position) {
+        this(player, position, null);
+    }
+
+    public DelayedObjectMoveEvent(Player player, Position position, Runnable onArrival) {
         this.player = player;
         this.destination = position;
+        this.onArrival = onArrival;
     }
 
     @Override
@@ -32,6 +38,9 @@ extends CycleEvent {
         }
         this.player.getUpdateState().setAnimation(65535);
         cycleEventContainer.stop();
+        if (this.onArrival != null) {
+            this.onArrival.run();
+        }
     }
 
     @Override
