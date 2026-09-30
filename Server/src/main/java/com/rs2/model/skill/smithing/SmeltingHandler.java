@@ -223,7 +223,9 @@ public final class SmeltingHandler {
                     return true;
                 }
                 if (player.getQuestState(0) != 1) {
-                    player.getDialogueManager().showOneLineStatement("You smelt the " + itemStack.getDefinition().getName().toLowerCase() + " " + (enabled ? "and " + itemStack2.getDefinition().getName().toLowerCase() + " together " : "") + "in the furnace.");
+                    player.getDialogueManager().showOneLineStatement(selectedSmithingBarItemId == 2349
+                            ? "You smelt the copper and tin together in the furnace."
+                            : "You smelt the " + itemStack.getDefinition().getName().toLowerCase() + " " + (enabled ? "and " + itemStack2.getDefinition().getName().toLowerCase() + " together " : "") + "in the furnace.");
                     player.setInteractionTargetId(0);
                 } else if (itemStack3.getId() == 2365) {
                     Player player4 = player;

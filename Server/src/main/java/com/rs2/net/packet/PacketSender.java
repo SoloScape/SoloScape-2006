@@ -814,6 +814,11 @@ public final class PacketSender {
         if (componentId == InterfaceBridge.UNMAPPED) {
             return this;
         }
+        if (slot == 4 && (componentId == (312 << 16 | 147)
+                || componentId == (312 << 16 | 148))) {
+            componentId = 312 << 16 | ((componentId & 0xffff) == 147 ? 166 : 170);
+            slot = 0;
+        }
         PacketWriter packetWriter = PacketBuffer.allocateWriter(16);
         packetWriter.startVariableShortPacket(this.player.getOutboundCipher(), 213);
         packetWriter.writeInt(componentId);

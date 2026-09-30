@@ -137,7 +137,21 @@ public enum SmithableItemDefinition {
     RUNE_TWO_HANDED_SWORD(99, 3, 1319, "2-hand sword"),
     RUNE_PLATE_LEGS(99, 3, 1079, "Plate legs"),
     RUNE_PLATE_SKIRT(99, 3, 1093, "Plate skirt"),
-    RUNE_PLATE_BODY(99, 5, 1127, "Plate body");
+    RUNE_PLATE_BODY(99, 5, 1127, "Plate body"),
+    // Crossbows update, 31 July 2006: one bar makes ten bolts or one limb set.
+    BRONZE_BOLTS(3, 1, 9375, 10, "Bolts"),
+    IRON_BOLTS(18, 1, 9377, 10, "Bolts"),
+    STEEL_BOLTS(33, 1, 9378, 10, "Bolts"),
+    MITHRIL_BOLTS(53, 1, 9379, 10, "Bolts"),
+    ADAMANT_BOLTS(73, 1, 9380, 10, "Bolts"),
+    RUNE_BOLTS(88, 1, 9381, 10, "Bolts"),
+    BRONZE_LIMBS(6, 1, 9420, "Limbs"),
+    IRON_LIMBS(23, 1, 9423, "Limbs"),
+    STEEL_LIMBS(36, 1, 9425, "Limbs"),
+    MITHRIL_LIMBS(56, 1, 9427, "Limbs"),
+    ADAMANT_LIMBS(76, 1, 9429, "Limbs"),
+    RUNE_LIMBS(91, 1, 9431, "Limbs"),
+    MITHRIL_GRAPPLE_TIP(59, 1, 9416, "Grapple Tips");
 
     private int productItemId;
     private int requiredLevel;

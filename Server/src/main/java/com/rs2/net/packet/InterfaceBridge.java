@@ -164,6 +164,30 @@ public final class InterfaceBridge {
         put(mappings, 153, 261, 0);    // toggle run
         put(mappings, 3214, 149, 0);   // inventory container
         put(mappings, 1688, 387, 25);  // worn equipment container
+        // Native smithing columns and labels, verified against cache group 312.
+        putRange(mappings, 1119, 312, 146, 5);
+        int[] smithingNames = {1094,1091,1098,1102,1107,1085,1093,1099,1103,1108,
+                1087,1083,1100,1104,1106,1086,1092,1101,1105,1096,
+                1088,8429,11461,13358,1134};
+        int[] nativeNames = {121,118,125,129,134,112,120,126,130,135,
+                114,111,128,131,133,113,119,127,132,123,115,165,171,173,162};
+        int[] smithingBars = {1125,1126,1109,1127,1128,1124,1129,1110,1113,1130,
+                1116,1118,1111,1114,1131,1089,1095,1112,1115,1132,
+                1090,8428,11459,13357,1135};
+        int[] nativeBars = {153,154,136,155,156,152,157,137,140,158,
+                143,145,138,141,159,116,122,139,142,160,117,164,169,172,163};
+        for (int i = 0; i < smithingNames.length; i++) {
+            put(mappings, smithingNames[i], 312, nativeNames[i]);
+            put(mappings, smithingBars[i], 312, nativeBars[i]);
+        }
+        put(mappings, 19740, 312, 178); // bolts label
+        put(mappings, 19741, 312, 175); // limbs label
+        put(mappings, 19742, 312, 181); // grapple tips label
+        put(mappings, 19743, 312, 176); // bolts bar count
+        put(mappings, 19744, 312, 177); // limbs bar count
+        put(mappings, 19745, 312, 182); // grapple tips bar count
+        put(mappings, 19746, 312, 151); // bolts / limbs item container
+        put(mappings, 19748, 312, 180); // grapple item container
         put(mappings, 2458, 182, 6);   // logout button ("Click here to logout")
 
         // Login combat tabs. The old dynamic weapon-model widgets have no 443
@@ -583,6 +607,9 @@ public final class InterfaceBridge {
 
     public static int translate(int legacyId, String payload) {
         Integer packedId = COMPONENTS.get(legacyId);
+        // HotSwap replaces this class's methods without rerunning its static
+        // initializers. Resolve newly added mappings when the live table predates them.
+        if (packedId == null) packedId = createComponentMappings().get(legacyId);
         int mappedId = packedId != null ? packedId
                 : CUSTOM_FLAT_COMPONENTS.contains(legacyId) ? legacyId : UNMAPPED;
         PacketAudit.interfaceComponent(legacyId, mappedId, payload);
@@ -620,11 +647,25 @@ public final class InterfaceBridge {
                     skillGuideCategoryLegacyIds[index]);
         }
         for (Integer id : CUSTOM_FLAT_COMPONENTS) reverse.put(id, id);
+        // Claws and lantern frames have separate native item containers.
+        reverse.put(312 << 16 | 166, 1120);
+        reverse.put(312 << 16 | 170, 1121);
+        reverse.put(312 << 16 | 151, 1119);
+        reverse.put(312 << 16 | 180, 1119);
         return Collections.unmodifiableMap(reverse);
     }
 
     public static int toLegacyComponent(int packedId) {
         Integer legacyId = LEGACY_COMPONENTS.get(packedId);
+        if (legacyId == null && packedId >>> 16 == 312) {
+            // Smithing may have been added after the dev server loaded its maps.
+            if ((packedId & 0xffff) == 166) return 1120;
+            if ((packedId & 0xffff) == 170) return 1121;
+            if ((packedId & 0xffff) == 151 || (packedId & 0xffff) == 180) return 1119;
+            for (Map.Entry<Integer, Integer> entry : createComponentMappings().entrySet()) {
+                if (entry.getValue() == packedId) return entry.getKey();
+            }
+        }
         return legacyId == null ? UNMAPPED : legacyId;
     }
 

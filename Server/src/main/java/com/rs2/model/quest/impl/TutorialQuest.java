@@ -1081,6 +1081,11 @@ extends QuestScript {
                     player.getDialogueManager().showItemMessage("Dezzick gives you a @dbl@bronze pickaxe@bla@!", new ItemStack(1265, 1));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(1265, 1));
+                    // Keep the hand-off visible until Continue; advancing now
+                    // refreshes the mining instruction over the item message.
+                    return true;
+                }
+                if (value2 == 5) {
                     player.advanceTutorialStage();
                     player.getDialogueManager().resetDialogueState();
                     player.getDialogueManager().finishDialogue();
@@ -1108,6 +1113,10 @@ extends QuestScript {
                     player.getDialogueManager().showItemMessage("Dezzick gives you a @dbl@hammer@bla@!", new ItemStack(2347, 1));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(2347, 1));
+                    // Show the hand-off until Continue opens the smithing instructions.
+                    return true;
+                }
+                if (value2 == 4) {
                     player.advanceTutorialStage();
                     player.getDialogueManager().resetDialogueState();
                     player.getDialogueManager().finishDialogue();

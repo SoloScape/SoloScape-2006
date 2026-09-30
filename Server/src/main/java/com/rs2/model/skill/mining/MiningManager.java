@@ -3,6 +3,7 @@ package com.rs2.model.skill.mining;
 import com.rs2.ServerSettings;
 import com.rs2.model.GameplayHelper;
 import com.rs2.model.Position;
+import com.rs2.model.World;
 import com.rs2.model.item.ItemService;
 import com.rs2.model.objects.DynamicObject;
 import com.rs2.model.objects.LoadedWorldObject;
@@ -151,7 +152,9 @@ public final class MiningManager {
                 ObjectManager.getInstance().addDynamicObject(new DynamicObject(MiningManager.getRandomEventRockObjectId(value5, new Position(value22, value32, this.player.getPosition().getPlane())), value22, value32, this.player.getPosition().getPlane(), randomEventRockObjectId, objectType, value5, 15), true);
             }
         }
-        this.player.setActiveCycleEvent(new MiningTask(this, value4, value5, value22, value32, gatheringToolDefinition, mineChanceLow, mineChanceHigh, oreItemId, baseExperience, depletionChance, respawnTicks));
+        MiningTask miningTask = new MiningTask(this, value4, value5, value22, value32, gatheringToolDefinition, mineChanceLow, mineChanceHigh, oreItemId, baseExperience, depletionChance, respawnTicks);
+        this.player.setActiveCycleEvent(miningTask);
+        World.scheduleTickTask(new MiningSwingSoundTask(this.player, value4, miningTask, value5, value22, value32));
         CycleEventHandler.getInstance().schedule(this.player, this.player.getActiveCycleEvent(), toolSpeed);
     }
 

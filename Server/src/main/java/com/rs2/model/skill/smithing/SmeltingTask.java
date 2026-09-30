@@ -91,10 +91,14 @@ extends CycleEvent {
                 if (this.player.getQuestState(0) != 1) {
                     if (this.player.getQuestState(0) == 35) {
                         this.player.advanceTutorialStage();
+                    } else {
+                        this.player.getQuestManager().refreshQuestJournal();
                     }
                     this.player.setInteractionTargetId(0);
-                    this.player.getDialogueManager().showOneLineStatement("You retrieve a " + this.outputBar.getDefinition().getName().toLowerCase() + " from the furnace.");
-                    this.player.getQuestManager().refreshQuestJournal();
+                    // Show the result after refreshing the tutorial so it stays visible until Continue.
+                    this.player.getDialogueManager().showOneLineStatement(this.barItemId == 2349
+                            ? "You retrieve a bar of bronze."
+                            : "You retrieve a " + this.outputBar.getDefinition().getName().toLowerCase() + " from the furnace.");
                 } else if (this.outputBar.getId() == 2365) {
                     player = this.player;
                     player.packetSender.sendGameMessage("You retrieve a bar of gold from the furnace.");

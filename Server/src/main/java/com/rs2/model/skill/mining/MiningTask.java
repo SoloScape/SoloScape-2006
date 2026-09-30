@@ -36,6 +36,7 @@ extends CycleEvent {
     private final int baseExperience;
     private final double depletionChance;
     private final int respawnTicks;
+    private boolean stopped;
 
     public MiningTask(MiningManager miningManager, int actionSequence, int rockObjectId, int x, int y, GatheringToolDefinition gatheringToolDefinition, int mineChanceLow, int mineChanceHigh, int oreItemId, int baseExperience, double depletionChance, int respawnTicks) {
         this.manager = miningManager;
@@ -156,6 +157,7 @@ extends CycleEvent {
             value4 = 210;
         }
         if (GameUtil.rollLevelScaledChance(value, value4, MiningManager.getPlayer(this.manager).getSkillManager().getCurrentLevels()[14])) {
+            MiningManager.getPlayer(this.manager).packetSender.sendSoundEffect(429, 1, 0);
             String text;
             if (this.rockObjectId == 2111) {
                 String[] stringValues3 = new String[]{"1000/2133", "1000/4267", "1000/8533", "100/1422", "10/256", "10/256", "1/32"};
@@ -250,6 +252,11 @@ extends CycleEvent {
 
     @Override
     public final void onStop() {
+        this.stopped = true;
         MiningManager.getPlayer(this.manager).getUpdateState().setAnimation(-1);
+    }
+
+    final boolean isStopped() {
+        return this.stopped;
     }
 }

@@ -176,10 +176,10 @@ public class SmithingBarDefinition {
         smithableItemDefinitionArray6[21] = SmithableItemDefinition.RUNE_CLAWS;
         RUNITE_BAR = new RuniteBarDefinition(85, 75.0, 2363, smithableItemDefinitionArray6);
         VALUES = new SmithingBarDefinition[]{BRONZE_BAR, IRON_BAR, STEEL_BAR, MITHRIL_BAR, ADAMANT_BAR, RUNITE_BAR};
-        productNameTextIds = new int[]{1094, 1091, 1098, 1102, 1107, 1085, 1093, 1099, 1103, 1108, 1087, 1083, 1100, 1104, 1106, 1086, 1092, 1101, 1105, 1096, 1088, 8429, 11461, 13358, 1134};
-        barRequirementTextIds = new int[]{1125, 1126, 1109, 1127, 1128, 1124, 1129, 1110, 1113, 1130, 1116, 1118, 1111, 1114, 1131, 1089, 1095, 1112, 1115, 1132, 1090, 8428, 11459, 13357, 1135};
-        productItemInterfaceIds = new int[]{1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123};
-        int[] integerValues = new int[25];
+        productNameTextIds = new int[]{1094, 1091, 1098, 1102, 1107, 1085, 1093, 1099, 1103, 1108, 1087, 1083, 1100, 1104, 1106, 1086, 1092, 1101, 1105, 1096, 1088, 8429, 11461, 13358, 1134, 19740, 19741, 19742};
+        barRequirementTextIds = new int[]{1125, 1126, 1109, 1127, 1128, 1124, 1129, 1110, 1113, 1130, 1116, 1118, 1111, 1114, 1131, 1089, 1095, 1112, 1115, 1132, 1090, 8428, 11459, 13357, 1135, 19743, 19744, 19745};
+        productItemInterfaceIds = new int[]{1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 1119, 1120, 1121, 1122, 1123, 19746, 19746, 19748};
+        int[] integerValues = new int[28];
         integerValues[5] = 1;
         integerValues[6] = 1;
         integerValues[7] = 1;
@@ -200,6 +200,7 @@ public class SmithingBarDefinition {
         integerValues[22] = 4;
         integerValues[23] = 4;
         integerValues[24] = 4;
+        integerValues[26] = 1;
         productItemSlots = integerValues;
     }
 
@@ -219,7 +220,25 @@ public class SmithingBarDefinition {
     }
 
     public final SmithableItemDefinition[] getSmithableItems() {
-        return this.smithableItems;
+        if (com.rs2.ServerSettings.clientBuild != 443) return this.smithableItems;
+        SmithableItemDefinition[] items = java.util.Arrays.copyOf(this.smithableItems, 28);
+        // Native group 312: nails under shields, wire/spit under knives, studs at bottom.
+        items[23] = items[19];
+        items[19] = this.barItemId == 2349 || this.barItemId == 2351 ? items[24] : null;
+        if (this.barItemId != 2353) items[24] = null;
+        switch (this.barItemId) {
+            case 2349: items[25] = SmithableItemDefinition.BRONZE_BOLTS; items[26] = SmithableItemDefinition.BRONZE_LIMBS; break;
+            case 2351: items[25] = SmithableItemDefinition.IRON_BOLTS; items[26] = SmithableItemDefinition.IRON_LIMBS; break;
+            case 2353: items[25] = SmithableItemDefinition.STEEL_BOLTS; items[26] = SmithableItemDefinition.STEEL_LIMBS; break;
+            case 2359:
+                items[25] = SmithableItemDefinition.MITHRIL_BOLTS;
+                items[26] = SmithableItemDefinition.MITHRIL_LIMBS;
+                items[27] = SmithableItemDefinition.MITHRIL_GRAPPLE_TIP;
+                break;
+            case 2361: items[25] = SmithableItemDefinition.ADAMANT_BOLTS; items[26] = SmithableItemDefinition.ADAMANT_LIMBS; break;
+            case 2363: items[25] = SmithableItemDefinition.RUNE_BOLTS; items[26] = SmithableItemDefinition.RUNE_LIMBS; break;
+        }
+        return items;
     }
 
     public final int getRequiredLevel() {

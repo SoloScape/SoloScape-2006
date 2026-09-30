@@ -89,6 +89,24 @@ public class DialogueManager {
         return this.dialogueStep > 9000 || this.dialogueStep < 0 || this.dialogueId < 0;
     }
 
+    public final boolean continueTutorialStatement() {
+        if (!this.isDialogueInactive() || this.player.getQuestState(0) == 1) {
+            return false;
+        }
+        switch (this.player.getOpenInterfaceId()) {
+            case 356:
+            case 359:
+            case 363:
+            case 368:
+            case 374:
+                this.resetDialogueState();
+                this.player.getQuestManager().refreshQuestJournal();
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public final void setDialogueId(int dialogueId) {
         this.dialogueId = dialogueId;
     }

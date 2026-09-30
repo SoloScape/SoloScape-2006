@@ -50,10 +50,7 @@ implements PacketHandler {
                     player.packetSender.sendGameMessage("dialogue: " + player.getDialogueManager().getDialogueId() + " chat: " + player.getDialogueManager().getDialogueStep());
                 }
                 if (player.getDialogueManager().isDialogueInactive()) {
-                    if (player.getOpenInterfaceId() == 356
-                            && (player.getQuestState(0) == 31 || player.getQuestState(0) == 32)) {
-                        player.getDialogueManager().resetDialogueState();
-                        player.getQuestManager().refreshQuestJournal();
+                    if (player.getDialogueManager().continueTutorialStatement()) {
                         break;
                     }
                     continueLevelUp(player);

@@ -81,11 +81,12 @@ public class SmithingHandler {
             player.currentBotTask.startWalkToBank(player);
             return;
         }
-        ItemStack[] itemStackArray = new ItemStack[((SmithingBarDefinition)value2).getSmithableItems().length];
+        SmithableItemDefinition[] menuItems = ((SmithingBarDefinition)value2).getSmithableItems();
+        ItemStack[] itemStackArray = new ItemStack[menuItems.length];
         int index2 = 0;
-        while (index2 < ((SmithingBarDefinition)value2).getSmithableItems().length) {
+        while (index2 < menuItems.length) {
             int value4;
-            value = ((SmithingBarDefinition)value2).getSmithableItems()[index2];
+            value = menuItems[index2];
             String text = "";
             Object value5 = "";
             int initialValue3 = 1;
