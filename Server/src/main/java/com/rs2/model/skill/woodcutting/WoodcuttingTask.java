@@ -92,6 +92,7 @@ extends CycleEvent {
             }
             this.player.packetSender.sendSoundEffect(472, 1, 0);
             World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
+            World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
             this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);
             ++this.player.gatheringHazardCounter;
             return;
@@ -218,6 +219,7 @@ extends CycleEvent {
         }
         this.player.packetSender.sendSoundEffect(472, 1, 0);
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
+        World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
         this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);
     }
 
