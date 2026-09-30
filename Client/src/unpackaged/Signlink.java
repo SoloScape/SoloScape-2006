@@ -128,7 +128,7 @@ public class Signlink implements Runnable {
         if (userHome == null) {
             userHome = "~/";
         }
-        String[] paths = { "cache", "bin/cache" };
+        String[] paths = { "../Server/cache", "cache", "bin/cache" };
         for (int i_3_ = 0; paths.length > i_3_; i_3_++) {
             try {
                 String filePath = paths[i_3_];

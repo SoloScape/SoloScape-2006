@@ -2,11 +2,11 @@
 setlocal
 cd /d "%~dp0"
 
-set "CLIENT_CACHE_ROOT=%~dp0..\06-server\cache"
+set "CLIENT_CACHE_ROOT=%~dp0..\Server\cache"
 
 if not exist "%CLIENT_CACHE_ROOT%\main_file_cache.dat2" (
     echo Error: sibling server cache was not found at "%CLIENT_CACHE_ROOT%".
-    echo Expected 06-client and 06-server to be next to each other.
+    echo Expected the Server\cache folder next to Client.
     exit /b 1
 )
 

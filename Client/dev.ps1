@@ -17,7 +17,7 @@ $RestartFlag = Join-Path $BuildRoot "hotswap-restart.flag"
 $SourcesFile = Join-Path $BuildRoot "dev-sources.txt"
 $AgentSource = Join-Path $Root "dev\hotswap\HotSwapAgent.java"
 $AgentManifest = Join-Path $Root "dev\hotswap\MANIFEST.MF"
-$ServerRoot = Join-Path (Split-Path $Root -Parent) "06-server"
+$ServerRoot = Join-Path (Split-Path $Root -Parent) "Server"
 $ServerCache = Join-Path $ServerRoot "cache"
 
 function Assert-Command([string]$Name) {
@@ -65,7 +65,7 @@ function Assert-ServerCache {
     $cacheFile = Join-Path $ServerCache "main_file_cache.dat2"
     $fallbackSource = Join-Path $ServerCache "map-fallback"
     if (-not (Test-Path $cacheFile)) {
-        throw "Sibling server cache was not found at $ServerCache. Expected 06-client and 06-server to be next to each other."
+        throw "Server cache was not found at $ServerCache. Expected Server\cache next to Client."
     }
     if (-not (Test-Path $fallbackSource)) {
         throw "Map fallbacks were not found at $fallbackSource"

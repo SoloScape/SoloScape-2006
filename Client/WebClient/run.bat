@@ -2,13 +2,13 @@
 setlocal
 cd /d "%~dp0"
 
-set "CLIENT_ROOT=%~dp0..\06-Client"
-set "SERVER_ROOT=%~dp0..\06-Server"
+set "CLIENT_ROOT=%~dp0.."
+set "SERVER_ROOT=%~dp0..\..\Server"
 set "CLIENT_CACHE_ROOT=%SERVER_ROOT%\cache"
 set "WEB_ROOT=%~dp0web"
 
 if not exist "%CLIENT_ROOT%\build.bat" (
-  echo Error: 06-Client was not found at "%CLIENT_ROOT%".
+  echo Error: Client was not found at "%CLIENT_ROOT%".
   pause
   exit /b 1
 )
