@@ -253,6 +253,7 @@ public final class InterfaceBridge {
 
         put(mappings, 3984, 320, 141); // total level
         put(mappings, 3985, 274, 24);  // quest points
+        put(mappings, 4439, 239, 183); // music tab: currently playing track name
 
         // Bank: stock 443 group 12 plus its inventory overlay group 15.
         put(mappings, 5382, 12, 89); // bank item container
