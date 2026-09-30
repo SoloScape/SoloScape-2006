@@ -32,6 +32,9 @@ public final class EquipmentManager {
         ItemStack[] rawItems = this.container.getRawItems();
         Player player = this.player;
         player.packetSender.sendItemContainer(1688, rawItems);
+        if (ServerSettings.clientBuild == 443 && player.getOpenInterfaceId() == 15106) {
+            player.packetSender.sendItemContainer(15107, rawItems);
+        }
         ItemStack itemStack = rawItems[3];
         if (itemStack != null && ((ItemStack)itemStack).getDefinition().isMembersOnly() && ServerSettings.freeToPlayWorld) {
             itemStack = null;
@@ -126,6 +129,8 @@ public final class EquipmentManager {
     }
 
     public final void equipFromInventorySlot(int slot) {
+        boolean equipmentStatsOpen = ServerSettings.clientBuild == 443
+                && this.player.getOpenInterfaceId() == 15106;
         int value;
         int value2;
         ItemStack itemStack;
@@ -393,6 +398,10 @@ public final class EquipmentManager {
             this.player.setAutocastSpell(null);
             BotCombatHelper.syncPrimaryMagicAutocast(this.player);
         }
+        if (equipmentStatsOpen && this.player.getOpenInterfaceId() != 15106) {
+            // Equipping can advance Tutorial Island and replace the tracked chatbox root.
+            this.player.packetSender.showInterface(15106);
+        }
         this.refresh();
         this.refreshCarriedValue();
         this.player.getAttributes().put("usedGlory", Boolean.FALSE);
@@ -483,6 +492,9 @@ public final class EquipmentManager {
         EquipmentManager equipmentManager = this;
         value = equipmentManager.player;
         ((Player)value).packetSender.sendInterfaceSlotItem(value2, 1688, itemStack2);
+        if (ServerSettings.clientBuild == 443 && this.player.getOpenInterfaceId() == 15106) {
+            this.player.packetSender.sendItemContainer(15107, this.container.getRawItems());
+        }
         equipmentManager.player.getEquipmentManager().refreshWeaponAmmunitionState();
         equipmentManager.player.getEquipmentManager().refreshBarrowsSetEffects();
         equipmentManager.refreshEquipmentBonuses(equipmentManager.player);

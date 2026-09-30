@@ -74,5 +74,19 @@ public enum WeaponInterfaceDefinition {
     public final AttackStyleDefinition[] getAttackStyles() {
         return this.attackStyles;
     }
+
+    /** Legacy synth IDs: stabsword slash/stab, hacksword slash/stab, staff crush. */
+    public final int getAttackSoundId(AttackStyleDefinition style) {
+        if (this == DAGGER) {
+            return style.getAttackBonusType() == AttackBonusType.SLASH ? 401 : 403;
+        }
+        if (this == SLASH_SWORD) {
+            return style.getAttackBonusType() == AttackBonusType.STAB ? 398 : 396;
+        }
+        if (this == STAFF) {
+            return 394;
+        }
+        return this.attackSoundId;
+    }
 }
 

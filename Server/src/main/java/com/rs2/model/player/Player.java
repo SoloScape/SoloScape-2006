@@ -4807,7 +4807,7 @@ extends Entity {
     }
 
     public final int getBlockSoundId() {
-        int value = 405;
+        int value = 820; // human_block_1; 405 is a metal clash, even without armour.
         Player player = this;
         int itemIdAtSlot = player.equipmentManager.getItemIdAtSlot(4);
         String definition = new ItemStack(itemIdAtSlot).getDefinition().getName().toLowerCase();
@@ -4818,6 +4818,10 @@ extends Entity {
             value = 414;
         }
         return value;
+    }
+
+    public final int getHitSoundId() {
+        return this.gender == 1 ? 73 : 69;
     }
 
     public final boolean handleSpecialAttackButton(int buttonId) {

@@ -87,6 +87,7 @@ public abstract class BaseCombatAttack extends CombatAttack {
         if (this.animationId != -1) {
             if (this.getAttacker().isNpc()) {
                 Npc npc = (Npc)this.getAttacker();
+                this.animationId = npc.getDefinition().resolveAttackAnimationId(this.animationId);
                 if (npc.getNpcId() == 907 || npc.getNpcId() == 908 || npc.getNpcId() == 909 || npc.getNpcId() == 910 || npc.getNpcId() == 911 || npc.getNpcId() == 912 || npc.getNpcId() == 913 || npc.getNpcId() == 914) {
                     this.animationId = npc.getDefinition().getAttackAnimationId();
                 }
@@ -103,7 +104,7 @@ public abstract class BaseCombatAttack extends CombatAttack {
             this.getAttacker().getUpdateState().setAnimation(this.animationId);
             if (this.getAttacker().isPlayer()) {
                 Player attacker = (Player)this.getAttacker();
-                attacker.packetSender.sendSoundEffect(this.attackSoundId, 1, 20);
+                attacker.packetSender.sendSoundEffect(this.attackSoundId, 1, 0);
             }
             if (this.getTarget().isPlayer()) {
                 Player target = (Player)this.getTarget();
@@ -113,7 +114,7 @@ public abstract class BaseCombatAttack extends CombatAttack {
                         this.attackSoundId = npc.getAttackSoundId();
                     }
                 }
-                target.packetSender.sendSoundEffect(this.attackSoundId, 1, 20);
+                target.packetSender.sendSoundEffect(this.attackSoundId, 1, 0);
             }
         }
         if (this.hitDefinitions != null) {

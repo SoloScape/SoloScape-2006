@@ -533,6 +533,7 @@ public final class NpcDefinition {
 
     /** Applies stock 443 display data over the server's combat/shop metadata. */
     public static void loadRevision443() throws IOException {
+        NpcAnimations.load();
         Map<Integer, byte[]> files = Definitions.readGroup(9);
         int maxId = -1;
         for (Integer id : files.keySet()) maxId = Math.max(maxId, id);
@@ -558,12 +559,21 @@ public final class NpcDefinition {
     private static void decodeRevision443(NpcDefinition definition, byte[] data)
             throws IOException {
         ConfigReader reader = new ConfigReader(data);
+        int idleAnimationId = -1;
+        int walkAnimationId = -1;
         while (reader.position() < reader.length()) {
             int opcode = reader.readUnsignedByte();
             if (opcode == 0) {
                 if (reader.position() != reader.length()) {
                     throw new IOException("Trailing bytes in 443 NPC " + definition.id);
                 }
+                int modelAnimationId = idleAnimationId >= 0 ? idleAnimationId : walkAnimationId;
+                definition.attackAnimationId = NpcAnimations.resolve(
+                        modelAnimationId, definition.attackAnimationId, 0);
+                definition.blockAnimationId = NpcAnimations.resolve(
+                        modelAnimationId, definition.blockAnimationId, 1);
+                definition.deathAnimationId = NpcAnimations.resolve(
+                        modelAnimationId, definition.deathAnimationId, 2);
                 return;
             }
             if (opcode == 1 || opcode == 60) {
@@ -576,11 +586,16 @@ public final class NpcDefinition {
             } else if (opcode == 12) {
                 definition.size = reader.readUnsignedByte();
                 if (definition.id == 1431 || definition.id == 1432) definition.size = 1;
-            } else if (opcode == 13 || opcode == 14 || opcode == 90 || opcode == 91
+            } else if (opcode == 13) {
+                idleAnimationId = reader.readUnsignedShort();
+            } else if (opcode == 14) {
+                walkAnimationId = reader.readUnsignedShort();
+            } else if (opcode == 90 || opcode == 91
                     || opcode == 92 || opcode == 97 || opcode == 98 || opcode == 103) {
                 reader.readUnsignedShort();
             } else if (opcode == 17) {
-                reader.skip(8);
+                walkAnimationId = reader.readUnsignedShort();
+                reader.skip(6);
             } else if (opcode >= 30 && opcode < 35) {
                 String action = reader.readString();
                 if (!"hidden".equalsIgnoreCase(action)) {
@@ -651,6 +666,10 @@ public final class NpcDefinition {
     }
 
     public final int getHitSoundId() {
+        // The inherited content table gives the basic men female_hit.
+        if ("Man".equalsIgnoreCase(this.name) && this.hitSoundId == 73) {
+            return 72;
+        }
         if (this.hitSoundId == 0) {
             return -1;
         }
@@ -673,6 +692,9 @@ public final class NpcDefinition {
     }
 
     public final int getDeathSoundId() {
+        if ("Man".equalsIgnoreCase(this.name) && this.deathSoundId == 71) {
+            return 70;
+        }
         if (this.deathSoundId == 0) {
             return -1;
         }
@@ -719,6 +741,12 @@ public final class NpcDefinition {
 
     public final int getAttackAnimationId() {
         return this.attackAnimationId;
+    }
+
+    public final int resolveAttackAnimationId(int animationId) {
+        return ServerSettings.cacheVersion == 443
+                ? NpcAnimations.resolveAttack(this.attackAnimationId, animationId)
+                : animationId;
     }
 
     public final int getCombatLevel() {

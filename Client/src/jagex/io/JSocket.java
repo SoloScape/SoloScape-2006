@@ -284,6 +284,10 @@ public class JSocket implements Runnable {
         Class14.aBoolean245 = true;
     }
 
+    public static boolean isTutorialInstructionMode() {
+        return tutorialInstructionMode;
+    }
+
     public static JString sanitizeTutorialChatText(int componentId, JString text) {
         // Use native group-214 child 5 as the mode-control channel. Unlike the
         // synthetic scroll-container child 8, child 5 always exists in cache,

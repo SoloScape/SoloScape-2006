@@ -288,6 +288,25 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
 
         int widgetGroup = packedWidgetId >>> 16;
         int widgetChild = packedWidgetId & 0xffff;
+        // Revision 443 uses one toggle on each combat tab, whereas the legacy
+        // dispatcher has separate On/Off buttons (150/151).
+        if (isAutoRetaliateButton(widgetGroup, widgetChild)
+                && (operation == -1 || parameter == 0)) {
+            player.setAutoRetaliate(!player.isAutoRetaliate());
+            return;
+        }
+        if (widgetGroup == 387 && widgetChild == 24
+                && (operation == -1 || parameter == 0)) {
+            player.getEquipmentManager().refresh();
+            player.packetSender.sendItemContainer(15107,
+                    player.getEquipmentManager().getContainer().getRawItems());
+            if (player.getQuestState(0) != 1) {
+                player.getQuestManager().refreshQuestJournal();
+            }
+            // Open the viewport after the tutorial chatbox refresh so it stays visible.
+            player.packetSender.showInterface(15106);
+            return;
+        }
         if (handleMusicTrack(player, widgetGroup, widgetChild, operation, parameter)) {
             return;
         }
@@ -403,6 +422,22 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 && legacyButtonId != 3214 && legacyButtonId != 1688
                 && (operation == -1 || parameter == 0)) {
             buttonHandler.handleButton(player, legacyButtonId);
+        }
+    }
+
+    private static boolean isAutoRetaliateButton(int group, int child) {
+        // Click targets verified against the revision 443 cache (actionType 4).
+        switch (group) {
+            case 75: case 78: case 81: case 82: case 83:
+            case 87: case 88: case 89:
+                return child == 26;
+            case 76: case 77: case 79: case 84: case 85:
+            case 91: case 92: case 93:
+                return child == 24;
+            case 80: return child == 8;
+            case 86: return child == 12;
+            case 90: return child == 9;
+            default: return false;
         }
     }
 }

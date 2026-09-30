@@ -54,10 +54,17 @@ extends CycleEvent {
         if (this.player.getQuestState(0) != 1) {
             if (this.player.getQuestState(0) == 38) {
                 this.player.advanceTutorialStage();
+            } else {
+                this.player.getQuestManager().refreshQuestJournal();
             }
             this.player.setInteractionTargetId(0);
-            this.player.getDialogueManager().showOneLineStatement("You hammer the " + this.requiredBars.getDefinition().getName().toLowerCase() + " and make " + this.productItem.getDefinition().getName().toLowerCase() + ".");
-            this.player.getQuestManager().refreshQuestJournal();
+            // Show the result after refreshing the tutorial, and let Continue restore its instructions.
+            this.player.getDialogueManager().resetDialogueState();
+            this.player.getDialogueManager().showOneLineStatement(
+                    this.requiredBars.getId() == 2349 && this.productItemId == 1205
+                            ? "You hammer the bronze and make a dagger."
+                            : "You hammer the " + this.requiredBars.getDefinition().getName().toLowerCase()
+                                    + " and make " + this.productItem.getDefinition().getName().toLowerCase() + ".");
         } else {
             player = this.player;
             player.packetSender.sendGameMessage("You hammer the " + this.requiredBars.getDefinition().getName().toLowerCase() + " and make " + this.productItem.getDefinition().getName().toLowerCase() + ".");

@@ -778,9 +778,10 @@ public class Bzip2Block {
                     IsaacPrng.aBoolean1089 = true;
                     StillGraphic.anInt2338 = -1;
                 }
-                // The tutorial smithing menu shares the screen with its instructions.
+                // Tutorial smithing and equipment stats share the screen with instructions.
                 if (Class39_Sub5_Sub14.anInt1912 != -1
-                        && !(i_79_ == 312 && Class39_Sub5_Sub14.anInt1912 == 214)) {
+                        && !((i_79_ == 312 || i_79_ == 465 && JSocket.isTutorialInstructionMode())
+                        && Class39_Sub5_Sub14.anInt1912 == 214)) {
                     Class62_Sub2.method1084((byte) 115,
                             Class39_Sub5_Sub14.anInt1912);
                     Class14.aBoolean245 = true;
@@ -1120,7 +1121,9 @@ public class Bzip2Block {
                 // disappear as soon as "Getting Started" was opened.
                 if (Class39_Sub11.anInt1478 != -1
                         && Class39_Sub11.anInt1478 != 269
-                        && !(Class39_Sub11.anInt1478 == 312 && i_105_ == 214)) {
+                        && !((Class39_Sub11.anInt1478 == 312
+                        || Class39_Sub11.anInt1478 == 465 && JSocket.isTutorialInstructionMode())
+                        && i_105_ == 214)) {
                     Class62_Sub2.method1084((byte) 107,
                             Class39_Sub11.anInt1478);
                     Class39_Sub11.anInt1478 = -1;

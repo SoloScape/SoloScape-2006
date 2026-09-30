@@ -25,6 +25,7 @@ public final class InterfaceBridge {
         mappings.put(638, 274);  // quest journal
         mappings.put(3213, 149); // inventory
         mappings.put(1644, 387); // worn equipment
+        mappings.put(15106, 465); // equipment statistics
         mappings.put(5608, 271); // prayer
         mappings.put(1151, 192);  // standard spellbook
         mappings.put(12855, 193); // ancient spellbook
@@ -164,6 +165,7 @@ public final class InterfaceBridge {
         put(mappings, 153, 261, 0);    // toggle run
         put(mappings, 3214, 149, 0);   // inventory container
         put(mappings, 1688, 387, 25);  // worn equipment container
+        put(mappings, 15107, 465, 103); // items on the equipment statistics screen
         // Native smithing columns and labels, verified against cache group 312.
         putRange(mappings, 1119, 312, 146, 5);
         int[] smithingNames = {1094,1091,1098,1102,1107,1085,1093,1099,1103,1108,
@@ -595,6 +597,7 @@ public final class InterfaceBridge {
     public static int translateGroup(int legacyId, String payload) {
         if (legacyId == -1) return -1;
         Integer groupId = GROUPS.get(legacyId);
+        if (groupId == null) groupId = createGroupMappings().get(legacyId);
         int mappedId = groupId != null ? groupId
                 : CUSTOM_FLAT_GROUPS.contains(legacyId) ? legacyId : UNMAPPED;
         PacketAudit.interfaceGroup(legacyId, mappedId, payload);
@@ -656,6 +659,7 @@ public final class InterfaceBridge {
     }
 
     public static int toLegacyComponent(int packedId) {
+        if (packedId == (465 << 16 | 103)) return 1688;
         Integer legacyId = LEGACY_COMPONENTS.get(packedId);
         if (legacyId == null && packedId >>> 16 == 312) {
             // Smithing may have been added after the dev server loaded its maps.

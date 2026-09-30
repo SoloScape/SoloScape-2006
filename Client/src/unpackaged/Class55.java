@@ -89,8 +89,9 @@ public class Class55 implements Interface2
     }
     
     public static void method999(int i) {
-	boolean preserveTutorialInstructions = characterDesignActive
-		&& Class39_Sub5_Sub14.anInt1912 == 214;
+	boolean preserveTutorialInstructions = Class39_Sub5_Sub14.anInt1912 == 214
+		&& (characterDesignActive || Class39_Sub11.anInt1478 == 465
+		&& jagex.io.JSocket.isTutorialInstructionMode());
 	characterDesignActive = false;
 	FrameBuffer.outgoingGameBuffer.putFrame(70);
 	if (StillGraphic.anInt2338 != -1) {
@@ -107,8 +108,8 @@ public class Class55 implements Interface2
 	    Class14.aBoolean245 = true;
 	    Class39_Sub10.anInt1420 = -1;
 	} else if (preserveTutorialInstructions) {
-	    // Keep native tutorial chat group 214 alive across character-design Accept
-	    // and repaint it immediately instead of waiting for another input event.
+	    // Keep the tutorial instructions alive when accepting character design
+	    // or closing equipment stats; neither should expose the normal chatbox.
 	    Class14.aBoolean245 = true;
 	    Class39_Sub10.anInt1420 = -1;
 	}

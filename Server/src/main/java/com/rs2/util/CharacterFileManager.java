@@ -263,7 +263,7 @@ public final class CharacterFileManager {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             value6 = new FileOutputStream((File)value6);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             value6 = new DataOutputStream((OutputStream)value6);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ((DataOutputStream)value6).writeShort(30);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ((DataOutputStream)value6).writeShort(31);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ((DataOutputStream)value6).writeUTF(((Player)value).getUsername());
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ((DataOutputStream)value6).writeUTF(((Player)value).getPassword());
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ((DataOutputStream)value6).writeUTF(((Player)value).getHostAddress());
@@ -1277,6 +1277,7 @@ public final class CharacterFileManager {
             ((DataOutputStream)value6).writeBoolean(((Player)value).swampCaveRopeAttached);
             ((DataOutputStream)value6).writeBoolean(((Player)value).lampOilStillFilled);
             ((DataOutputStream)value6).writeInt(((Player)value).enterTheAbyssMiniquestState);
+            ((DataOutputStream)value6).writeInt(((Player)value).configStates[872]);
             ((DataOutputStream)value6).writeBoolean(((Player)value).botEnabled);
             if (((Player)value).botEnabled) {
                 ((DataOutputStream)value6).writeByte(((Player)value).botMode);
@@ -1413,7 +1414,7 @@ public final class CharacterFileManager {
                             }
                             value3 = new FileOutputStream((File)value3);
                             value3 = new DataOutputStream((OutputStream)value3);
-                            ((DataOutputStream)value3).writeShort(30);
+                            ((DataOutputStream)value3).writeShort(31);
                             value4 = value;
                             ((DataOutputStream)value3).writeUTF(((CharacterFileRecord)value4).username);
                             Object value5 = value;
@@ -2076,6 +2077,7 @@ public final class CharacterFileManager {
             ((DataOutputStream)value3).writeBoolean(((CharacterFileRecord)value).swampCaveRopeAttached);
             ((DataOutputStream)value3).writeBoolean(((CharacterFileRecord)value).lampOilStillFilled);
             ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).enterTheAbyssMiniquestState);
+            ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).configStates[872]);
             ((DataOutputStream)value3).writeBoolean(((CharacterFileRecord)value).botEnabled);
             if (((CharacterFileRecord)value).botEnabled) {
                 ((DataOutputStream)value3).writeByte(((CharacterFileRecord)value).botMode);
@@ -3038,6 +3040,9 @@ public final class CharacterFileManager {
                     if (s >= 30) {
                         ((DataInputStream)value2).readBoolean();
                         ((DataInputStream)value2).readBoolean();
+                        ((DataInputStream)value2).readInt();
+                    }
+                    if (s >= 31) {
                         ((DataInputStream)value2).readInt();
                     }
                     if (s >= 20) {
@@ -4029,6 +4034,9 @@ public final class CharacterFileManager {
                         ((CharacterFileRecord)value2).lampOilStillFilled = dataInputStream.readBoolean();
                         ((CharacterFileRecord)value2).enterTheAbyssMiniquestState = dataInputStream.readInt();
                     }
+                    if (s >= 31) {
+                        ((CharacterFileRecord)value2).configStates[872] = dataInputStream.readInt();
+                    }
                     if (s >= 20) {
                         boolean botEnabled = dataInputStream.readBoolean();
                         ((CharacterFileRecord)value2).botEnabled = botEnabled;
@@ -4224,6 +4232,7 @@ public final class CharacterFileManager {
         player.setAcceptAid(record.acceptAid);
         player.setMusicVolume(record.musicVolume);
         player.setEffectVolume(record.effectVolume);
+        player.configStates[872] = record.configStates[872];
         player.setSpecialEnergy(record.specialEnergy);
         player.getBankPinManager().setChangingPin(record.changingBankPin);
         player.getBankPinManager().setDeletingPin(record.deletingBankPin);

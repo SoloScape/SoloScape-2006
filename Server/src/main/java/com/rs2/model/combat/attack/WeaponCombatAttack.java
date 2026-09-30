@@ -131,7 +131,7 @@ public class WeaponCombatAttack extends BaseCombatAttack {
         this.setAttackDelay(this.weaponProfile.getAttackDelay() + delayModifier);
         this.setAttackerGraphic(this.ammunition != null && this.weaponProfile.getAmmunitionProfile() != null ? (this.weaponProfile == WeaponProfile.DARK_BOW ? new GraphicEffect(this.ammunition.getAlternateGraphicId(), this.weaponProfile.getAmmunitionProfile().getGraphicDelay()) : new GraphicEffect(this.ammunition.getGraphicId(), this.weaponProfile.getAmmunitionProfile().getGraphicDelay())) : null);
         this.setAnimationId(this.weaponProfile.getAttackAnimations()[this.attackStyleIndex]);
-        this.setAttackSoundId(this.weaponProfile.getInterfaceDefinition().attackSoundId);
+        this.setAttackSoundId(this.weaponProfile.getInterfaceDefinition().getAttackSoundId(this.attackStyle));
         this.cancelled = !this.prepareSpecialAttack();
     }
 

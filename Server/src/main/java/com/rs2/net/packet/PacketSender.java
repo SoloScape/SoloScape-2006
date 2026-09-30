@@ -364,8 +364,9 @@ public final class PacketSender {
             if (this.player.loadedCharacterFromBackup) {
                 this.sendGameMessage("Your account file was somehow corrupted and had to be loaded from backup.");
             }
-            this.player.loginInitializationComplete = true;
         }
+        // Tutorial accounts must also save when their session disconnects.
+        this.player.loginInitializationComplete = true;
         return this;
     }
 

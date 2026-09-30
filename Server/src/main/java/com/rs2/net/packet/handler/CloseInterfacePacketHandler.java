@@ -27,6 +27,13 @@ implements PacketHandler {
         player.getAttributes().put("isShopping", Boolean.FALSE);
         player.interfaceAction = "";
         if (player.getQuestState(0) != 1) {
+            if (ServerSettings.clientBuild == 443 && player.getOpenInterfaceId() == 15106) {
+                // The native X button already closed the viewport and kept
+                // the tutorial chatbox. A global close/reopen would make it flicker.
+                player.setOpenInterfaceId(6179);
+                player.setInventoryOverlayInterfaceId(0);
+                return;
+            }
             if (ServerSettings.clientBuild == 443 && player.getQuestState(0) == 0) {
                 // Native revision-443 character design (group 269) accepts via
                 // clientscript opcode 3103. It does not send the legacy 3651

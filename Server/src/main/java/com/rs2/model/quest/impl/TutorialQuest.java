@@ -144,13 +144,13 @@ extends QuestScript {
         if (objectId == 3022 && value2 == 3111 && value32 == 9518 || objectId == 3023 && value2 == 3111 && value32 == 9519) {
             if (value42 >= 46 && value42 <= 50) {
                 Player player8 = player;
-                // 2006Scape Tutorial rat gate: shift both leaves west for four ticks.
+                // Keep both rat-pit gate leaves open for two ticks while passing through.
                 player8.packetSender.passThroughDoubleDoor(
                         3022, 3111, 9518, 0,
                         3023, 3111, 9519, 0,
                         3110, 9518, 3,
                         3110, 9519, 1,
-                        0, player.getPosition().getX() < 3111 ? 1 : -1, 0, 4);
+                        0, player.getPosition().getX() < 3111 ? 1 : -1, 0, 2);
                 if (value42 == 46) {
                     player.advanceTutorialStage();
                 }
@@ -561,12 +561,12 @@ extends QuestScript {
         if (value3 == 40) {
             value2 = itemStackArray;
             itemStackArray.packetSender.sendEntityHintIcon(1, Npc.findByDefinitionId(944).getIndex());
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Combat.", "", "In this area you will find out about combat with swords and", "bows. Speak to the guide and he will tell you all about it.", "", true);
+            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("", "@bla@Combat.", "In this area you will find out about combat, both melee and", "ranged. Speak to the guide and he will tell you all about it.", "", true);
         }
         if (value3 == 41) {
             value2 = itemStackArray;
             itemStackArray.packetSender.flashSidebarIcon(QuestConstants.EQUIPMENT_TAB_INTERFACE[0]);
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Wielding weapons.", "", "You now have access to a new interface. Click on the flashing", "icon of a man, the one to the right of your backpack icon.", "", true);
+            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("", "@bla@Wielding weapons.", "You now have access to a new interface. Click on the flashing", "icon of a man, the one to the right of your backpack icon.", "", true);
         }
         if (value3 == 42) {
             itemStackArray.getDialogueManager().showTutorialInstructionOverlay("This is your worn inventory.", "From here you can see what items you have equipped. Let's", "get one of those slots filled, go back to your inventory", "and right click your dagger, select wield from the menu.", "", true);
@@ -1166,12 +1166,16 @@ extends QuestScript {
                     return true;
                 }
                 if (value2 == 2) {
-                    player.getDialogueManager().showTwoItemMessage("The Combat Instructor gives you a @dbl@bronze sword @bla@and a", "@dbl@wooden shield@bla@!", new ItemStack(1277, 1), new ItemStack(1171, 1));
+                    player.getDialogueManager().showTwoItemMessage("The Combat Guide gives you a @blu@Bronze sword@bla@ and a", "@blu@Wooden Shield!", new ItemStack(1277, 1), new ItemStack(1171, 1));
                     player.setInteractionTargetId(0);
                     Player player11 = player;
                     player11.packetSender.sendEntityHintIcon(1, -1);
                     player.getInventoryManager().addOrDropItem(new ItemStack(1171, 1));
                     player.getInventoryManager().addOrDropItem(new ItemStack(1277, 1));
+                    // Keep the item dialogue visible until the player clicks Continue.
+                    return true;
+                }
+                if (value2 == 3) {
                     player.advanceTutorialStage();
                     player.getDialogueManager().resetDialogueState();
                     player.getDialogueManager().finishDialogue();
@@ -1179,14 +1183,20 @@ extends QuestScript {
                 }
             }
             if (!(value42 < 44 || value2 != 1 || player.ownsItem(1171) && player.ownsItem(1277))) {
-                player.getDialogueManager().showTwoItemMessage("The Combat Instructor gives you a @dbl@bronze sword @bla@and a", "@dbl@wooden shield@bla@!", new ItemStack(1277, 1), new ItemStack(1171, 1));
+                player.getDialogueManager().showTwoItemMessage("The Combat Guide gives you a @blu@Bronze sword@bla@ and a", "@blu@Wooden Shield!", new ItemStack(1277, 1), new ItemStack(1171, 1));
                 player.setInteractionTargetId(0);
                 Player player12 = player;
                 player12.packetSender.sendEntityHintIcon(1, -1);
                 player.getInventoryManager().addOrDropItem(new ItemStack(1171, 1));
                 player.getInventoryManager().addOrDropItem(new ItemStack(1277, 1));
+                // Replacement equipment uses the same Continue step without advancing.
+                player.getDialogueManager().setDialogueStep(2);
+                return true;
+            }
+            if (value42 >= 44 && value2 == 3 && player.getOpenInterfaceId() == 4950) {
                 player.getDialogueManager().resetDialogueState();
                 player.getDialogueManager().finishDialogue();
+                player.getQuestManager().refreshQuestJournal();
                 return true;
             }
             if (value42 == 48) {

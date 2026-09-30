@@ -575,6 +575,10 @@ public class CombatAction {
             return;
         }
         Object updateState = this.target.getUpdateState();
+        boolean magicSplash = this.hitDefinition.getAttackStyle() != null
+                && this.hitDefinition.getAttackStyle().getCombatType() == CombatType.MAGIC
+                && this.hitDefinition.getGraphic() != null
+                && this.hitDefinition.getGraphic().getId() == 85;
         Object hitType = value = this.damage == 0 ? HitType.BLOCKED : this.hitDefinition.getHitType();
         if (!((EntityUpdateState)updateState).isPrimaryHitDamageOverridden()) {
             Object value2;
@@ -586,20 +590,22 @@ public class CombatAction {
             ((EntityUpdateState)updateState).setPrimaryHitType(((HitType)((Object)value)).getClientId());
             if (this.target.isPlayer()) {
                 updateState = (Player)this.getTarget();
-                if (this.damage > 0) {
+                if (!magicSplash && this.damage > 0) {
                     value2 = updateState;
-                    ((Player)value2).packetSender.sendSoundEffect(69, 1, 0);
-                } else {
+                    ((Player)value2).packetSender.sendSoundEffect(((Player)updateState).getHitSoundId(), 1, 0);
+                } else if (!magicSplash) {
                     value2 = updateState;
                     ((Player)value2).packetSender.sendSoundEffect(((Player)updateState).getBlockSoundId(), 1, 0);
                 }
-                if (this.hitDefinition.getAttackStyle() != null && this.hitDefinition.getAttackStyle().getCombatType() == CombatType.MAGIC) {
+                if (!magicSplash && this.hitDefinition.getAttackStyle() != null && this.hitDefinition.getAttackStyle().getCombatType() == CombatType.MAGIC) {
                     value2 = updateState;
                     ((Player)value2).packetSender.sendSoundEffect(this.hitDefinition.getImpactSoundId(), 1, 0);
                 }
-                if (this.attacker != null && this.attacker.isPlayer()) {
+                if (!magicSplash && this.attacker != null && this.attacker.isPlayer()) {
                     value2 = value = (Player)this.getAttacker();
-                    ((Player)value).packetSender.sendSoundEffect(((Player)updateState).getBlockSoundId(), 1, 0);
+                    ((Player)value).packetSender.sendSoundEffect(this.damage > 0
+                            ? ((Player)updateState).getHitSoundId()
+                            : ((Player)updateState).getBlockSoundId(), 1, 0);
                     if (this.hitDefinition.getAttackStyle() != null && this.hitDefinition.getAttackStyle().getCombatType() == CombatType.MAGIC) {
                         value2 = value;
                         ((Player)value2).packetSender.sendSoundEffect(this.hitDefinition.getImpactSoundId(), 1, 0);
@@ -610,10 +616,14 @@ public class CombatAction {
                 updateState = (Player)this.getAttacker();
                 value = (Npc)this.getTarget();
                 value2 = updateState;
-                ((Player)value2).packetSender.sendSoundEffect(((Npc)value).getHitSoundId(), 1, 0);
+                if (!magicSplash) {
+                    ((Player)value2).packetSender.sendSoundEffect(((Npc)value).getHitSoundId(), 1, 0);
+                }
                 if (this.hitDefinition.getAttackStyle() != null && this.hitDefinition.getAttackStyle().getCombatType() == CombatType.MAGIC) {
                     value2 = updateState;
-                    ((Player)value2).packetSender.sendSoundEffect(this.hitDefinition.getImpactSoundId(), 1, 0);
+                    if (!magicSplash) {
+                        ((Player)value2).packetSender.sendSoundEffect(this.hitDefinition.getImpactSoundId(), 1, 0);
+                    }
                     if (((Npc)value).getNpcId() == 667 && this.hitDefinition.getSpell() != null && this.damage > 0) {
                         if (this.hitDefinition.getSpell() == SpellDefinition.WIND_BLAST) {
                             ((Npc)value).chronozonHitByWindBlast = true;
@@ -755,7 +765,15 @@ public class CombatAction {
         }
         if (this.target.isPlayer()) {
             value = value3 = (Player)this.target;
-            ((Player)value3).packetSender.closeInterfaces();
+            Player player = (Player)value3;
+            // Rat retaliation must leave Tutorial Island's instructions visible.
+            if (player.getQuestState(0) == 1 || player.getOpenInterfaceId() != 6179) {
+                player.packetSender.closeInterfaces();
+                // A modal window can replace the tracked interface while the
+                // tutorial chatbox is still underneath it. Restore the active
+                // combat lesson after dismissing that window (including misses).
+                CombatManager.showTutorialCombatInstructions(player);
+            }
         }
         if (this.hitDefinition.getGraphic() != null) {
             this.target.getUpdateState().setGraphic(this.hitDefinition.getGraphic());

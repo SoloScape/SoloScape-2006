@@ -620,6 +620,19 @@ implements PacketHandler {
                     itemId, null, "invalid-slot");
             return;
         }
+        if (packedInterface == (465 << 16 | 103)) {
+            // This viewport container represents the same equipment as the sidebar,
+            // but must be validated against the stats window rather than the sidebar.
+            if (player.getOpenInterfaceId() != 15106 || option != 1
+                    || slot >= player.getEquipmentManager().getContainer().getRawItems().length) {
+                return;
+            }
+            ItemStack equipped = player.getEquipmentManager().getContainer().getItemAt(slot);
+            if (equipped != null && equipped.getId() == itemId) {
+                player.getEquipmentManager().unequipSlot(slot);
+            }
+            return;
+        }
         if (widgetOption && handleRevision443BankShopItemOption(player, packedInterface, slot, itemId, option)) {
             return;
         }

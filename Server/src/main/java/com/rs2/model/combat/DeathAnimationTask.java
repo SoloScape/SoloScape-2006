@@ -27,8 +27,15 @@ extends TickTask {
             player.setHideHeldItemsInAppearance(true);
             this.defeatedEntity.getUpdateState().setFaceEntity(-1);
             player.setAppearanceUpdateRequired(true);
+            int deathSound = player.getGender() == 1 ? 71 : 70;
             if (player.npcTransformationId > 0) {
-                value = new Npc(player.npcTransformationId).getDefinition().getDeathAnimationId();
+                Npc transformed = new Npc(player.npcTransformationId);
+                value = transformed.getDefinition().getDeathAnimationId();
+                deathSound = transformed.getDeathSoundId();
+            }
+            player.packetSender.sendSoundEffect(deathSound, 1, 0);
+            if (this.killer != null && this.killer.isPlayer() && this.killer != player) {
+                ((Player)this.killer).packetSender.sendSoundEffect(deathSound, 1, 0);
             }
         }
         this.defeatedEntity.getUpdateState().setAnimation(value);
@@ -36,7 +43,7 @@ extends TickTask {
             player = (Player)this.killer;
             Npc npc = (Npc)this.defeatedEntity;
             this.defeatedEntity.getUpdateState().setFaceEntity(-1);
-            player.packetSender.sendSoundEffect(npc.getDeathSoundId(), 1, 20);
+            player.packetSender.sendSoundEffect(npc.getDeathSoundId(), 1, 0);
         }
         this.stop();
     }

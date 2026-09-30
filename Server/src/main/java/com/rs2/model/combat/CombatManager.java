@@ -179,8 +179,16 @@ extends TickTask {
         } else if (GameplayTrace.enabled()) {
             GameplayTrace.log("combat cycle not-scheduled attacker=" + GameplayTrace.describe(attacker) + " target=" + GameplayTrace.describe(target));
         }
-        if (entity.isPlayer() && ((Player)entity).getQuestState(0) == 47) {
-            ((Player)entity).getDialogueManager().showTutorialInstructionOverlay("Sit back and watch.", "While you are fighting you will see a bar over your head. The", "bar shows how much health you have left. Your opponent will", "have one too. You will continue to attack the rat until it's dead", "or you do something else.", true);
+        if (entity.isPlayer()) {
+            showTutorialCombatInstructions((Player)entity);
+        }
+    }
+
+    static void showTutorialCombatInstructions(Player player) {
+        if (player.getQuestState(0) == 47) {
+            player.getDialogueManager().showTutorialInstructionOverlay("Sit back and watch.", "While you are fighting you will see a bar over your head. The", "bar shows how much health you have left. Your opponent will", "have one too. You will continue to attack the rat until it's dead", "or you do something else.", true);
+        } else if (player.getQuestState(0) == 49) {
+            player.getDialogueManager().showTutorialInstructionOverlay("Rat ranging.", "Now you have a bow and some arrows. Before you can use", "them you'll need to equip them. Once equipped with the", "ranging gear, try killing another rat. Remember: to attack, right", "click on the monster and select attack.", true);
         }
     }
 
