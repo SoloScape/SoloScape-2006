@@ -527,6 +527,7 @@ extends Entity {
     public int gatheringHazardCounter;
     public long lastCharacterSaveMillis;
     public long lastPacketReceivedMillis;
+    public long lastPlayerInputMillis;
     public int familyCrestGauntletItemId;
     public boolean logoutPacketSent;
     public long lastRegionChangeMillis;
@@ -1373,7 +1374,20 @@ extends Entity {
             this.addRunEnergyRaw(restoreAmount);
             this.packetSender.sendRunEnergy();
         }
-        if (this.lastPacketReceivedMillis != 0L && System.currentTimeMillis() - this.lastPacketReceivedMillis >= 60000L && (this.getSingleCombatTimer().hasElapsed() || this.logoutPacketSent)) {
+        this.processConnectionTimeout();
+    }
+
+    public final void processConnectionTimeout() {
+        if (this.isBot || this.getConnectionState() != PlayerConnectionState.IN_GAME) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        // A dead connection must leave the world even if combat keeps refreshing its timer.
+        if (this.lastPacketReceivedMillis != 0L && now - this.lastPacketReceivedMillis >= 60000L) {
+            this.disconnect();
+        } else if (ServerSettings.idleLogoutEnabled && this.getPlayerRights() < 2
+                && this.lastPlayerInputMillis != 0L && now - this.lastPlayerInputMillis >= 300000L
+                && this.getSingleCombatTimer().hasElapsed()) {
             this.packetSender.sendLogout();
             this.disconnect();
         }
@@ -1564,6 +1578,7 @@ extends Entity {
         this.displayedBarrowsKillCount = -1;
         this.gatheringHazardCounter = 0;
         this.lastPacketReceivedMillis = 0L;
+        this.lastPlayerInputMillis = 0L;
         this.familyCrestGauntletItemId = 778;
         this.logoutPacketSent = false;
         this.lastRegionChangeMillis = 0L;
@@ -3429,6 +3444,8 @@ extends Entity {
             this.disconnect();
             return;
         }
+        this.lastPacketReceivedMillis = System.currentTimeMillis();
+        this.lastPlayerInputMillis = this.lastPacketReceivedMillis;
         if (ServerSettings.clientBuild == 443) {
             this.actionLocked = false;
             this.teleporting = true;

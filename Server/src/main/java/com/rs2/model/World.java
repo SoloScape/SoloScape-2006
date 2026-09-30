@@ -113,6 +113,8 @@ public final class World {
                     try {
                         if (ServerSettings.clientBuild != 443 || ((Player)value2).isBot) {
                             ((Player)value2).process();
+                        } else {
+                            ((Player)value2).processConnectionTimeout();
                         }
                     }
                     catch (Exception exception) {

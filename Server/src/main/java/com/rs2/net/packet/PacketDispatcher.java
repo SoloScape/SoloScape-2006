@@ -221,10 +221,18 @@ public final class PacketDispatcher {
             if (GameplayTrace.enabled() && PacketDispatcher.isGameplayTraceOpcode(((IncomingPacket)packetId).getOpcode())) {
                 GameplayTrace.log("packet dispatch opcode=" + ((IncomingPacket)packetId).getOpcode() + " length=" + ((IncomingPacket)packetId).getLength() + " player=" + GameplayTrace.describe(player));
             }
-            if (!(packetHandler instanceof NoOpPacketHandler)
-                    && (ServerSettings.clientBuild == 443
-                    || ((IncomingPacket)packetId).getOpcode() != 202)) {
+            int opcode = ((IncomingPacket)packetId).getOpcode();
+            boolean playerInput = !(packetHandler instanceof NoOpPacketHandler)
+                    && !(packetHandler instanceof IdlePacketHandler)
+                    && (ServerSettings.clientBuild == 443 || opcode != 202);
+            if (ServerSettings.clientBuild == 443) {
+                playerInput |= opcode == ClientPackets.MOUSE_MOVEMENT
+                        || opcode == ClientPackets.MOUSE_CLICK
+                        || opcode == ClientPackets.FOCUS;
+            }
+            if (playerInput) {
                 player.setIdlePacketCount(0);
+                player.lastPlayerInputMillis = System.currentTimeMillis();
             }
             player.lastPacketReceivedMillis = System.currentTimeMillis();
             packetHandler.handle(player, (IncomingPacket)packetId);

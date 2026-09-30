@@ -58,6 +58,8 @@ public final class SmokeChecks {
                 checkAssetsAndChat();
             } else if ("startup".equals(args[0])) {
                 checkStartup();
+            } else if ("timeouts".equals(args[0])) {
+                checkTimeouts();
             } else {
                 throw new IllegalArgumentException("Unknown check: " + args[0]);
             }
@@ -763,8 +765,78 @@ public final class SmokeChecks {
                             "443 secondary hit transform is wrong");
                 }
                 require(foundExtendedMask, "443 extended player mask was not observed");
+
             }
         }
+    }
+
+    private static void checkTimeouts() throws Exception {
+        int port;
+        try (ServerSocket availablePort = new ServerSocket(0)) {
+            port = availablePort.getLocalPort();
+        }
+        ServerSettings.serverPort = port;
+        ServerSettings.idleLogoutEnabled = true;
+        System.setProperty("java.awt.headless", "true");
+        System.setProperty("prs.bindHost", "127.0.0.1");
+        Server.main(new String[0]);
+        long deadline = System.currentTimeMillis() + 45000L;
+        while (Server.serverStatus != 2 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(100L);
+        }
+        require(Server.serverStatus == 2, "Server did not start for timeout smoke check");
+        int[] cacheCrcs;
+        try (Socket js5 = new Socket("127.0.0.1", port)) {
+            cacheCrcs = checkRevision443Js5(js5);
+        }
+        try (Socket idleSocket = new Socket("127.0.0.1", port)) {
+            idleSocket.setSoTimeout(5000);
+            DataOutputStream output = new DataOutputStream(idleSocket.getOutputStream());
+            int index = performRevision443Login(
+                    new DataInputStream(idleSocket.getInputStream()), output, cacheCrcs, "afksmoke1");
+            Player player = World.getPlayers()[index];
+            require(player != null, "AFK smoke player was not registered");
+            long initializationDeadline = System.currentTimeMillis() + 3000L;
+            while (player.lastPlayerInputMillis == 0L
+                    && System.currentTimeMillis() < initializationDeadline) {
+                Thread.sleep(20L);
+            }
+            require(player.lastPlayerInputMillis != 0L,
+                    "AFK smoke player did not finish login initialization");
+            long lastInput = player.lastPlayerInputMillis;
+            IsaacCipher inbound = new IsaacCipher(new int[]{1, 2, 3, 4});
+            output.writeByte((ClientPackets.IDLE + inbound.nextInt()) & 255);
+            output.flush();
+            long packetDeadline = System.currentTimeMillis() + 3000L;
+            while (player.getIdlePacketCount() == 0 && System.currentTimeMillis() < packetDeadline) {
+                Thread.sleep(20L);
+            }
+            require(player.getIdlePacketCount() > 0, "443 idle packet was not handled");
+            require(player.lastPlayerInputMillis == lastInput,
+                    "443 idle packet incorrectly reset player activity");
+            player.lastPlayerInputMillis = System.currentTimeMillis() - 301000L;
+            awaitPlayerRemoval(index, player, "443 AFK player stayed in the world");
+        }
+        try (Socket silentSocket = new Socket("127.0.0.1", port)) {
+            silentSocket.setSoTimeout(5000);
+            int index = performRevision443Login(
+                    new DataInputStream(silentSocket.getInputStream()),
+                    new DataOutputStream(silentSocket.getOutputStream()), cacheCrcs, "afksmoke2");
+            Player player = World.getPlayers()[index];
+            require(player != null, "Silent smoke player was not registered");
+            player.lastPacketReceivedMillis = System.currentTimeMillis() - 61000L;
+            awaitPlayerRemoval(index, player, "443 silent player stayed in the world");
+        }
+        System.out.println("PASS: AFK and silent 443 sessions left the world");
+    }
+
+    private static void awaitPlayerRemoval(int index, Player player, String failure)
+            throws Exception {
+        long deadline = System.currentTimeMillis() + 5000L;
+        while (System.currentTimeMillis() < deadline && World.getPlayers()[index] == player) {
+            Thread.sleep(20L);
+        }
+        require(World.getPlayers()[index] != player, failure);
     }
 
     private static void readRevision443NpcUpdate(DataInputStream input, IsaacCipher cipher)
