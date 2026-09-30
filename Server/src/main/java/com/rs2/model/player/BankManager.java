@@ -1,0 +1,850 @@
+package com.rs2.model.player;
+
+import com.rs2.ServerSettings;
+import com.rs2.bot.BotTaskDefinition;
+import com.rs2.bot.BotTaskPlanner;
+import com.rs2.bot.combat.BotCombatHelper;
+import com.rs2.model.GameplayHelper;
+import com.rs2.model.World;
+import com.rs2.model.bankpin.BankPinEntryMode;
+import com.rs2.model.item.ItemStack;
+import com.rs2.model.skill.smithing.SmeltingHandler;
+import com.rs2.util.GameplayTrace;
+import com.rs2.util.GameUtil;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public final class BankManager {
+    public static int freeBankCapacity = 64;
+    public static int memberBankCapacity = 64;
+    private static int mainBankContainerInterfaceId = 5382;
+    public static PlayerUpdateTask[] bankTabUpdateTasks = new PlayerUpdateTask[]{
+        new PlayerUpdateTask(mainBankContainerInterfaceId, 19509, 19508, 0),
+        new PlayerUpdateTask(19532, 19511, 19510, 0),
+        new PlayerUpdateTask(19533, 19513, 19512, 0),
+        new PlayerUpdateTask(19534, 19515, 19514, 0),
+        new PlayerUpdateTask(19535, 19517, 19516, 0),
+        new PlayerUpdateTask(19536, 19519, 19518, 0),
+        new PlayerUpdateTask(19537, 19521, 19520, 0),
+        new PlayerUpdateTask(19538, 19523, 19522, 0),
+        new PlayerUpdateTask(19539, 19525, 19524, 0),
+        new PlayerUpdateTask(19540, 19527, 19526, 0)
+    };
+
+    public static int getBankTabIndexForButtonId(int buttonId) {
+        int index = 0;
+        while (index < bankTabUpdateTasks.length) {
+            if (bankTabUpdateTasks[index].getBankTabButtonId() == buttonId) {
+                return index;
+            }
+            ++index;
+        }
+        return -1;
+    }
+
+    public static boolean isBankControlButton(int buttonId) {
+        return buttonId == 18885
+                || buttonId == 18886
+                || getBankTabIndexForButtonId(buttonId) != -1;
+    }
+
+    public static boolean isBankItemContainerInterfaceId(int interfaceId) {
+        int index = 0;
+        while (index < bankTabUpdateTasks.length) {
+            if (bankTabUpdateTasks[index].itemContainerInterfaceId == interfaceId) {
+                return true;
+            }
+            ++index;
+        }
+        return false;
+    }
+
+    public static void openBank(Player player) {
+        if (player.botEnabled) {
+            World.getTaskScheduler().schedule(new DelayedBankOpenTask(3 + GameUtil.randomInt(3), player));
+            return;
+        }
+        BankManager.openBank(player, player);
+    }
+
+    public static void selectTab(Player player, int tabIndex) {
+        if (tabIndex < 0 || player.getBankContainer().getTabCount() - 1 < tabIndex) {
+            return;
+        }
+        player.currentBankTab = tabIndex;
+        int index = 0;
+        while (index < player.getBankContainer().getTabLimit()) {
+            player.getBankContainer().compactTab(index);
+            BankManager.sendBankTab(player, index);
+            ++index;
+        }
+    }
+
+    private static int getSelectedDepositTab(Player player, int bankItemId, int metadata) {
+        int tabCount = player.getBankContainer().getTabCount();
+        if (tabCount <= 0) {
+            player.currentBankTab = 0;
+            return 0;
+        }
+        if (player.currentBankTab < 0 || player.currentBankTab >= tabCount) {
+            player.currentBankTab = 0;
+        }
+
+        int targetTab = player.currentBankTab;
+        if (metadata != -1) {
+            return targetTab;
+        }
+
+        int existingTab = player.getBankContainer().findTabContainingItem(bankItemId);
+        if (existingTab == -1 || existingTab == targetTab) {
+            return targetTab;
+        }
+
+        int existingSlot = player.getBankContainer().indexOfItemInTab(bankItemId, existingTab);
+        if (existingSlot == -1
+                || !player.getBankContainer().moveTabItemBetweenTabs(existingSlot, existingTab, targetTab)) {
+            return existingTab;
+        }
+
+        boolean sourceTabEmpty = isBankTabEmpty(player, existingTab);
+        int oldTabCount = player.getBankContainer().getTabCount();
+        player.getBankContainer().removeEmptyTabs();
+        if (sourceTabEmpty && player.getBankContainer().getTabCount() < oldTabCount
+                && existingTab < targetTab) {
+            --targetTab;
+        }
+        player.currentBankTab = Math.max(0, Math.min(targetTab, player.getBankContainer().getTabCount() - 1));
+        return player.currentBankTab;
+    }
+
+    private static boolean isBankTabEmpty(Player player, int tabIndex) {
+        ItemStack[] tabItems = player.getBankContainer().getTabItems(tabIndex);
+        for (ItemStack tabItem : tabItems) {
+            if (tabItem != null && tabItem.getId() != -1 && tabItem.getAmount() > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void removeEmptyTabsAndAdjustSelection(Player player, int changedTab) {
+        int oldTabCount = player.getBankContainer().getTabCount();
+        boolean changedTabEmpty = changedTab > 0 && isBankTabEmpty(player, changedTab);
+        player.getBankContainer().removeEmptyTabs();
+        int newTabCount = player.getBankContainer().getTabCount();
+
+        if (changedTabEmpty && newTabCount < oldTabCount) {
+            if (player.currentBankTab == changedTab) {
+                player.currentBankTab = Math.max(0, changedTab - 1);
+            } else if (changedTab < player.currentBankTab) {
+                --player.currentBankTab;
+            }
+        }
+
+        if (player.currentBankTab < 0 || player.currentBankTab >= newTabCount) {
+            player.currentBankTab = 0;
+        }
+    }
+
+    public static void openBank(Player bankOwner, Player player) {
+        if (player.gameMode == 2) {
+            player.packetSender.sendGameMessage("You are ultimate ironman and cannot use banks.");
+            return;
+        }
+        if (bankOwner.equals(player) && ServerSettings.cacheVersion >= 336) {
+            if (bankOwner.getBankPinManager().hasPin()) {
+                if (!bankOwner.getBankPinManager().isVerified()) {
+                    bankOwner.getBankPinManager().setEntryMode(BankPinEntryMode.a);
+                    return;
+                }
+            } else if (!bankOwner.isBankPinReminderShown()) {
+                bankOwner.packetSender.sendGameMessage("You do not have a bank pin, it is highly recommended you get one.");
+                bankOwner.setBankPinReminderShown(true);
+            }
+        }
+        ItemStack[] inventoryItems = player.getInventoryManager().getContainer().getRawItems();
+        int tabIndex = 0;
+        if (ServerSettings.clientBuild == 443) {
+            while (tabIndex < bankOwner.getBankContainer().getTabLimit()) {
+                bankOwner.getBankContainer().compactTab(tabIndex++);
+            }
+            // Stock revision 443 exposes one 8x50 bank container. Preserve the
+            // server's internal tab model by presenting it as one flattened view.
+            player.packetSender.sendItemContainer(mainBankContainerInterfaceId,
+                    bankOwner.getBankContainer().getItems());
+        } else {
+            while (tabIndex < bankOwner.getBankContainer().getTabLimit()) {
+                try {
+                    bankOwner.getBankContainer().compactTab(tabIndex);
+                    ItemStack[] tabItems = bankOwner.getBankContainer().getTabItems(tabIndex);
+                    player.packetSender.sendItemContainer(bankTabUpdateTasks[tabIndex].itemContainerInterfaceId, tabItems);
+                }
+                catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+                ++tabIndex;
+            }
+        }
+        player.packetSender.sendItemContainer(5064, inventoryItems);
+        player.packetSender.showInterfaceWithInventory(5292, 5063);
+        player.getAttributes().put("isBanking", Boolean.TRUE);
+        if (GameplayTrace.enabled()) {
+            GameplayTrace.log("bank open player=" + GameplayTrace.describe(player) + " owner=" + GameplayTrace.describe(bankOwner) + " usedSlots=" + bankOwner.getBankContainer().getUsedSlots() + " inventoryFree=" + player.getInventoryManager().getContainer().getFreeSlots());
+        }
+        if (player.getQuestState(0) == 51) {
+            player.advanceTutorialStage();
+        }
+        if (player.botEnabled) {
+            if (player.currentBotTask.lootSellShopIds.size() > 0 && player.botMode != 4) {
+                BotCombatHelper.sellBotLootItems(player);
+            }
+            if (player.botTaskState.equals("empty inventory")) {
+                BankManager.depositInventory(player);
+                if (player.botCombatLoadoutItemIds != null && player.botCombatLoadoutItemIds.size() > 0) {
+                    BankManager.depositEquipment(player);
+                }
+            }
+            if (!player.botTaskReturnToBankRequested) {
+                GameplayHelper.shouldReturnToBankForBotTask(player);
+            }
+            if (player.botTaskReturnToBankRequested) {
+                BotBankContinuationTask botBankContinuationTask = new BotBankContinuationTask(10 + GameUtil.randomInt(10), player);
+                World.getTaskScheduler().schedule(botBankContinuationTask);
+                return;
+            }
+            if (player.botTaskRequiredItems != null) {
+                ItemStack[] requiredItems = player.botTaskRequiredItems;
+                int length = player.botTaskRequiredItems.length;
+                int index = 0;
+                while (index < length) {
+                    ItemStack itemStack = requiredItems[index];
+                    if (itemStack.getDefinition().getEquipmentSlot() == -1 || itemStack.getAmount() != 1 || !player.getEquipmentManager().containsItem(itemStack.getId())) {
+                        BankManager.withdrawItem(player, itemStack.getId(), itemStack.getAmount());
+                    }
+                    ++index;
+                }
+                if (player.botTaskReturnToBankRequested) {
+                    if (BotTaskDefinition.leatherCraftingTasks.contains(player.currentBotTask) || BotTaskDefinition.tanningTasks.contains(player.currentBotTask) || BotTaskDefinition.spinningTasks.contains(player.currentBotTask) || BotTaskDefinition.cookingTasks.contains(player.currentBotTask) || BotTaskDefinition.smeltingTasks.contains(player.currentBotTask) || BotTaskDefinition.smithingTasks.contains(player.currentBotTask)) {
+                        GameplayHelper.selectAndStartProgressiveBotTask(player, true);
+                    } else {
+                        GameplayHelper.selectAndStartNextProgressiveBotTask(player);
+                    }
+                    BankManager.depositInventory(player);
+                    return;
+                }
+                BankManager.equipBotInventoryItems(player);
+            }
+            if (player.botCombatLoadoutItemIds != null && player.currentBotTask.combatTask) {
+                player.queuePublicChatMessage("Im going to train some combat stats.");
+                if (player.botCombatLoadoutItemIds.size() > 0) {
+                    int index = 0;
+                    while (index < player.botCombatLoadoutItemIds.size()) {
+                        ItemStack itemStack = new ItemStack((Integer)player.botCombatLoadoutItemIds.get(index));
+                        BankManager.withdrawItem(player, itemStack.getId(), itemStack.getAmount());
+                        ++index;
+                    }
+                    BankManager.equipBotInventoryItems(player);
+                    player.botCombatLoadoutItemIds.clear();
+                }
+                BotTaskPlanner.selectMeleeTrainingFightMode(player);
+            }
+            BankManager.depositInventory(player);
+            if (player.botTaskRequiredItems != null) {
+                ItemStack[] requiredItems = player.botTaskRequiredItems;
+                int length = player.botTaskRequiredItems.length;
+                int index = 0;
+                while (index < length) {
+                    ItemStack itemStack = requiredItems[index];
+                    if (itemStack.getDefinition().getEquipmentSlot() == -1 || itemStack.getAmount() != 1 || !player.getEquipmentManager().containsItem(itemStack.getId())) {
+                        BankManager.withdrawItem(player, itemStack.getId(), itemStack.getAmount());
+                    }
+                    ++index;
+                }
+            }
+            if (player.botShopSellItemIds != null && player.botShopSellItemIds.size() > 0) {
+                player.setBankWithdrawNoteMode(true);
+                Iterator iterator = player.botShopSellItemIds.iterator();
+                while (iterator.hasNext()) {
+                    int itemId = (Integer)iterator.next();
+                    ItemStack bankItem = player.getBankContainer().findItem(itemId);
+                    if (bankItem == null) continue;
+                    BankManager.withdrawItem(player, bankItem.getId(), bankItem.getAmount());
+                }
+                player.setBankWithdrawNoteMode(false);
+            }
+            player.currentBotTask.startWalkToTask(player);
+            player.botInteractionOption = 1;
+            player.packetSender.closeInterfaces();
+        }
+    }
+
+    public static void openDepositBox(Player player) {
+        if (player.gameMode == 2) {
+            player.packetSender.sendGameMessage("You are ultimate ironman and cannot use banks.");
+            return;
+        }
+        ItemStack[] inventoryItems = player.getInventoryManager().getContainer().getRawItems();
+        player.packetSender.sendItemContainer(7423, inventoryItems);
+        player.packetSender.showInterfaceWithInventory(4465, 197);
+        player.getAttributes().put("isBanking", Boolean.TRUE);
+    }
+
+    public static boolean depositEquipment(Player player) {
+        ArrayList<ItemStack> depositItems = new ArrayList<ItemStack>();
+        ItemStack[] equipmentItems = player.getEquipmentManager().getContainer().getItems();
+        int length = equipmentItems.length;
+        int index = 0;
+        while (index < length) {
+            ItemStack itemStack = equipmentItems[index];
+            if (itemStack != null && !depositItems.contains(itemStack)) {
+                depositItems.add(itemStack);
+            }
+            ++index;
+        }
+        ItemStack[] items = BankManager.toItemArray(depositItems);
+        if (BankManager.canDepositItems(player, items)) {
+            equipmentItems = player.getEquipmentManager().getContainer().getItems();
+            length = equipmentItems.length;
+            index = 0;
+            while (index < length) {
+                ItemStack itemStack = equipmentItems[index];
+                if (itemStack != null) {
+                    player.getEquipmentManager().removeItemWithoutRefresh(itemStack);
+                    BankManager.depositToBank(player, itemStack);
+                }
+                ++index;
+            }
+            player.getEquipmentManager().finishBulkEquipmentRemoval();
+            BankManager.refreshBankAndInventory(player);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean depositInventory(Player player) {
+        ArrayList<ItemStack> depositItems = new ArrayList<ItemStack>();
+        ItemStack[] inventoryItems = player.getInventoryManager().getContainer().getItems();
+        int length = inventoryItems.length;
+        int index = 0;
+        while (index < length) {
+            ItemStack itemStack = inventoryItems[index];
+            if (itemStack != null) {
+                depositItems.add(itemStack);
+            }
+            ++index;
+        }
+        ItemStack[] items = BankManager.toItemArray(depositItems);
+        if (BankManager.canDepositItems(player, items)) {
+            inventoryItems = player.getInventoryManager().getContainer().getItems();
+            length = inventoryItems.length;
+            index = 0;
+            while (index < length) {
+                ItemStack itemStack = inventoryItems[index];
+                if (itemStack != null) {
+                    player.getInventoryManager().removeItem(itemStack);
+                    BankManager.depositToBank(player, itemStack);
+                }
+                ++index;
+            }
+            BankManager.refreshBankAndInventory(player);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean depositInventoryAndEquipment(Player player) {
+        ArrayList<ItemStack> depositItems = new ArrayList<ItemStack>();
+        ItemStack[] inventoryItems = player.getInventoryManager().getContainer().getItems();
+        int length = inventoryItems.length;
+        int index = 0;
+        while (index < length) {
+            ItemStack itemStack = inventoryItems[index];
+            if (itemStack != null && !depositItems.contains(itemStack)) {
+                depositItems.add(itemStack);
+            }
+            ++index;
+        }
+        ItemStack[] equipmentItems = player.getEquipmentManager().getContainer().getItems();
+        length = equipmentItems.length;
+        index = 0;
+        while (index < length) {
+            ItemStack itemStack = equipmentItems[index];
+            if (itemStack != null && !depositItems.contains(itemStack)) {
+                depositItems.add(itemStack);
+            }
+            ++index;
+        }
+        ItemStack[] items = BankManager.toItemArray(depositItems);
+        if (BankManager.canDepositItems(player, items)) {
+            inventoryItems = player.getInventoryManager().getContainer().getItems();
+            length = inventoryItems.length;
+            index = 0;
+            while (index < length) {
+                ItemStack itemStack = inventoryItems[index];
+                if (itemStack != null) {
+                    player.getInventoryManager().removeItem(itemStack);
+                    BankManager.depositToBank(player, itemStack);
+                }
+                ++index;
+            }
+            equipmentItems = player.getEquipmentManager().getContainer().getItems();
+            length = equipmentItems.length;
+            index = 0;
+            while (index < length) {
+                ItemStack itemStack = equipmentItems[index];
+                if (itemStack != null) {
+                    player.getEquipmentManager().removeItemWithoutRefresh(itemStack);
+                    BankManager.depositToBank(player, itemStack);
+                }
+                ++index;
+            }
+            player.getEquipmentManager().finishBulkEquipmentRemoval();
+            BankManager.refreshBankAndInventory(player);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean canDepositItem(Player player, ItemStack itemStack, int usedSlots) {
+        int bankItemId = itemStack.getDefinition().isNote() ? itemStack.getDefinition().getUnnotedId() : itemStack.getDefinition().getId();
+        int existingAmount = player.getBankContainer().getItemAmount(bankItemId);
+        if (itemStack.getMetadata() != -1) {
+            existingAmount = 0;
+        }
+        if (existingAmount > 0) {
+            return true;
+        }
+        int capacity = player.isBot ? 288 : (player.isMember() ? memberBankCapacity : freeBankCapacity);
+        if (usedSlots >= capacity) {
+            player.packetSender.sendGameMessage("You don't have enough space in your bank account.");
+            return false;
+        }
+        return true;
+    }
+
+    private static void depositToBank(Player player, ItemStack itemStack) {
+        if (itemStack == null) {
+            return;
+        }
+        int amount = itemStack.getAmount();
+        int bankItemId = itemStack.getDefinition().isNote() ? itemStack.getDefinition().getUnnotedId() : itemStack.getDefinition().getId();
+        int metadata = itemStack.getMetadata();
+        int tab = BankManager.getSelectedDepositTab(player, bankItemId, metadata);
+        int existingSlotInSelectedTab = player.getBankContainer().indexOfItemInTab(bankItemId, tab);
+        int existingAmount = existingSlotInSelectedTab == -1
+                ? 0
+                : player.getBankContainer().getItemAtTabSlot(existingSlotInSelectedTab, tab).getAmount();
+        if (!BankManager.canDepositItem(player, itemStack, player.getBankContainer().getUsedSlots())) {
+            return;
+        }
+        int existingTab = player.getBankContainer().findTabContainingItem(bankItemId);
+        int existingSlot = player.getBankContainer().indexOfItemInTab(bankItemId, tab);
+        if (metadata != -1) {
+            existingSlot = -1;
+            existingTab = player.getBankContainer().findTabContainingPlaceholder(bankItemId, 0);
+            if (existingTab != -1) {
+                existingSlot = player.getBankContainer().indexOfPlaceholderInTab(bankItemId, 0, existingTab);
+                tab = existingTab;
+            }
+            existingAmount = 0;
+            amount = 1;
+        }
+        if (existingSlot == -1) {
+            player.getBankContainer().addToTab(new ItemStack(bankItemId, amount, metadata), tab);
+            return;
+        }
+        player.getBankContainer().setTabItem(existingSlot, new ItemStack(bankItemId, existingAmount + amount, metadata), tab);
+    }
+
+    private static boolean canDepositItems(Player player, ItemStack[] items) {
+        ArrayList<Integer> newItemIds = new ArrayList<Integer>();
+        int usedSlots = player.getBankContainer().getUsedSlots();
+        int length = items.length;
+        int index = 0;
+        while (index < length) {
+            ItemStack itemStack = items[index];
+            int bankItemId = itemStack.getDefinition().isNote() ? itemStack.getDefinition().getUnnotedId() : itemStack.getDefinition().getId();
+            if (!newItemIds.contains(bankItemId)) {
+                int existingAmount = player.getBankContainer().getItemAmount(bankItemId);
+                if (itemStack.getMetadata() != -1) {
+                    existingAmount = 0;
+                }
+                if (!BankManager.canDepositItem(player, itemStack, usedSlots)) {
+                    return false;
+                }
+                if (existingAmount == 0) {
+                    ++usedSlots;
+                    newItemIds.add(bankItemId);
+                }
+            }
+            ++index;
+        }
+        return true;
+    }
+
+    private static void refreshBankAndInventory(Player player) {
+        player.getInventoryManager().sendToInterface(5064);
+        if (ServerSettings.cacheVersion >= 336) {
+            player.getInventoryManager().sendToInterface(7423);
+        }
+        BankManager.refreshBankTabs(player);
+    }
+
+    public static void depositInventoryItem(Player player, int slot, int itemId, int amount) {
+        ItemStack itemStack = player.getInventoryManager().getContainer().getItemAt(slot);
+        if (GameplayTrace.enabled()) {
+            GameplayTrace.log("bank deposit request player=" + GameplayTrace.describe(player) + " slot=" + slot + " itemId=" + itemId + " amount=" + amount + " selected=" + (itemStack == null ? "null" : itemStack.getId() + ":" + itemStack.getDefinition().getName() + "x" + itemStack.getAmount()));
+        }
+        if (itemStack == null || itemStack.getId() != itemId || !itemStack.isValid()) {
+            return;
+        }
+        int inventoryAmount = player.getInventoryManager().getContainer().getItemAmount(itemId);
+        int metadata = itemStack.getMetadata();
+        int bankItemId;
+        if (itemStack.getDefinition().getId() > 11883) {
+            player.packetSender.sendGameMessage("This item is not supported yet.");
+            return;
+        }
+        bankItemId = itemStack.getDefinition().isNote() ? itemStack.getDefinition().getUnnotedId() : itemStack.getDefinition().getId();
+        int tab = BankManager.getSelectedDepositTab(player, bankItemId, metadata);
+        int existingSlot = player.getBankContainer().indexOfItemInTab(bankItemId, tab);
+        int existingAmount = existingSlot == -1
+                ? 0
+                : player.getBankContainer().getItemAtTabSlot(existingSlot, tab).getAmount();
+        int existingTab = player.getBankContainer().findTabContainingItem(bankItemId);
+        if (metadata != -1) {
+            existingSlot = -1;
+            existingTab = player.getBankContainer().findTabContainingPlaceholder(bankItemId, 0);
+            if (existingTab != -1) {
+                existingSlot = player.getBankContainer().indexOfPlaceholderInTab(bankItemId, 0, existingTab);
+                tab = existingTab;
+            }
+            existingAmount = 0;
+            inventoryAmount = 1;
+        }
+        if (!BankManager.canDepositItem(player, itemStack, player.getBankContainer().getUsedSlots())) {
+            return;
+        }
+        if (inventoryAmount > amount) {
+            inventoryAmount = amount;
+        }
+        if (!itemStack.getDefinition().isStackable()) {
+            int index = 0;
+            while (index < inventoryAmount) {
+                if (metadata != -1) {
+                    player.getInventoryManager().removeItemFromSlot(new ItemStack(itemId, 1, metadata), slot);
+                } else {
+                    player.getInventoryManager().removeItem(new ItemStack(itemId, 1, metadata));
+                }
+                ++index;
+            }
+        } else if (metadata != -1) {
+            player.getInventoryManager().removeItemFromSlot(new ItemStack(itemId, inventoryAmount, metadata), slot);
+        } else {
+            player.getInventoryManager().removeItem(new ItemStack(itemId, inventoryAmount, metadata));
+        }
+        if (existingSlot == -1) {
+            player.getBankContainer().addToTab(new ItemStack(bankItemId, inventoryAmount, metadata), tab);
+        } else {
+            player.getBankContainer().setTabItem(existingSlot, new ItemStack(bankItemId, existingAmount + inventoryAmount, metadata), tab);
+        }
+        BankManager.refreshBankAndInventory(player);
+        if (GameplayTrace.enabled()) {
+            GameplayTrace.log("bank deposit success player=" + GameplayTrace.describe(player) + " itemId=" + bankItemId + " item=" + itemStack.getDefinition().getName() + " amount=" + inventoryAmount + " tab=" + tab + " bankAmount=" + player.getBankContainer().getItemAmount(bankItemId));
+        }
+    }
+
+    private static void withdrawItem(Player player, int itemId, int amount) {
+        ItemStack itemStack = new ItemStack(itemId);
+        int bankAmount = player.getBankContainer().getItemAmount(itemId);
+        int tab = 0;
+        if (bankAmount != 0) {
+            tab = player.getBankContainer().findTabContainingItem(itemId);
+        }
+        int slot = 0;
+        if (bankAmount != 0) {
+            slot = player.getBankContainer().indexOfItemInTab(itemId, tab);
+        }
+        boolean noteMode = player.isBankWithdrawNoteMode();
+        boolean hasNote = itemStack.getDefinition().hasNote();
+        int notedId = itemStack.getDefinition().getNotedId();
+        if (player.botMode == 4 && player.botEnabled && player.currentBotTask != null && BotTaskDefinition.smeltingTasks.contains(player.currentBotTask) && itemId == 453 && bankAmount < SmeltingHandler.getCoalRequiredForBar(player.botTaskItemId)) {
+            player.botTaskReturnToBankRequested = true;
+            return;
+        }
+        if (bankAmount <= 0 || itemId < 0 || player.getBankContainer().getItemAtTabSlot(slot, tab) == null || player.getBankContainer().getItemAtTabSlot(slot, tab).getId() != itemStack.getId() || !itemStack.isValid()) {
+            if (player.botEnabled && player.currentBotTask != null && player.botTaskRequiredItems != null && player.botTaskRequiredItems.length > 0) {
+                int index = 0;
+                while (index < player.botTaskRequiredItems.length) {
+                    if (player.botTaskRequiredItems[index].getId() == itemId && player.getInventoryManager().getItemAmount(itemId) < player.botTaskRequiredItems[index].getAmount()) {
+                        player.botTaskReturnToBankRequested = true;
+                    }
+                    ++index;
+                }
+            }
+            return;
+        }
+        int metadata = player.getBankContainer().getItemAtTabSlot(slot, tab).getMetadata();
+        if (metadata != -1) {
+            amount = 1;
+        }
+        if (itemId > 11883) {
+            player.packetSender.sendGameMessage("This item is not supported yet.");
+            return;
+        }
+        if (bankAmount < amount) {
+            amount = bankAmount;
+        }
+        if (noteMode && !hasNote) {
+            player.packetSender.sendGameMessage("This item cannot be withdrawn as a note.");
+            noteMode = false;
+        }
+        int addedAmount = 0;
+        if (!noteMode || !hasNote) {
+            addedAmount = player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount, metadata));
+        } else if (noteMode) {
+            addedAmount = player.getInventoryManager().addItemPartial(new ItemStack(notedId, amount, metadata));
+        }
+        player.getBankContainer().removeFromTab(new ItemStack(itemId, addedAmount, metadata), slot, tab);
+        player.getInventoryManager().sendToInterface(5064);
+        BankManager.refreshBankTabs(player);
+    }
+
+    public static void withdrawItemFromTab(Player player, int slot, int itemId, int amount, int interfaceId) {
+        ItemStack itemStack = new ItemStack(itemId);
+        int tab = player.currentBankTab;
+        int index = 0;
+        while (index < bankTabUpdateTasks.length) {
+            PlayerUpdateTask playerUpdateTask = bankTabUpdateTasks[index];
+            if (playerUpdateTask.itemContainerInterfaceId == interfaceId) {
+                tab = index;
+                break;
+            }
+            ++index;
+        }
+        boolean noteMode = player.isBankWithdrawNoteMode();
+        boolean hasNote = itemStack.getDefinition().hasNote();
+        int notedId = itemStack.getDefinition().getNotedId();
+        int bankAmount = player.getBankContainer().getItemAmount(itemId);
+        if (GameplayTrace.enabled()) {
+            GameplayTrace.log("bank withdraw request player=" + GameplayTrace.describe(player) + " slot=" + slot + " itemId=" + itemId + " item=" + itemStack.getDefinition().getName() + " amount=" + amount + " interfaceId=" + interfaceId + " tab=" + tab + " bankAmount=" + bankAmount + " noteMode=" + noteMode);
+        }
+        if (amount <= 0 || player.getBankContainer().getItemAtTabSlot(slot, tab) == null || player.getBankContainer().getItemAtTabSlot(slot, tab).getId() != itemStack.getId()) {
+            return;
+        }
+        int metadata = player.getBankContainer().getItemAtTabSlot(slot, tab).getMetadata();
+        int slotAmount = player.getBankContainer().getItemAtTabSlot(slot, tab).getAmount();
+        int addedAmount = 0;
+        if (slotAmount <= 0) {
+            player.getBankContainer().removeFromTab(new ItemStack(itemId, 0, metadata), slot, tab);
+            BankManager.removeEmptyTabsAndAdjustSelection(player, tab);
+            BankManager.refreshBankTabs(player);
+            return;
+        }
+        if (itemId < 0 || !itemStack.isValid()) {
+            return;
+        }
+        if (metadata != -1) {
+            amount = 1;
+        }
+        if (itemId > 11883) {
+            player.packetSender.sendGameMessage("This item is not supported yet.");
+            return;
+        }
+        if (bankAmount < amount) {
+            amount = bankAmount;
+        }
+        if (noteMode && !hasNote) {
+            player.packetSender.sendGameMessage("This item cannot be withdrawn as a note.");
+            noteMode = false;
+        }
+        if (!noteMode || !hasNote) {
+            addedAmount = player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount, metadata));
+        } else if (noteMode) {
+            addedAmount = player.getInventoryManager().addItemPartial(new ItemStack(notedId, amount, metadata));
+        }
+        player.getBankContainer().removeFromTab(new ItemStack(itemId, addedAmount, metadata), slot, tab);
+        BankManager.removeEmptyTabsAndAdjustSelection(player, tab);
+        player.getInventoryManager().sendToInterface(5064);
+        BankManager.refreshBankTabs(player);
+        if (GameplayTrace.enabled()) {
+            GameplayTrace.log("bank withdraw success player=" + GameplayTrace.describe(player) + " itemId=" + itemId + " item=" + itemStack.getDefinition().getName() + " requested=" + amount + " added=" + addedAmount + " remainingBankAmount=" + player.getBankContainer().getItemAmount(itemId));
+        }
+    }
+
+    private static void refreshBankTabs(Player player) {
+        if (ServerSettings.clientBuild == 443) {
+            int tab = 0;
+            while (tab < player.getBankContainer().getTabLimit()) {
+                player.getBankContainer().compactTab(tab++);
+            }
+            player.packetSender.sendItemContainer(mainBankContainerInterfaceId,
+                    player.getBankContainer().getItems());
+            return;
+        }
+        int index = 0;
+        while (index < player.getBankContainer().getTabLimit()) {
+            BankManager.sendBankTab(player, index);
+            ++index;
+        }
+    }
+
+    public static int getRevision443BankSlotAmount(Player player, int flatSlot, int itemId) {
+        BankSlot slot = resolveRevision443BankSlot(player, flatSlot);
+        return slot == null || slot.item == null || slot.item.getId() != itemId
+                ? 0 : slot.item.getAmount();
+    }
+
+    public static void withdrawRevision443Item(Player player, int flatSlot, int itemId, int amount) {
+        BankSlot slot = resolveRevision443BankSlot(player, flatSlot);
+        if (slot == null || slot.item == null || slot.item.getId() != itemId || amount <= 0) {
+            return;
+        }
+        BankManager.withdrawItemFromTab(player, slot.slot, itemId, amount,
+                bankTabUpdateTasks[slot.tab].itemContainerInterfaceId);
+    }
+
+    public static void rearrangeRevision443BankItem(Player player, int sourceFlatSlot, int targetFlatSlot) {
+        BankSlot source = resolveRevision443BankSlot(player, sourceFlatSlot);
+        BankSlot target = resolveRevision443BankSlot(player, targetFlatSlot);
+        if (source == null || target == null) {
+            return;
+        }
+        BankManager.rearrangeBankItem(player, source.slot, target.slot,
+                bankTabUpdateTasks[source.tab].itemContainerInterfaceId,
+                bankTabUpdateTasks[target.tab].itemContainerInterfaceId);
+    }
+
+    private static BankSlot resolveRevision443BankSlot(Player player, int flatSlot) {
+        if (flatSlot < 0) return null;
+        int flatIndex = 0;
+        int tab = 0;
+        while (tab < player.getBankContainer().getTabCount()) {
+            player.getBankContainer().compactTab(tab);
+            ItemStack[] items = player.getBankContainer().getTabItems(tab);
+            int slot = 0;
+            while (slot < items.length) {
+                ItemStack item = items[slot];
+                if (item != null && item.getId() != -1) {
+                    if (flatIndex == flatSlot) return new BankSlot(tab, slot, item);
+                    ++flatIndex;
+                }
+                ++slot;
+            }
+            ++tab;
+        }
+        return null;
+    }
+
+    private static final class BankSlot {
+        final int tab;
+        final int slot;
+        final ItemStack item;
+        BankSlot(int tab, int slot, ItemStack item) {
+            this.tab = tab;
+            this.slot = slot;
+            this.item = item;
+        }
+    }
+
+    public static void rearrangeBankItem(Player player, int sourceSlot, int targetSlot, int sourceInterfaceId, int targetInterfaceId) {
+        if (sourceSlot < 0 || targetSlot < 0
+                || targetSlot >= player.getBankContainer().getCapacity()
+                || sourceSlot >= player.getBankContainer().getCapacity()) {
+            return;
+        }
+        int targetTab = 0;
+        int sourceTab = 0;
+        int index = 0;
+        while (index < bankTabUpdateTasks.length) {
+            PlayerUpdateTask task = bankTabUpdateTasks[index];
+            if (task.itemContainerInterfaceId == sourceInterfaceId) {
+                sourceTab = index;
+            }
+            task = bankTabUpdateTasks[index];
+            if (task.itemContainerInterfaceId == targetInterfaceId) {
+                targetTab = index;
+            }
+            ++index;
+        }
+        boolean moveBetweenTabs = false;
+        if (sourceInterfaceId == 19531) {
+            sourceTab = sourceSlot;
+            moveBetweenTabs = true;
+        }
+        if (targetInterfaceId == 19531) {
+            targetTab = targetSlot;
+            moveBetweenTabs = true;
+        } else {
+            int targetButtonTab = BankManager.getBankTabIndexForButtonId(targetInterfaceId);
+            if (targetButtonTab != -1) {
+                targetTab = targetButtonTab;
+                moveBetweenTabs = true;
+            }
+        }
+        if (moveBetweenTabs) {
+            int sourceItemId = -1;
+            int sourceAmount = -1;
+            ItemStack sourceItem = player.getBankContainer().getItemAtTabSlot(sourceSlot, sourceTab);
+            if (sourceItem != null) {
+                sourceItemId = sourceItem.getId();
+                sourceAmount = sourceItem.getAmount();
+            }
+            boolean moved = player.getBankContainer().moveTabItemBetweenTabs(sourceSlot, sourceTab, targetTab);
+            if (GameplayTrace.enabled()) {
+                GameplayTrace.log("bank tab move player=" + GameplayTrace.describe(player)
+                        + " sourceInterface=" + sourceInterfaceId
+                        + " targetInterface=" + targetInterfaceId
+                        + " sourceTab=" + sourceTab
+                        + " targetTab=" + targetTab
+                        + " sourceSlot=" + sourceSlot
+                        + " targetSlot=" + targetSlot
+                        + " itemId=" + sourceItemId
+                        + " amount=" + sourceAmount
+                        + " moved=" + moved
+                        + " tabCount=" + player.getBankContainer().getTabCount());
+            }
+            if (!moved) {
+                return;
+            }
+        } else if (!player.getBankRearrangeMode().equals(BankRearrangeMode.SWAP) && player.getBankRearrangeMode().equals(BankRearrangeMode.INSERT) && targetTab == sourceTab) {
+            player.getBankContainer().moveTabItem(sourceSlot, targetSlot, sourceTab);
+        } else {
+            player.getBankContainer().swapTabSlots(sourceSlot, targetSlot, sourceTab, targetTab);
+        }
+        player.getBankContainer().removeEmptyTabs();
+        BankManager.refreshBankTabs(player);
+    }
+
+    private static void equipBotInventoryItems(Player player) {
+        int index = 0;
+        while (index < player.getInventoryManager().getContainer().getItems().length) {
+            ItemStack itemStack = player.getInventoryManager().getContainer().getItems()[index];
+            if (itemStack != null) {
+                if (player.botMode != 4) {
+                    if (itemStack.getDefinition().getEquipmentSlot() == 13) {
+                        player.getEquipmentManager().equipFromInventorySlot(index);
+                    }
+                } else if (itemStack.getDefinition().getEquipmentSlot() != -1) {
+                    player.getEquipmentManager().equipFromInventorySlot(index);
+                }
+            }
+            ++index;
+        }
+    }
+
+    private static ItemStack[] toItemArray(ArrayList<ItemStack> items) {
+        ItemStack[] itemArray = new ItemStack[items.size()];
+        int index = 0;
+        while (index < itemArray.length) {
+            itemArray[index] = items.get(index);
+            ++index;
+        }
+        return itemArray;
+    }
+
+    private static void sendBankTab(Player player, int tabIndex) {
+        ItemStack[] tabItems = player.getBankContainer().getTabItems(tabIndex);
+        player.packetSender.sendItemContainer(bankTabUpdateTasks[tabIndex].itemContainerInterfaceId, tabItems);
+    }
+}

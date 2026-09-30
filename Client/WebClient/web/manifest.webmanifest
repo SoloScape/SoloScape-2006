@@ -1,0 +1,9 @@
+{
+  "name": "06 Client",
+  "short_name": "06 Client",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
