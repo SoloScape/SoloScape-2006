@@ -347,10 +347,9 @@ public final class ObjectManager {
             }
             case 3017: {
                 if (value2 == 3079 && value32 == 3084) {
-                    // Tutorial Island Chef door is entered from the east.
-                    // Require the real doorway tile before the scripted westward
-                    // step so clicking from beside the door cannot cross the wall.
-                    player.interactionApproachX = 3080;
+                    // The door is on the west edge of this tile. Walk onto it
+                    // before the scripted westward step into the kitchen.
+                    player.interactionApproachX = 3079;
                     player.interactionApproachY = 3084;
                     return;
                 }

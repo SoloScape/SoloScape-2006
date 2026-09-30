@@ -73,9 +73,9 @@ extends QuestScript {
         }
         if (objectId == 3017 && value2 == 3079 && value32 == 3084) {
             if (value42 == 16) {
-                // 2006Scape PassDoor: face 0 -> 3, then step west.
+                // Open west into the kitchen; opening north replaces the wall at 3079, 3085.
                 player.packetSender.passThroughDoor(3017, 3079, 3084,
-                        player.getPosition().getPlane(), 3, 0, 0, -1, 0);
+                        player.getPosition().getPlane(), 1, 0, 0, -1, 0);
                 player.advanceTutorialStage();
                 return true;
             }
@@ -192,6 +192,11 @@ extends QuestScript {
 
     @Override
     public final void refreshQuestJournal(Player itemStackArray, int value3) {
+        if (value3 == 8 && itemStackArray.getInventoryManager().getContainer().containsItem(1511)) {
+            itemStackArray.packetSender.sendEntityHintIcon(1, -1);
+            itemStackArray.advanceTutorialStage();
+            return;
+        }
         Object value2 = itemStackArray;
         if (!itemStackArray.isTutorialRunUnlocked() && itemStackArray.getMovementQueue().isRunning()) {
             itemStackArray.getMovementQueue().setRunning(false);

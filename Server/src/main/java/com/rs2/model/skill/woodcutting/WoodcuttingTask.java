@@ -146,7 +146,13 @@ extends CycleEvent {
                 }
                 WoodcuttingTask woodcuttingTask = this;
                 woodcuttingTask.player.rollActionReward();
-                if (this.player.getQuestState(0) == 8 || this.player.getQuestState(0) == 9) {
+                if (this.player.getQuestState(0) == 8) {
+                    this.player.packetSender.sendEntityHintIcon(1, -1);
+                    this.player.advanceTutorialStage();
+                    cycleEventContainer.stop();
+                    return;
+                }
+                if (this.player.getQuestState(0) == 9) {
                     this.player.getDialogueManager().showItemMessage("you get some logs.", new ItemStack(1511));
                     this.player.getDialogueManager().finishDialogue();
                     this.player.setInteractionTargetId(0);
