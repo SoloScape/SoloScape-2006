@@ -138,6 +138,7 @@ extends CycleEvent {
             GroundItemManager.getInstance().spawn(groundItem);
         }
         if (GameUtil.rollLevelScaledChance(this.treeDefinition.getCutChanceLow(), this.treeDefinition.getCutChanceHigh(), this.player.getSkillManager().getCurrentLevels()[8], this.gatheringTool.getToolSpeed())) {
+            boolean tutorialTreeCut = this.player.getQuestState(0) == 8;
             this.player.getSkillManager().addExperience(8, this.treeDefinition.getExperience());
             if (((ItemStack)dynamicObjectAt).getId() > 0) {
                 this.player.getInventoryManager().addItem((ItemStack)dynamicObjectAt);
@@ -146,12 +147,6 @@ extends CycleEvent {
                 }
                 WoodcuttingTask woodcuttingTask = this;
                 woodcuttingTask.player.rollActionReward();
-                if (this.player.getQuestState(0) == 8) {
-                    this.player.packetSender.sendEntityHintIcon(1, -1);
-                    this.player.advanceTutorialStage();
-                    cycleEventContainer.stop();
-                    return;
-                }
                 if (this.player.getQuestState(0) == 9) {
                     this.player.getDialogueManager().showItemMessage("you get some logs.", new ItemStack(1511));
                     this.player.getDialogueManager().finishDialogue();
@@ -180,6 +175,10 @@ extends CycleEvent {
                 int objectOrientation = SkillActionHelper.getObjectOrientation(this.treeObjectId, this.x, this.y, this.player.getPosition().getPlane());
                 int respawnTicksLow = GameUtil.randomBetweenInclusive(this.treeDefinition.getRespawnTicksLow(), this.treeDefinition.getRespawnTicksHigh());
                 new DynamicObject(this.treeDefinition.getStumpObjectId(), this.x, this.y, this.player.getPosition().getPlane(), objectOrientation, 10, this.treeObjectId, respawnTicksLow, this.treeDefinition != TreeDefinition.VINES);
+                if (tutorialTreeCut) {
+                    this.player.packetSender.sendEntityHintIcon(1, -1);
+                    this.player.advanceTutorialStage();
+                }
                 cycleEventContainer.stop();
                 if (this.treeDefinition == TreeDefinition.VINES) {
                     int value4 = this.y;
