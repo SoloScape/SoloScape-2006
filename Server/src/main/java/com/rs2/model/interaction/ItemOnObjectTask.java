@@ -226,10 +226,12 @@ extends TickTask {
             return;
         }
         if (this.objectId == 2783 && this.player.getQuestState(0) == 37 && this.itemId == 2349) {
-            SmithingHandler.openSmithingInterface(this.player, 2349);
             value = this.player;
             ((Player)value).packetSender.sendEntityHintIcon(1, -1);
+            // Refresh stage 38 before opening the smithing menu so the tutorial
+            // overlay cannot replace the active-interface tracking for the menu.
             this.player.advanceTutorialStage();
+            SmithingHandler.openSmithingInterface(this.player, 2349);
             this.stop();
             return;
         }
