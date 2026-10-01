@@ -6,10 +6,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = $PSScriptRoot
+$Root = Split-Path -Parent $PSScriptRoot
 
 function Invoke-Build([string]$Component) {
-    $script = Join-Path $Root "$Component\build.bat"
+    $script = Join-Path $Root "$Component\Build-$Component.bat"
     Write-Host "Building $Component..." -ForegroundColor Cyan
     & $script --no-pause
     if ($LASTEXITCODE -ne 0) {
@@ -41,22 +41,22 @@ try {
         'run' {
             Invoke-Build 'Server'
             Invoke-Build 'Client'
-            Start-Component 'Server' 'Run.bat' '--auto-start'
+            Start-Component 'Server' 'Start-Server.bat' '--auto-start'
             Write-Host 'Waiting 5 seconds for the server before starting the client...'
             Start-Sleep -Seconds 5
-            Start-Component 'Client' 'run.bat'
+            Start-Component 'Client' 'Play-Client.bat'
             Write-Host 'Server and client launched in separate consoles.'
         }
         'dev' {
-            Start-Component 'Server' 'dev.bat'
+            Start-Component 'Server' 'Start-Server-Dev-Mode.bat'
             Write-Host 'Waiting 5 seconds for the server before starting the client...'
             Start-Sleep -Seconds 5
-            Start-Component 'Client' 'dev.bat'
+            Start-Component 'Client' 'Start-Client-Dev-Mode.bat'
             Write-Host 'Live recompilation started in separate consoles. Close each application to stop its watcher.'
         }
         'clean' {
             # Only these generated outputs are removed; caches and player data stay intact.
-            foreach ($relative in @('Client\build', 'Server\build', 'Server\build-release', 'Server\dist')) {
+            foreach ($relative in @('Client\build', 'Server\build', 'Server\build-release', 'Server\dist', 'Client\Play-Client.bat', 'Server\Start-Server.bat', 'Play-Client.bat', 'Start-Server.bat')) {
                 $path = [System.IO.Path]::GetFullPath((Join-Path $Root $relative))
                 $prefix = [System.IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'
                 if (-not $path.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {

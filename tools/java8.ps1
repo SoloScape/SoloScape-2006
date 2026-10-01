@@ -89,7 +89,7 @@ function Install-Java8Jdk([string]$InstallRoot) {
     $archive = Join-Path ([System.IO.Path]::GetTempPath()) "soloscape-java8-$installationId.zip"
     $destination = Join-Path $InstallRoot "temurin-$installationId"
     try {
-        # Keep all progress off stdout: java8.bat reads stdout as the selected path.
+        # Keep all progress off stdout: Setup-Java-8.bat reads stdout as the selected path.
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -UseBasicParsing -Uri $package.link -OutFile $archive -TimeoutSec 600
         if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $package.checksum) {

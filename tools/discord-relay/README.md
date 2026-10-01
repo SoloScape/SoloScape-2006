@@ -37,7 +37,7 @@ For internet use, put the relay behind HTTPS (for example a normal HTTPS reverse
 
 ## Each friend's SoloScape config file
 
-The easiest setup for each friend is a local properties file. `Server/Run.bat` creates `Server/discord-relay.properties` from the included example on first run if the file does not already exist.
+The easiest setup for each friend is a local properties file. `Server/Start-Server.bat` creates `Server/discord-relay.properties` from the included example on first run if the file does not already exist.
 
 Edit `Server/discord-relay.properties`:
 

@@ -1,6 +1,6 @@
 @echo off
 setlocal
-call "%~dp0..\..\java8.bat"
+call "%~dp0..\..\Setup-Java-8.bat"
 if errorlevel 1 exit /b 1
 cd /d "%~dp0"
 
@@ -9,7 +9,7 @@ set "SERVER_ROOT=%~dp0..\..\Server"
 set "CLIENT_CACHE_ROOT=%SERVER_ROOT%\cache"
 set "WEB_ROOT=%~dp0web"
 
-if not exist "%CLIENT_ROOT%\build.bat" (
+if not exist "%CLIENT_ROOT%\Build-Client.bat" (
   echo Error: Client was not found at "%CLIENT_ROOT%".
   pause
   exit /b 1
@@ -22,7 +22,7 @@ if not exist "%CLIENT_CACHE_ROOT%\main_file_cache.dat2" (
 )
 
 echo Building the real Java client with phone bridge support...
-call "%CLIENT_ROOT%\build.bat"
+call "%CLIENT_ROOT%\Build-Client.bat"
 if errorlevel 1 (
   echo.
   echo Client build failed.

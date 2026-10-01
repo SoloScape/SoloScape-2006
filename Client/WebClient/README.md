@@ -27,7 +27,7 @@ Browser input is converted back to AWT mouse/key events and dispatched to the ex
 2. Run:
 
 ```bat
-06-WebClient\run.bat
+Client\WebClient\Play-In-Browser-Or-Phone.bat
 ```
 
 This rebuilds and starts the real `06-Client` with the bridge enabled.

@@ -1,8 +1,13 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-call "%~dp0..\java8.bat"
+call "%~dp0..\Setup-Java-8.bat"
 if errorlevel 1 exit /b 1
 cd /d "%~dp0"
+
+if not exist "Start-Server.bat.template" (
+    echo ERROR: Start-Server.bat.template is missing. Restore it from the project files.
+    exit /b 1
+)
 set "NO_PAUSE=0"
 if /I "%~1"=="--no-pause" set "NO_PAUSE=1"
 
@@ -63,10 +68,16 @@ if errorlevel 1 goto :build_failed
 move /y "%TEMP_JAR%" "%OUTPUT_JAR%" >nul
 if errorlevel 1 goto :build_failed
 
+copy /y "Start-Server.bat.template" "Start-Server.bat" >nul
+if errorlevel 1 goto :build_failed
+
 if "%NO_PAUSE%"=="0" ping 127.0.0.1 -n 2 >nul
 rmdir /s /q "%BUILD_DIR%"
 echo.
 echo Build complete: %OUTPUT_JAR%
+copy /y "Start-Server-From-Root.bat.template" "..\Start-Server.bat" >nul
+if errorlevel 1 goto :build_failed
+echo Ready to play: Start-Server.bat has also been created in the main SoloScape folder.
 if "%NO_PAUSE%"=="0" pause
 exit /b 0
 

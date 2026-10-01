@@ -13,7 +13,7 @@ database server is not needed.
 **Revision 443 migration:** This branch defaults to a 443 cache path, login, and
 update handshake. The static region packet now uses the 443 layout and XTEA
 keys from `cache/xteas.json`. The matching client loads 443 JS5 assets when
-started with `run.bat`; packet and interface behavior still needs graphical
+started with `Play-Client.bat`; packet and interface behavior still needs graphical
 validation.
 
 ## Requirements
@@ -39,12 +39,15 @@ data is in `data/`.
 
 ## Build
 
-From File Explorer, double-click `Build.bat`. From Command Prompt, run:
+From File Explorer, double-click `Build-Server.bat`. From Command Prompt, run:
 
 ```bat
 cd /d "location of server"
-Build.bat
+Build-Server.bat
 ```
+
+`Start-Server.bat` appears in this folder after a successful build. Keep
+`Start-Server.bat.template` in place so the build can create it.
 
 The script compiles every Java file under `src/main/java`, uses all JARs in
 `lib/` as the classpath, and creates:
@@ -56,7 +59,7 @@ dist/server.jar
 The dependencies remain in `lib/`; keep that directory next to `dist/` when
 running the server.
 
-For a build that exits without waiting for a keypress, run `Build.bat --no-pause`.
+For a build that exits without waiting for a keypress, run `Build-Server.bat --no-pause`.
 This is useful for terminals and automation; it returns a nonzero exit code when
 compilation or packaging fails.
 
@@ -67,14 +70,14 @@ Start the compiled server control panel with:
 
 ```bat
 cd /d "location of server"
-Run.bat
+Start-Server.bat
 ```
 
 When the control panel opens:
 
 1. Review the connection and gameplay settings if needed.
 2. Click **Start Server** and wait for the status to show that it is online.
-3. Start the matching client with its `run.bat` file.
+3. Start the matching client with its `Play-Client.bat` file.
 4. Log in with the username and password you want to use. Local player data is
    created and saved by the server.
 
@@ -92,7 +95,7 @@ Administrators can alternatively enter `::debug` in-game to toggle these
 diagnostics for only their player; the terminal prints an `[interaction-debug]`
 confirmation when the toggle changes.
 
-Keep the project directory structure intact. `Run.bat` uses the project root as
+Keep the project directory structure intact. `Start-Server.bat` uses the project root as
 the working directory so the relative paths to `config/`, `data/`, `cache/`, and
 `lib/` resolve correctly.
 
@@ -119,8 +122,8 @@ lib/                 Bundled runtime dependencies
 config/              Editable server configuration
 cache/               Revision 443 JS5 game cache
 data/                Content, settings, saves, logs, and SQLite data
-Build.bat             Compiles and packages the server
-Run.bat               Opens the server control panel
+Build-Server.bat             Compiles and packages the server
+Start-Server.bat               Opens the server control panel
 dist/server.jar       Generated executable JAR
 ```
 

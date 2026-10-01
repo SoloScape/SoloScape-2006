@@ -170,7 +170,7 @@ Build-HotSwapAgent
 
 if ($PrepareOnly) {
     Write-Host "[Dev] Server HotSwap development build is ready." -ForegroundColor Green
-    Write-Host "[Dev] Run dev.bat to launch the live server watcher." -ForegroundColor Green
+    Write-Host "[Dev] Run Start-Server-Dev-Mode.bat to launch the live server watcher." -ForegroundColor Green
     exit 0
 }
 
