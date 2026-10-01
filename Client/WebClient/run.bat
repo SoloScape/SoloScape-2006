@@ -2,6 +2,13 @@
 setlocal
 set "JAVA_HOME=C:\Program Files\Java\jdk1.8.0_101"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
+for %%T in (java javac jar) do (
+    if not exist "%JAVA_HOME%\bin\%%T.exe" (
+        echo ERROR: Required Java 8 JDK tool is missing: "%JAVA_HOME%\bin\%%T.exe"
+        echo Install JDK 8 at "%JAVA_HOME%" before building or running SoloScape.
+        exit /b 1
+    )
+)
 cd /d "%~dp0"
 
 set "CLIENT_ROOT=%~dp0.."
@@ -37,7 +44,7 @@ echo The phone page will print below when the bridge starts.
 echo.
 
 pushd "%CLIENT_ROOT%"
-java -XX:ErrorFile=client-web-hs-err.log -Dweb.bridge.port=8081 -Dweb.bridge.root="%WEB_ROOT%" -Dclient.cache="%CLIENT_CACHE_ROOT%" -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar "build\client.jar" 1 local live highmem members english
+"%JAVA_HOME%\bin\java.exe" -XX:ErrorFile=client-web-hs-err.log -Dweb.bridge.port=8081 -Dweb.bridge.root="%WEB_ROOT%" -Dclient.cache="%CLIENT_CACHE_ROOT%" -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar "build\client.jar" 1 local live highmem members english
 set "EXIT_CODE=%ERRORLEVEL%"
 popd
 

@@ -2,6 +2,13 @@
 setlocal EnableExtensions EnableDelayedExpansion
 set "JAVA_HOME=C:\Program Files\Java\jdk1.8.0_101"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
+for %%T in (java javac jar) do (
+    if not exist "%JAVA_HOME%\bin\%%T.exe" (
+        echo ERROR: Required Java 8 JDK tool is missing: "%JAVA_HOME%\bin\%%T.exe"
+        echo Install JDK 8 at "%JAVA_HOME%" before building or running SoloScape.
+        exit /b 1
+    )
+)
 cd /d "%~dp0"
 set "NO_PAUSE=0"
 if /I "%~1"=="--no-pause" set "NO_PAUSE=1"
@@ -46,7 +53,7 @@ for /r "%SOURCE_DIR%" %%F in (*.java) do (
 )
 
 echo Compiling server...
-javac -Xmaxerrs 5000 -classpath "%LIB_DIR%\*" -d "%CLASSES_DIR%" @"%SOURCE_LIST%"
+"%JAVA_HOME%\bin\javac.exe" -Xmaxerrs 5000 -classpath "%LIB_DIR%\*" -d "%CLASSES_DIR%" @"%SOURCE_LIST%"
 if errorlevel 1 goto :build_failed
 
 (
@@ -57,7 +64,7 @@ if errorlevel 1 goto :build_failed
 )>"%MANIFEST%"
 
 echo Packaging server...
-jar cfm "%TEMP_JAR%" "%MANIFEST%" -C "%CLASSES_DIR%" .
+"%JAVA_HOME%\bin\jar.exe" cfm "%TEMP_JAR%" "%MANIFEST%" -C "%CLASSES_DIR%" .
 if errorlevel 1 goto :build_failed
 
 move /y "%TEMP_JAR%" "%OUTPUT_JAR%" >nul

@@ -2,6 +2,13 @@
 setlocal
 set "JAVA_HOME=C:\Program Files\Java\jdk1.8.0_101"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
+for %%T in (java javac jar) do (
+    if not exist "%JAVA_HOME%\bin\%%T.exe" (
+        echo ERROR: Required Java 8 JDK tool is missing: "%JAVA_HOME%\bin\%%T.exe"
+        echo Install JDK 8 at "%JAVA_HOME%" before building or running SoloScape.
+        exit /b 1
+    )
+)
 cd /d "%~dp0"
 
 if not exist "discord-relay.properties" if exist "discord-relay.properties.example" (
@@ -33,7 +40,7 @@ if not exist "dist\server.jar" (
 echo Revision 443 audit: %PRS_AUDIT443%
 set "AUTO_START=false"
 if /I "%~1"=="--auto-start" set "AUTO_START=true"
-java -Xmx1024m -Dprs.audit443=%PRS_AUDIT443% -Dprs.traceGameplay=true -Dprs.exitOnServerShutdown=true -Dprs.dev.autoStart=%AUTO_START% -jar "dist\server.jar"
+"%JAVA_HOME%\bin\java.exe" -Xmx1024m -Dprs.audit443=%PRS_AUDIT443% -Dprs.traceGameplay=true -Dprs.exitOnServerShutdown=true -Dprs.dev.autoStart=%AUTO_START% -jar "dist\server.jar"
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
 echo Server exited with code %EXIT_CODE%.
