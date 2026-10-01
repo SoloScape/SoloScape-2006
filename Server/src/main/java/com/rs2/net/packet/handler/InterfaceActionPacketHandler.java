@@ -142,11 +142,15 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
 
         DialogueManager dialogue = player.getDialogueManager();
         if (dialogue.isDialogueInactive()) {
-            if (group == InterfaceBridge.translateGroup(player.getOpenInterfaceId())
-                    && dialogue.continueTutorialStatement()) {
-                return true;
+            if (group != InterfaceBridge.translateGroup(player.getOpenInterfaceId())) {
+                return false;
             }
-            return false;
+            // Standalone statements (including level-ups) have no active
+            // dialogue. Use the same continuation path as legacy opcode 40.
+            if (!dialogue.continueTutorialStatement()) {
+                InterfaceInputPacketHandler.continueLevelUp(player);
+            }
+            return true;
         }
         int nextStep = dialogue.getDialogueStep() + 1;
         if (dialogue.getDialogueType() == 1) {

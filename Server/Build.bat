@@ -1,5 +1,7 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
+set "JAVA_HOME=C:\Program Files\Java\jdk1.8.0_101"
+set "PATH=%JAVA_HOME%\bin;%PATH%"
 cd /d "%~dp0"
 set "NO_PAUSE=0"
 if /I "%~1"=="--no-pause" set "NO_PAUSE=1"
