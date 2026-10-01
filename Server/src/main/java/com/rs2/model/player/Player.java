@@ -148,6 +148,7 @@ import com.rs2.net.packet.PacketWriter;
 import com.rs2.net.packet.InitialVarps;
 import com.rs2.util.CharacterFileManager;
 import com.rs2.util.ChatTextCodec;
+import com.rs2.util.ChatCodec;
 import com.rs2.util.ElapsedTimer;
 import com.rs2.util.FileUtil;
 import com.rs2.util.GameUtil;
@@ -1019,13 +1020,21 @@ extends Entity {
         if (message.equals("")) {
             return;
         }
-        byte[] byteValues = new byte[100];
-        int value3 = ChatTextCodec.encode(message, byteValues);
-        byte[] byteValues2 = new byte[value3];
-        ChatTextCodec.encode(message, byteValues2);
+        if (message.length() > 80) {
+            message = message.substring(0, 80);
+        }
+        byte[] payload;
+        if (ServerSettings.clientBuild == 443) {
+            // Queued bot/server chat must use the same wordpack as player chat.
+            payload = ChatCodec.get().encode(message);
+        } else {
+            byte[] legacy = new byte[100];
+            int length = ChatTextCodec.encode(message, legacy);
+            payload = Arrays.copyOf(legacy, length);
+        }
         this.publicChatAnimation = publicChatEffects;
         this.publicChatColor = publicChatColor;
-        this.publicChatPayload = byteValues2;
+        this.publicChatPayload = payload;
         this.publicChatUpdatePending = true;
         this.flagAppearanceUpdate(true);
         this.getUpdateState().setUpdateRequired(true);

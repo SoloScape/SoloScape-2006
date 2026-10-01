@@ -3,10 +3,13 @@ import com.rs2.util.ChatCodec;
 import com.rs2.ServerSettings;
 import com.rs2.model.World;
 import com.rs2.model.player.Player;
+import com.rs2.model.player.ModernPlayerUpdateTask;
 import com.rs2.net.IsaacCipher;
 import com.rs2.net.packet.IncomingPacket;
 import com.rs2.net.packet.PacketBuffer;
 import com.rs2.net.packet.PacketDispatcher;
+import com.rs2.net.packet.PacketWriter;
+import com.rs2.util.ChatTextCodec;
 import jagex.utils.Huffmans;
 import java.io.File;
 import java.io.DataInputStream;
@@ -19,6 +22,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /** Run from Server with Client/build/classes on the test classpath. */
 public final class ChatCodecCompatibilityChecks {
@@ -63,8 +67,45 @@ public final class ChatCodecCompatibilityChecks {
         require(((int[]) codes.get(refreshed))[0] == 0, "Replacement is not the native wordpack");
         require(ChatCodec.get() == refreshed, "Compatible codec was unnecessarily reloaded");
         checkPrivateMessageDelivery(client, charset);
+        checkQueuedPublicChat(client, charset);
         System.out.println("Chat codec compatibility checks passed in both directions with the actual 443 client.");
         System.exit(0);
+    }
+
+    private static void checkQueuedPublicChat(Huffmans client, Charset charset) throws Exception {
+        Player bot = new Player(null);
+        bot.isBot = true;
+        Method write = ModernPlayerUpdateTask.class.getDeclaredMethod("writePublicChat", Player.class, PacketWriter.class);
+        write.setAccessible(true);
+        try {
+            ServerSettings.clientBuild = 443;
+            for (String text : new String[] {"Cabbage", "Buying rune essence!", "Hello world!", "Mixed CASE: 123?", repeat('e', 81)}) {
+                bot.queuePublicChatMessage(text, 2, 3);
+                require(bot.publicChatUpdatePending && bot.getUpdateState().isUpdateRequired(), "Bot chat wasn't queued");
+                PacketWriter writer = PacketBuffer.allocateWriter(512);
+                write.invoke(null, bot, writer);
+                ByteBuffer packet = writer.getBuffer();
+                packet.flip();
+                require((packet.getShort() & 65535) == (2 << 8 | 3), "Wrong bot chat effects");
+                require((packet.get() & 255) == bot.getPlayerRights(), "Wrong bot chat rights");
+                int length = ((packet.get() & 255) - 128) & 255;
+                require(length == packet.remaining(), "Wrong bot chat packet length");
+                byte[] payload = new byte[length];
+                for (int i = length - 1; i >= 0; i--) payload[i] = packet.get();
+                String expected = text.substring(0, Math.min(80, text.length()));
+                require((payload[0] & 255) == expected.length(), "Bot chat missing Huffman text length: " + text);
+                byte[] received = new byte[expected.length()];
+                client.decode(0, received, received.length, 1, payload);
+                require(expected.equals(new String(received, charset)), "Bot chat corrupted: " + text);
+            }
+            ServerSettings.clientBuild = 317;
+            bot.queuePublicChatMessage("Hello WORLD!", 0, 0);
+            require("hello world!".equals(ChatTextCodec.decode(bot.getPublicChatPayload(),
+                    bot.getPublicChatPayload().length).trim()), "Legacy queued chat changed");
+        } finally {
+            ServerSettings.clientBuild = 443;
+        }
+        System.out.println("Queued bot public chat passed: update packet -> actual client Huffman decoder, legacy compatibility, 80-character limit.");
     }
 
     private static void checkPrivateMessageDelivery(Huffmans client, Charset charset) throws Exception {
