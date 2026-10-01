@@ -19,23 +19,38 @@ public final class ChatCodec {
 
     private ChatCodec(byte[] table) {
         if (table.length != 256) throw new IllegalArgumentException("Invalid 443 Huffman table");
-        int[] counts = new int[33];
+        int[] next = new int[33];
+        Arrays.fill(symbol, -1);
         for (int i = 0; i < 256; i++) {
             lengths[i] = table[i] & 255;
             if (lengths[i] > 32) throw new IllegalArgumentException("Invalid Huffman code length");
-            if (lengths[i] != 0) counts[lengths[i]]++;
-        }
-        int[] next = new int[33];
-        int code = 0;
-        for (int bits = 1; bits <= 32; bits++) {
-            code = (code + counts[bits - 1]) << 1;
-            next[bits] = code;
-        }
-        Arrays.fill(symbol, -1);
-        for (int i = 0; i < 256; i++) {
             int bits = lengths[i];
             if (bits == 0) continue;
-            codes[i] = next[bits]++;
+            // The client allocates left-aligned codewords in symbol order,
+            // not canonical codewords sorted by length.
+            int code = next[bits];
+            int mask = 1 << (32 - bits);
+            codes[i] = code >>> (32 - bits);
+            int successor;
+            if ((code & mask) != 0) {
+                successor = next[bits - 1];
+            } else {
+                successor = code | mask;
+                for (int shorter = bits - 1; shorter >= 1; shorter--) {
+                    int previous = next[shorter];
+                    if (previous != code) break;
+                    int shorterMask = 1 << (32 - shorter);
+                    if ((previous & shorterMask) != 0) {
+                        next[shorter] = next[shorter - 1];
+                        break;
+                    }
+                    next[shorter] = previous | shorterMask;
+                }
+            }
+            next[bits] = successor;
+            for (int longer = bits + 1; longer <= 32; longer++) {
+                if (next[longer] == code) next[longer] = successor;
+            }
             int node = 0;
             for (int bit = bits - 1; bit >= 0; bit--) {
                 boolean one = ((codes[i] >>> bit) & 1) != 0;
@@ -51,9 +66,12 @@ public final class ChatCodec {
 
     public static ChatCodec get() {
         ChatCodec result = instance;
-        if (result != null) return result;
+        // HotSwap preserves static instances when constructor code changes.
+        // The native 443 wordpack assigns symbol 0 codeword 0; the obsolete
+        // canonical table did not. Replace that cached table on next use.
+        if (result != null && result.codes[0] == 0) return result;
         synchronized (ChatCodec.class) {
-            if (instance == null) {
+            if (instance == null || instance.codes[0] != 0) {
                 try (Js5CacheStore store = new Js5CacheStore(new File("cache"))) {
                     instance = new ChatCodec(store.readFile(10, "huffman", ""));
                 } catch (IOException e) {
