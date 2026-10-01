@@ -1,6 +1,8 @@
 package com.rs2.util;
 
 import com.rs2.model.player.Player;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -24,11 +27,17 @@ import java.util.concurrent.ThreadFactory;
  * only knows the relay URL and its own revocable relay key.
  */
 public final class DiscordEventNotifier {
-    private static final String RELAY_URL = env("SOLOSCAPE_DISCORD_RELAY_URL");
-    private static final String RELAY_KEY = env("SOLOSCAPE_DISCORD_RELAY_KEY");
-    private static final String SERVER_NAME = defaultIfBlank(env("SOLOSCAPE_DISCORD_SERVER_NAME"), "SoloScape");
-    private static final Set<Integer> BOSS_IDS = parseBossIds(env("SOLOSCAPE_DISCORD_BOSS_IDS"));
-    private static final Set<String> BOSS_NAMES = buildBossNames(env("SOLOSCAPE_DISCORD_BOSS_NAMES"));
+    private static final String CONFIG_FILE_NAME = "discord-relay.properties";
+    private static final Properties CONFIG = loadConfig();
+
+    private static final String RELAY_URL = setting("relay.url", "SOLOSCAPE_DISCORD_RELAY_URL");
+    private static final String RELAY_KEY = setting("relay.key", "SOLOSCAPE_DISCORD_RELAY_KEY");
+    private static final String SERVER_NAME = defaultIfBlank(
+            setting("server.name", "SOLOSCAPE_DISCORD_SERVER_NAME"), "SoloScape");
+    private static final Set<Integer> BOSS_IDS = parseBossIds(
+            setting("boss.ids", "SOLOSCAPE_DISCORD_BOSS_IDS"));
+    private static final Set<String> BOSS_NAMES = buildBossNames(
+            setting("boss.names", "SOLOSCAPE_DISCORD_BOSS_NAMES"));
     private static final ConcurrentHashMap<String, Long> RECENT_BOSS_KILLS = new ConcurrentHashMap<String, Long>();
     private static final long BOSS_DEDUPE_MILLIS = 1500L;
 
@@ -198,6 +207,34 @@ public final class DiscordEventNotifier {
             }
         }
         return Collections.unmodifiableSet(names);
+    }
+
+    private static Properties loadConfig() {
+        Properties properties = new Properties();
+        File configFile = new File(CONFIG_FILE_NAME);
+        if (!configFile.isFile()) {
+            File fromRepositoryRoot = new File("Server", CONFIG_FILE_NAME);
+            if (!fromRepositoryRoot.isFile()) {
+                return properties;
+            }
+            configFile = fromRepositoryRoot;
+        }
+
+        try (InputStream input = new FileInputStream(configFile)) {
+            properties.load(input);
+        } catch (IOException exception) {
+            System.err.println("Could not read " + configFile.getPath() + ": " + exception.getMessage());
+        }
+        return properties;
+    }
+
+    private static String setting(String propertyName, String environmentName) {
+        String environmentValue = env(environmentName);
+        if (!environmentValue.isEmpty()) {
+            return environmentValue;
+        }
+        String propertyValue = CONFIG.getProperty(propertyName);
+        return propertyValue == null ? "" : propertyValue.trim();
     }
 
     private static String env(String name) {
