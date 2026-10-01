@@ -169,9 +169,9 @@ extends QuestScript {
         if (objectId == 3024 && value2 == 3125 && value32 == 3124) {
             if (value42 == 52) {
                 Player player9 = player;
-                // 2006Scape PassDoor: face 0 -> 3, then step east.
+                // Swing west into the bank; face 3 overwrites the wall at 3125, 3125.
                 player9.packetSender.passThroughDoor(3024, 3125, 3124, 0,
-                        3, 0, 0, 1, 0);
+                        1, 0, 0, 1, 0);
                 player.advanceTutorialStage();
                 return true;
             }
@@ -180,9 +180,9 @@ extends QuestScript {
         if (objectId == 3025 && value2 == 3130 && value32 == 3124) {
             if (value42 == 54) {
                 Player player10 = player;
-                // 2006Scape PassDoor: face 0 -> 3, then step east.
+                // Swing west into the advisor's room, clear of the wall at 3130, 3125.
                 player10.packetSender.passThroughDoor(3025, 3130, 3124, 0,
-                        3, 0, 0, 1, 0);
+                        1, 0, 0, 1, 0);
                 player.advanceTutorialStage();
                 return true;
             }
@@ -191,9 +191,9 @@ extends QuestScript {
         if (objectId == 3026 && value2 == 3122 && value32 == 3102) {
             if (value42 == 61) {
                 Player player11 = player;
-                // 2006Scape PassDoor: face 1 -> 0, then step south.
+                // Swing north into the chapel; face 0 overwrites the wall at 3123, 3102.
                 player11.packetSender.passThroughDoor(3026, 3122, 3102, 0,
-                        0, 1, 0, 0, -1);
+                        2, 1, 0, 0, -1);
                 player.advanceTutorialStage();
                 return true;
             }
@@ -1213,10 +1213,14 @@ extends QuestScript {
                     return true;
                 }
                 if (value2 == 4) {
-                    player.getDialogueManager().showTwoItemMessage("The Combat Instructor gives you some @dbl@bronze arrows @bla@and", "a @dbl@shortbow@bla@!", new ItemStack(882, 50), new ItemStack(841, 1));
+                    player.getDialogueManager().showTwoItemMessage("The Combat Guide gives you some @blu@Bronze arrows@bla@ and", "a @blu@Shortbow!", new ItemStack(882, 50), new ItemStack(841, 1));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(841, 1));
                     player.getInventoryManager().addOrDropItem(new ItemStack(882, 50));
+                    // Keep the gift and its Continue step active until clicked.
+                    return true;
+                }
+                if (value2 == 5) {
                     player.advanceTutorialStage();
                     player.getDialogueManager().resetDialogueState();
                     player.getDialogueManager().finishDialogue();
@@ -1224,29 +1228,33 @@ extends QuestScript {
                 }
             }
             if (value42 >= 49) {
+                if (value2 == 5 && (player.getOpenInterfaceId() == 4950
+                        || player.getOpenInterfaceId() == 306)) {
+                    player.getDialogueManager().resetDialogueState();
+                    player.getDialogueManager().finishDialogue();
+                    player.getQuestManager().refreshQuestJournal();
+                    return true;
+                }
                 if (value2 == 1 && !player.ownsItem(841) && !player.ownsItem(882)) {
-                    player.getDialogueManager().showTwoItemMessage("The Combat Instructor gives you some @dbl@bronze arrows @bla@and", "a @dbl@shortbow@bla@!", new ItemStack(882, 50), new ItemStack(841, 1));
+                    player.getDialogueManager().showTwoItemMessage("The Combat Guide gives you some @blu@Bronze arrows@bla@ and", "a @blu@Shortbow!", new ItemStack(882, 50), new ItemStack(841, 1));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(841, 1));
                     player.getInventoryManager().addOrDropItem(new ItemStack(882, 50));
-                    player.getDialogueManager().resetDialogueState();
-                    player.getDialogueManager().finishDialogue();
+                    player.getDialogueManager().setDialogueStep(4);
                     return true;
                 }
                 if (value2 == 1 && player.ownsItem(841) && !player.ownsItem(882)) {
-                    player.getDialogueManager().showItemMessage("The Combat Instructor gives you some @dbl@bronze arrows@bla@!", new ItemStack(882, 50));
+                    player.getDialogueManager().showItemMessage("The Combat Guide gives you some @blu@Bronze arrows!", new ItemStack(882, 50));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(882, 50));
-                    player.getDialogueManager().resetDialogueState();
-                    player.getDialogueManager().finishDialogue();
+                    player.getDialogueManager().setDialogueStep(4);
                     return true;
                 }
                 if (value2 == 1 && !player.ownsItem(841) && player.ownsItem(882)) {
-                    player.getDialogueManager().showItemMessage("The Combat Instructor gives you a @dbl@shortbow@bla@!", new ItemStack(841, 1));
+                    player.getDialogueManager().showItemMessage("The Combat Guide gives you a @blu@Shortbow!", new ItemStack(841, 1));
                     player.setInteractionTargetId(0);
                     player.getInventoryManager().addOrDropItem(new ItemStack(841, 1));
-                    player.getDialogueManager().resetDialogueState();
-                    player.getDialogueManager().finishDialogue();
+                    player.getDialogueManager().setDialogueStep(4);
                     return true;
                 }
             }
@@ -1458,10 +1466,24 @@ extends QuestScript {
                     return true;
                 }
                 if (value2 == 5) {
-                    player.getDialogueManager().showNpcThreeLineDialogue("If all else fails, visit the RuneScape website for a whole", "chestload of information on quests, skills and minigames", "as well as a very good starter's guide.", 591);
+                    player.getDialogueManager().showGuideIconFourLineDialogue(
+                            "When you get to Lumbridge, look for this icon on your",
+                            "mini-map. The Lumbridge Guide or one of the other",
+                            "tutors should be standing near there. The Lumbridge",
+                            "Guide should be standing slightly to the north-east of");
                     return true;
                 }
                 if (value2 == 6) {
+                    player.getDialogueManager().showGuideIconFourLineDialogue(
+                            "the castle's courtyard and the others you will find",
+                            "scattered around Lumbridge.", "", "");
+                    return true;
+                }
+                if (value2 == 7) {
+                    player.getDialogueManager().showNpcThreeLineDialogue("If all else fails, visit the RuneScape website for a whole", "chestload of information on quests, skills and minigames", "as well as a very good starter's guide.", 591);
+                    return true;
+                }
+                if (value2 == 8) {
                     Player player18 = player;
                     player18.packetSender.sendEntityHintIcon(1, -1);
                     player.moveTo(new Position(3233, 3229, 0));

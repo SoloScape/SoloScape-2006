@@ -185,14 +185,18 @@ public final class BankManager {
                 ++tabIndex;
             }
         }
+        // Send tutorial instructions before the bank so the active interface
+        // remains the bank (including when reopening it at stage 52).
+        if (player.getQuestState(0) == 51) {
+            player.advanceTutorialStage();
+        } else if (player.getQuestState(0) == 52) {
+            player.getQuestManager().refreshQuestJournal();
+        }
         player.packetSender.sendItemContainer(5064, inventoryItems);
         player.packetSender.showInterfaceWithInventory(5292, 5063);
         player.getAttributes().put("isBanking", Boolean.TRUE);
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("bank open player=" + GameplayTrace.describe(player) + " owner=" + GameplayTrace.describe(bankOwner) + " usedSlots=" + bankOwner.getBankContainer().getUsedSlots() + " inventoryFree=" + player.getInventoryManager().getContainer().getFreeSlots());
-        }
-        if (player.getQuestState(0) == 51) {
-            player.advanceTutorialStage();
         }
         if (player.botEnabled) {
             if (player.currentBotTask.lootSellShopIds.size() > 0 && player.botMode != 4) {

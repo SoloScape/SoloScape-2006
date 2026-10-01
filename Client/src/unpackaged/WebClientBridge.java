@@ -338,8 +338,14 @@ public final class WebClientBridge {
             if (button == MouseEvent.BUTTON1) modifiers = InputEvent.BUTTON1_DOWN_MASK;
             if (button == MouseEvent.BUTTON2) modifiers = InputEvent.BUTTON2_DOWN_MASK;
             if (button == MouseEvent.BUTTON3) modifiers = InputEvent.BUTTON3_DOWN_MASK | InputEvent.META_MASK;
+            int canvasX = clamp(x, 0, WIDTH - 1);
+            int canvasY = clamp(y, 0, HEIGHT - 1);
+            if (canvas instanceof Canvas_Sub1) {
+                canvasX = ((Canvas_Sub1) canvas).toCanvasX(canvasX);
+                canvasY = ((Canvas_Sub1) canvas).toCanvasY(canvasY);
+            }
             MouseEvent event = new MouseEvent(canvas, id, when, modifiers,
-                    clamp(x, 0, WIDTH - 1), clamp(y, 0, HEIGHT - 1), 1,
+                    canvasX, canvasY, 1,
                     button == MouseEvent.BUTTON3, button);
             canvas.dispatchEvent(event);
         });

@@ -15,6 +15,11 @@ public final class InitialVarps {
         // (varbit 2668). The lamp-skill picker reads 261 with the same 1..22
         // skill-selection values used by the server.
         43, 153, 261, 301, 406, 439,
+        // Group 271's original eighteen prayer buttons read varps 83..100.
+        83, 84, 85, 86, 87, 88, 89, 90, 91,
+        92, 93, 94, 95, 96, 97, 98, 99, 100,
+        // Group 271 children 36,38,40,42,44,46 read ranged/magic prayer varps.
+        862, 863, 864, 865, 866, 867,
         // Tutorial Island still uses native varp 406 for its progress state.
         // Player options and bank controls retain these varp identities in 443.
         115, 166, 168, 169, 170, 171, 172, 173, 287, 304, 427,

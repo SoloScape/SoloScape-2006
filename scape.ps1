@@ -42,11 +42,15 @@ try {
             Invoke-Build 'Server'
             Invoke-Build 'Client'
             Start-Component 'Server' 'Run.bat' '--auto-start'
+            Write-Host 'Waiting 5 seconds for the server before starting the client...'
+            Start-Sleep -Seconds 5
             Start-Component 'Client' 'run.bat'
             Write-Host 'Server and client launched in separate consoles.'
         }
         'dev' {
             Start-Component 'Server' 'dev.bat'
+            Write-Host 'Waiting 5 seconds for the server before starting the client...'
+            Start-Sleep -Seconds 5
             Start-Component 'Client' 'dev.bat'
             Write-Host 'Live recompilation started in separate consoles. Close each application to stop its watcher.'
         }

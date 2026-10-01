@@ -15,6 +15,10 @@ import jagex.utils.Cache;
 import java.awt.Canvas;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import jagex.utils.IsaacPrng;
 
 public class Canvas_Sub1 extends Canvas
 {
@@ -36,6 +40,53 @@ public class Canvas_Sub1 extends Canvas
     
     public void update(Graphics graphics) {
 	aComponent22.update(graphics);
+    }
+
+    @Override
+    public Graphics getGraphics() {
+	return scaleGameGraphics(super.getGraphics());
+    }
+
+    Graphics scaleGameGraphics(Graphics graphics) {
+	if (graphics instanceof Graphics2D && IsaacPrng.anInt1087 > 0 && Deque.anInt919 > 0) {
+	    Graphics2D graphics2d = (Graphics2D) graphics;
+	    graphics2d.scale((double) Math.max(1, getWidth()) / IsaacPrng.anInt1087,
+		(double) Math.max(1, getHeight()) / Deque.anInt919);
+	    graphics2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+		RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	}
+	return graphics;
+    }
+
+    private MouseEvent gameMouseEvent(MouseEvent event) {
+	int x = (int) Math.floor((double) event.getX() * IsaacPrng.anInt1087 / Math.max(1, getWidth()));
+	int y = (int) Math.floor((double) event.getY() * Deque.anInt919 / Math.max(1, getHeight()));
+	return new MouseEvent(this, event.getID(), event.getWhen(),
+	    event.getModifiersEx(), x, y, event.getXOnScreen(), event.getYOnScreen(),
+	    event.getClickCount(), event.isPopupTrigger(), event.getButton());
+    }
+
+    @Override
+    protected void processMouseEvent(MouseEvent event) {
+	MouseEvent gameEvent = gameMouseEvent(event);
+	super.processMouseEvent(gameEvent);
+	if (gameEvent.isConsumed()) event.consume();
+    }
+
+    @Override
+    protected void processMouseMotionEvent(MouseEvent event) {
+	MouseEvent gameEvent = gameMouseEvent(event);
+	super.processMouseMotionEvent(gameEvent);
+	if (gameEvent.isConsumed()) event.consume();
+    }
+
+    // The web bridge supplies coordinates in the original game resolution.
+    int toCanvasX(int x) {
+	return (int) Math.ceil((double) x * getWidth() / Math.max(1, IsaacPrng.anInt1087));
+    }
+
+    int toCanvasY(int y) {
+	return (int) Math.ceil((double) y * getHeight() / Math.max(1, Deque.anInt919));
     }
     
     public static void method39(int i) {

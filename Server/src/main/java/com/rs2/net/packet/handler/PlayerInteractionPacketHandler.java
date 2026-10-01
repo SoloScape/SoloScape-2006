@@ -328,7 +328,8 @@ implements PacketHandler {
             Player target = World.getPlayers()[targetIndex];
             if (target == null || target == player
                     || !isWithinCombatInteractionRange(player, target)) return;
-            SpellDefinition spell = Spellbook.getSpellForButtonId(player, spellChild);
+            int legacySpellButton = SpellWidgets.toLegacySpellButton(spellInterface, spellChild);
+            SpellDefinition spell = Spellbook.getSpellForButtonId(player, legacySpellButton);
             if (spell == null) return;
             if (!player.isInMageArena()) {
                 if (spell == SpellDefinition.SARADOMIN_STRIKE && player.mageArenaSaradominStrikeCastsRemaining > 0

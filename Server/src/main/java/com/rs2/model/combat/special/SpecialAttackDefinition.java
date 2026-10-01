@@ -235,7 +235,11 @@ public abstract class SpecialAttackDefinition {
             return;
         }
         Player player = (Player)entity;
-        player.packetSender.closeInterfaces();
+        // Ordinary hits also pass through this handler. Keep Tutorial Island's
+        // instruction panel visible when the player's arrow reaches the rat.
+        if (player.getQuestState(0) == 1 || player.getOpenInterfaceId() != 6179) {
+            player.packetSender.closeInterfaces();
+        }
         switch (hitDefinition.getSpecialEffectId()) {
             case 1: {
                 target.getUpdateState().setGraphic(474);

@@ -367,7 +367,8 @@ public final class NpcInteractionPacketHandler implements PacketHandler {
                         + " is not interested in interacting with you right now.");
                 return;
             }
-            SpellDefinition spell = Spellbook.getSpellForButtonId(player, spellChild);
+            int legacySpellButton = SpellWidgets.toLegacySpellButton(spellInterface, spellChild);
+            SpellDefinition spell = Spellbook.getSpellForButtonId(player, legacySpellButton);
             if (spell == null) return;
             if (!player.isInMageArena()) {
                 if (spell == SpellDefinition.SARADOMIN_STRIKE && player.mageArenaSaradominStrikeCastsRemaining > 0

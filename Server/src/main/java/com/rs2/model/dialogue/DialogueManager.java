@@ -700,6 +700,18 @@ public class DialogueManager {
         this.player.packetSender.showChatboxInterface(4900);
     }
 
+    public final void showGuideIconFourLineDialogue(String line1, String line2, String line3, String line4) {
+        this.traceDisplay("guide-icon4", line1 + " | " + line2 + " | " + line3 + " | " + line4);
+        this.player.packetSender.sendInterfaceText("", 4902);
+        this.player.packetSender.sendInterfaceText(line1, 4903);
+        this.player.packetSender.sendInterfaceText(line2, 4904);
+        this.player.packetSender.sendInterfaceText(line3, 4905);
+        this.player.packetSender.sendInterfaceText(line4, 4906);
+        // Revision 443 reserves NPC id 65535 here for the mapfunction Guide (?) icon.
+        this.player.packetSender.sendNpcHeadOnInterface(0xFFFF, 4901);
+        this.player.packetSender.showChatboxInterface(4900);
+    }
+
     public final void showAlternateNpcThreeLineDialogue(String line1, String line2, String line3, int animationId) {
         int npcId = this.dialogueNpcId < 0 || this.dialogueNpcId > 6433 ? 0 : this.dialogueNpcId;
         String npcName = World.getNpcDefinitions()[npcId].getName();

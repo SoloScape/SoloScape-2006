@@ -364,12 +364,14 @@ implements PacketHandler {
             int spellChild = packet.getReader().readSignedShort(ByteTransform.ADD, ByteOrder.LITTLE) & 0xFFFF;
             traceRevision443Item(player, "spell-on-ground-item", targetItemId, -1,
                     spellInterface, spellChild, x, y);
-            if (!SpellWidgets.isSpellWidget(spellInterface)) return;
+            int legacySpellButton = SpellWidgets.toLegacySpellButton(spellInterface, spellChild);
+            if (!SpellWidgets.isSpellWidget(spellInterface)
+                    || legacySpellButton == InterfaceBridge.UNMAPPED) return;
             PacketWriter writer = PacketBuffer.allocateWriter(8);
             writer.writeShort(y, ByteOrder.LITTLE);
             writer.writeShort(targetItemId);
             writer.writeShort(x, ByteOrder.LITTLE);
-            writer.writeShort(spellChild, ByteTransform.ADD);
+            writer.writeShort(legacySpellButton, ByteTransform.ADD);
             player.resetInteractionState();
             handleMagicOnGroundItem(player, legacyItemPacket(181, writer));
             return;
@@ -427,14 +429,16 @@ implements PacketHandler {
             int spellChild = packet.getReader().readSignedShort(ByteOrder.LITTLE) & 0xFFFF;
             traceRevision443Item(player, "spell-on-item", targetItemId, targetSlot,
                     targetInterface, spellInterface, spellChild, -1);
+            int legacySpellButton = SpellWidgets.toLegacySpellButton(spellInterface, spellChild);
             if (!SpellWidgets.isSpellWidget(spellInterface)
+                    || legacySpellButton == InterfaceBridge.UNMAPPED
                     || targetSlot >= 28
                     || InterfaceBridge.toLegacyComponent(targetInterface) != 3214) return;
             PacketWriter writer = PacketBuffer.allocateWriter(8);
             writer.writeShort(targetSlot);
             writer.writeShort(targetItemId, ByteTransform.ADD);
             writer.writeShort(3214);
-            writer.writeShort(spellChild, ByteTransform.ADD);
+            writer.writeShort(legacySpellButton, ByteTransform.ADD);
             player.resetInteractionState();
             handleMagicOnItem(player, legacyItemPacket(237, writer));
         }

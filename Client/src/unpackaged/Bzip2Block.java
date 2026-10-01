@@ -533,7 +533,11 @@ public class Bzip2Block {
             if (Class4.frameId == 146) {
                 int i_60_ = Class39_Sub5_Sub11.gameBuffer.method833((byte) 120);
                 int i_61_ = Class39_Sub5_Sub11.gameBuffer.getUword();
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
+                // Keep Tutorial Island instructions beneath the bank window.
+                if (Class39_Sub5_Sub14.anInt1912 != -1
+                        && !(i_60_ == 12 && i_61_ == 15
+                        && Class39_Sub5_Sub14.anInt1912 == 214
+                        && JSocket.isTutorialInstructionMode())) {
                     Class62_Sub2.method1084((byte) 109,
                             Class39_Sub5_Sub14.anInt1912);
                     Class39_Sub5_Sub14.anInt1912 = -1;
@@ -778,9 +782,12 @@ public class Bzip2Block {
                     IsaacPrng.aBoolean1089 = true;
                     StillGraphic.anInt2338 = -1;
                 }
-                // Tutorial smithing and equipment stats share the screen with instructions.
+                // Character design can arrive before the fresh-login tutorial mode latch,
+                // so preserve its instruction chatbox independently of that flag.
                 if (Class39_Sub5_Sub14.anInt1912 != -1
-                        && !((i_79_ == 312 || i_79_ == 465 && JSocket.isTutorialInstructionMode())
+                        && !((i_79_ == 269
+                        || ((i_79_ == 275 || i_79_ == 308 || i_79_ == 312 || i_79_ == 465)
+                        && JSocket.isTutorialInstructionMode()))
                         && Class39_Sub5_Sub14.anInt1912 == 214)) {
                     Class62_Sub2.method1084((byte) 115,
                             Class39_Sub5_Sub14.anInt1912);

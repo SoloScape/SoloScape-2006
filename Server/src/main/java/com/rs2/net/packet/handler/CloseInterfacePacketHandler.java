@@ -27,7 +27,12 @@ implements PacketHandler {
         player.getAttributes().put("isShopping", Boolean.FALSE);
         player.interfaceAction = "";
         if (player.getQuestState(0) != 1) {
-            if (ServerSettings.clientBuild == 443 && player.getOpenInterfaceId() == 15106) {
+            if (ServerSettings.clientBuild == 443
+                    && (player.getOpenInterfaceId() == 15106
+                    || player.getOpenInterfaceId() == 5292
+                    || player.getOpenInterfaceId() == 8714
+                    || player.getOpenInterfaceId() == 8134
+                    || player.getQuestState(0) == 52 && player.getOpenInterfaceId() == 6179)) {
                 // The native X button already closed the viewport and kept
                 // the tutorial chatbox. A global close/reopen would make it flicker.
                 player.setOpenInterfaceId(6179);

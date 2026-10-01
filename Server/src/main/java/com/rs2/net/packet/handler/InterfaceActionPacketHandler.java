@@ -216,7 +216,8 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
             if (SpellWidgets.isSpellWidget(spellWidgetId)
                     && InterfaceBridge.toLegacyComponent(targetWidgetId) == 3214
                     && targetParameter < 28 && player.isInterfaceIdOpen(3214)) {
-                SpellDefinition spell = Spellbook.getSpellForButtonId(player, spellChild);
+                int legacySpellButton = SpellWidgets.toLegacySpellButton(spellWidgetId, spellChild);
+                SpellDefinition spell = Spellbook.getSpellForButtonId(player, legacySpellButton);
                 ItemStack item = player.getInventoryManager().getContainer().getItemAt(targetParameter);
                 if (spell != null && item != null && item.isValid()) {
                     MagicSpellAction.castItemSpell(player, spell, item.getId(), targetParameter);
@@ -288,6 +289,11 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
 
         int widgetGroup = packedWidgetId >>> 16;
         int widgetChild = packedWidgetId & 0xffff;
+        if (widgetGroup == 271 && player.isInterfaceIdOpen(5609)
+                && (operation == -1 || parameter == 0)
+                && player.getPrayerManager().handleAdditionalPrayerClick(widgetChild)) {
+            return;
+        }
         // Revision 443 uses one toggle on each combat tab, whereas the legacy
         // dispatcher has separate On/Off buttons (150/151).
         if (isAutoRetaliateButton(widgetGroup, widgetChild)
@@ -418,6 +424,15 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                         + " operation=" + operation
                         + " parameter=" + parameter
         );
+        if (SpellWidgets.isSpellWidget(packedWidgetId)
+                && legacyButtonId != InterfaceBridge.UNMAPPED
+                && (operation == -1 || parameter == 0)) {
+            SpellDefinition spell = Spellbook.getSpellForButtonId(player, legacyButtonId);
+            if (spell != null) {
+                MagicSpellAction.castSelfSpell(player, spell);
+                return;
+            }
+        }
         if (legacyButtonId != InterfaceBridge.UNMAPPED
                 && legacyButtonId != 3214 && legacyButtonId != 1688
                 && (operation == -1 || parameter == 0)) {

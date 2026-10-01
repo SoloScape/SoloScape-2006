@@ -616,7 +616,8 @@ extends TickTask {
                 double rangedStrengthBonus = player.getCombatBonus(12);
                 return (int)Math.floor(0.5 + (double)effectiveRangedLevel * (rangedStrengthBonus + 64.0) / 640.0);
             }
-            int rangedLevel = player.getSkillManager().getCurrentLevels()[4];
+            int rangedLevel = (int)(player.getSkillManager().getCurrentLevels()[4]
+                    * CombatManager.getPrayerMultiplier(player, 4));
             double styleBonus = 0.0;
             if (attackStyleDefinition.getXpMode() == AttackXpMode.RANGED_ACCURATE) {
                 styleBonus = 3.0;
@@ -845,6 +846,10 @@ extends TickTask {
         }
         double attackBonus = entity.getCombatBonus(attackStyleDefinition.getAttackBonusType().getIndex());
         double attackLevel = entity.getAttackLevelFor(attackStyleDefinition.getCombatType());
+        if (entity.isPlayer() && attackStyleDefinition.getCombatType() != CombatType.MELEE) {
+            attackLevel *= CombatManager.getPrayerMultiplier((Player)entity,
+                    attackStyleDefinition.getCombatType() == CombatType.RANGED ? 4 : 6);
+        }
         if (attackBonus < 0.0) {
             attackLevel /= 2.0;
             attackBonus *= 3.0;
@@ -887,6 +892,12 @@ extends TickTask {
 
     private static double getPrayerMultiplier(Player player, int prayerId) {
         double value = 1.0;
+        if (prayerId == 4 || prayerId == 6) {
+            int firstPrayer = prayerId == 4 ? 18 : 19;
+            if (player.getActivePrayers()[firstPrayer + 4]) return 1.15;
+            if (player.getActivePrayers()[firstPrayer + 2]) return 1.1;
+            if (player.getActivePrayers()[firstPrayer]) return 1.05;
+        }
         if (prayerId == 2) {
             if (player.getActivePrayers()[1]) {
                 value = 1.05;

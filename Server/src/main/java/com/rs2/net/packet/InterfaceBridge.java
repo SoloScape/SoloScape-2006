@@ -108,6 +108,9 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        // Native prayer click targets are children 0..17 of group 271.
+        putRange(mappings, 5609, 271, 0, 15);
+        putRange(mappings, 683, 271, 15, 3);
         // Revision 443 Skills tab -> legacy skill-guide buttons.
         put(mappings, 8654, 320, 123);  // Attack
         put(mappings, 8655, 320, 124);  // Hitpoints
@@ -164,6 +167,7 @@ public final class InterfaceBridge {
         }
         put(mappings, 153, 261, 0);    // toggle run
         put(mappings, 3214, 149, 0);   // inventory container
+        put(mappings, 1167, 192, 591); // standard spellbook: Lumbridge Teleport
         put(mappings, 1688, 387, 25);  // worn equipment container
         put(mappings, 15107, 465, 103); // items on the equipment statistics screen
         // Native smithing columns and labels, verified against cache group 312.
@@ -660,6 +664,9 @@ public final class InterfaceBridge {
 
     public static int toLegacyComponent(int packedId) {
         if (packedId == (465 << 16 | 103)) return 1688;
+        // Keep newly-added spell mappings visible to a live HotSwap server; the
+        // static reverse table is built only once when this class is first loaded.
+        if (packedId == (192 << 16 | 591)) return 1167;
         Integer legacyId = LEGACY_COMPONENTS.get(packedId);
         if (legacyId == null && packedId >>> 16 == 312) {
             // Smithing may have been added after the dev server loaded its maps.

@@ -7,11 +7,15 @@ import com.rs2.model.combat.CombatType;
 import com.rs2.model.combat.hit.HitDefinition;
 import com.rs2.model.combat.hit.HitType;
 import com.rs2.model.player.Player;
+import com.rs2.model.npc.Npc;
 
 /** Incoming combat hits preserve tutorial instructions but close ordinary interfaces. */
 public final class TutorialCombatOverlayChecks {
     public static void main(String[] args) {
         ServerSettings.clientBuild = 443;
+        ServerSettings.xpRate = 1;
+        ServerSettings.progressiveXpMode = 0;
+        ServerSettings.botXpRateMode = 0;
         for (int stage : new int[] {47, 48, 49, 50, 1}) {
             for (int interfaceId : new int[] {6179, 15106, 4882, 0}) {
                 for (boolean successful : new boolean[] {false, true}) {
@@ -39,7 +43,36 @@ public final class TutorialCombatOverlayChecks {
                 }
             }
         }
-        System.out.println("Tutorial combat overlay checks passed (melee/ranging stages, hits/misses, ordinary interfaces).");
+        for (int stage : new int[] {47, 49, 1}) {
+            for (int interfaceId : new int[] {6179, 15106, 4882, 0}) {
+                for (CombatType type : new CombatType[] {CombatType.MELEE, CombatType.RANGED}) {
+                    Player player = new Player(null);
+                    player.setEncodedIndex(32768);
+                    player.isBot = true;
+                    player.setQuestState(0, stage);
+                    player.setOpenInterfaceId(interfaceId);
+                    Npc rat = new Npc(950);
+                    rat.getAttributes().put("canTakeDamage", Boolean.TRUE);
+                    rat.setCurrentHitpoints(5);
+                    HitDefinition hit = new HitDefinition(new AttackStyleDefinition(type,
+                            type == CombatType.RANGED ? AttackXpMode.RANGED_ACCURATE
+                                    : AttackXpMode.MELEE_ACCURATE,
+                            type == CombatType.RANGED ? AttackBonusType.RANGED
+                                    : AttackBonusType.STAB), HitType.NORMAL, 1)
+                            .setAlwaysHits(true).setBlockAnimationEnabled(false);
+                    new CombatAction(player, rat, hit).applyHit();
+                    boolean preserve = stage != 1 && interfaceId == 6179;
+                    require(player.getOpenInterfaceId() == (preserve ? 6179 : 0),
+                            "Outgoing hit closed instructions: stage=" + stage
+                                    + " interface=" + interfaceId + " type=" + type
+                                    + " actual=" + player.getOpenInterfaceId());
+                    require(rat.getCurrentHitpoints() == 4, "Outgoing damage changed");
+                    require(player.getQuestState(0) == stage, "Hit advanced tutorial early");
+                }
+            }
+        }
+        System.out.println("Tutorial combat overlay checks passed (incoming/outgoing melee/ranged hits, ordinary interfaces).");
+        System.exit(0);
     }
 
     private static void require(boolean condition, String message) {

@@ -14,7 +14,7 @@ import com.rs2.model.task.TickTask;
 
 public final class PrayerManager {
     private Player player;
-    private static final Object[][] PRAYER_DEFINITIONS = new Object[][]{{0, 83, "Thick Skin", 1, 3, 446, false}, {1, 84, "Burst of Strength", 4, 3, 449, false}, {2, 85, "Clarity of Thought", 7, 3, 436, false}, {3, 86, "Rock Skin", 10, 6, 441, false}, {4, 87, "Superhuman Strength", 13, 6, 434, false}, {5, 88, "Improved Reflexes", 16, 6, 448, false}, {6, 89, "Rapid Restore", 19, 1, 451, false}, {7, 90, "Rapid Heal", 22, 2, 443, false}, {8, 91, "Protect Item", 25, 2, 337, false}, {9, 92, "Steel Skin", 28, 12, 439, false}, {10, 93, "Ultimate Strength", 31, 12, 450, false}, {11, 94, "Incredible Reflexes", 34, 12, 440, false}, {12, 95, "Protect from Magic", 37, 12, 438, false}, {13, 96, "Protect from Range", 40, 12, 444, false}, {14, 97, "Protect from Melee", 43, 12, 433, false}, {15, 98, "Retribution", 46, 3, 1703, true}, {16, 99, "Redemption", 49, 6, 1705, true}, {17, 100, "Smite", 52, 18, 1704, true}};
+    private static final Object[][] PRAYER_DEFINITIONS = new Object[][]{{0, 83, "Thick Skin", 1, 3, 446, false}, {1, 84, "Burst of Strength", 4, 3, 449, false}, {2, 85, "Clarity of Thought", 7, 3, 436, false}, {3, 86, "Rock Skin", 10, 6, 441, false}, {4, 87, "Superhuman Strength", 13, 6, 434, false}, {5, 88, "Improved Reflexes", 16, 6, 448, false}, {6, 89, "Rapid Restore", 19, 1, 451, false}, {7, 90, "Rapid Heal", 22, 2, 443, false}, {8, 91, "Protect Item", 25, 2, 337, false}, {9, 92, "Steel Skin", 28, 12, 439, false}, {10, 93, "Ultimate Strength", 31, 12, 450, false}, {11, 94, "Incredible Reflexes", 34, 12, 440, false}, {12, 95, "Protect from Magic", 37, 12, 438, false}, {13, 96, "Protect from Range", 40, 12, 444, false}, {14, 97, "Protect from Melee", 43, 12, 433, false}, {15, 98, "Retribution", 46, 3, 1703, true}, {16, 99, "Redemption", 49, 6, 1705, true}, {17, 100, "Smite", 52, 18, 1704, true}, {18, 862, "Sharp Eye", 8, 3, -1, false}, {19, 863, "Mystic Will", 9, 3, -1, false}, {20, 864, "Hawk Eye", 26, 6, -1, false}, {21, 865, "Mystic Lore", 27, 6, -1, false}, {22, 866, "Eagle Eye", 44, 12, -1, false}, {23, 867, "Mystic Might", 45, 12, -1, false}};
     private static final int[][] NPC_PRAYER_EXPERIENCE_REWARDS = new int[][]{{3867, 130}, {3868, 182}, {3869, 286}, {3870, 454}, {3871, 480}, {3872, 494}, {3873, 520}, {3874, 584}, {3875, 650}, {3876, 716}, {3877, 754}, {3878, 780}, {3879, 884}, {3880, 936}, {3881, 1040}, {3882, 1104}, {3883, 1170}, {3884, 1300}, {3885, 1560}};
     private TickTask rapidRestoreTask;
 
@@ -70,9 +70,9 @@ public final class PrayerManager {
         prayerId2 = 0;
         Object[][] objectValues = PRAYER_DEFINITIONS;
         int index = 0;
-        while (index < 18) {
+        while (index < PRAYER_DEFINITIONS.length) {
             Object[] objectValues2 = objectValues[index];
-            if (objectValues2[0] == prayerId) {
+            if (objectValues2[0].equals(prayerId)) {
                 prayerId2 = (Integer)objectValues2[1];
             }
             ++index;
@@ -81,6 +81,9 @@ public final class PrayerManager {
     }
 
     public final void togglePrayer(Integer prayerId) {
+        if (prayerId == null || prayerId < 0 || prayerId >= PRAYER_DEFINITIONS.length) {
+            return;
+        }
         if (this.player.isDead()) {
             return;
         }
@@ -91,9 +94,9 @@ public final class PrayerManager {
         boolean enabled = false;
         Object[][] objectValues = PRAYER_DEFINITIONS;
         int index3 = 0;
-        while (index3 < 18) {
+        while (index3 < PRAYER_DEFINITIONS.length) {
             Object[] objectValues2 = objectValues[index3];
-            if (objectValues2[0] == prayerId) {
+            if (objectValues2[0].equals(prayerId)) {
                 index = (Integer)objectValues2[1];
                 text = (String)objectValues2[2];
                 index2 = (Integer)objectValues2[3];
@@ -292,6 +295,17 @@ public final class PrayerManager {
                 integerValues = new int[]{16, 15, 14, 13, 12};
             }
         }
+        // Ranged and magic boosts share the offensive slot with melee attack/strength.
+        // Defence boosts can remain active alongside any of them.
+        if (prayerId >= 18) {
+            integerValues = new int[]{1, 2, 4, 5, 10, 11, 18, 19, 20, 21, 22, 23};
+        } else if (prayerId == 1 || prayerId == 2 || prayerId == 4
+                || prayerId == 5 || prayerId == 10 || prayerId == 11) {
+            int[] conflicts = new int[integerValues.length + 6];
+            System.arraycopy(integerValues, 0, conflicts, 0, integerValues.length);
+            for (int i = 0; i < 6; i++) conflicts[integerValues.length + i] = 18 + i;
+            integerValues = conflicts;
+        }
         int[] integerValues4 = integerValues;
         int length = integerValues.length;
         int index = 0;
@@ -327,7 +341,7 @@ public final class PrayerManager {
             this.player.getSkillManager().setRapidHealRestoreDelay(false);
         }
         int index = 0;
-        while (index < 18) {
+        while (index < PRAYER_DEFINITIONS.length) {
             this.player.getActivePrayers()[index] = false;
             Player player = this.player;
             player.packetSender.sendConfig(PrayerManager.getPrayerConfigId(index, 1), 0);
@@ -358,6 +372,13 @@ public final class PrayerManager {
 
     public final boolean isRapidRestoreActive() {
         return this.player.getSkillManager().getCurrentLevels()[5] > 0 && this.player.getActivePrayers()[6];
+    }
+
+    /** Native 443 ranged/magic prayer buttons have no legacy 377 counterpart. */
+    public final boolean handleAdditionalPrayerClick(int child) {
+        if (child < 36 || child > 46 || (child & 1) != 0) return false;
+        this.togglePrayer(18 + (child - 36) / 2);
+        return true;
     }
 
     public final boolean handleButtonClick(int buttonId) {
@@ -433,15 +454,6 @@ public final class PrayerManager {
             }
             case 684: {
                 this.togglePrayer(16);
-                Player player = this.player;
-                if (player.getSkillManager().getCurrentLevels()[3] <= (int)((double)player.getSkillManager().getBaseLevel(3) * 0.1)) {
-                    int[] skillManager = player.getSkillManager().getCurrentLevels();
-                    skillManager[3] = skillManager[3] + (int)((double)player.getSkillManager().getBaseLevel(5) * 0.25);
-                    player.getUpdateState().setGraphic(436, 0);
-                    player.getSkillManager().refreshSkill(5);
-                    player.getSkillManager().setCurrentLevel(5, 0);
-                    player.getSkillManager().refreshSkill(3);
-                }
                 return true;
             }
             case 685: {

@@ -1431,7 +1431,7 @@ extends Entity {
         this.prayerHeadIcon = -1;
         this.skullIcon = -1;
         this.donatorPoints = 0;
-        this.activePrayers = new boolean[18];
+        this.activePrayers = new boolean[24];
         this.spellbook = Spellbook.MODERN;
         this.previousSpellbookBeforeNecromancy = Spellbook.MODERN;
         this.autoRetaliate = false;

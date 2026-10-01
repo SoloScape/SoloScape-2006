@@ -17,11 +17,15 @@ import jagex.utils.Cache;
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.awt.Container;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.FocusEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -221,12 +225,20 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	    IsaacPrng.anInt1087 = i_6_;
 	    Class10.frame = new Frame();
 	    Class10.frame.setTitle("Jagex");
-	    Class10.frame.setResizable(false);
+	    Class10.frame.setResizable(true);
+	    Class10.frame.setLayout(null);
+	    Class10.frame.setBackground(Color.BLACK);
+	    Class10.frame.addComponentListener(new ComponentAdapter() {
+		public void componentResized(ComponentEvent event) {
+		    positionGameCanvas();
+		}
+	    });
 	    Class10.frame.addWindowListener(this);
 	    Class10.frame.setVisible(true);
 	    Class10.frame.toFront();
 	    Insets insets = Class10.frame.getInsets();
 	    Class10.frame.setSize(insets.right + (insets.left + i_6_), insets.top + i_7_ + insets.bottom);
+	    Class10.frame.setMinimumSize(new Dimension(Class10.frame.getWidth(), Class10.frame.getHeight()));
 	    Cache.aClass21_108 = Class39_Sub5_Sub9.signlink = new Signlink(true, null, inetaddress, i_10_, string, i_8_);
 	    Class39_Sub5_Sub9.signlink.requestThread(this, 1);
 	} catch (Exception exception) {
@@ -617,6 +629,23 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	}
     }
     
+    private synchronized void positionGameCanvas() {
+	if (Class10.frame == null || Class41.aCanvas778 == null)
+	    return;
+	Insets insets = Class10.frame.getInsets();
+	int width = Class10.frame.getWidth() - insets.left - insets.right;
+	int height = Class10.frame.getHeight() - insets.top - insets.bottom;
+	double scale = Math.min((double) width / IsaacPrng.anInt1087,
+	    (double) height / Deque.anInt919);
+	int canvasWidth = Math.max(1, (int) (IsaacPrng.anInt1087 * scale));
+	int canvasHeight = Math.max(1, (int) (Deque.anInt919 * scale));
+	Class41.aCanvas778.setBounds(
+	    insets.left + Math.max(0, (width - canvasWidth) / 2),
+	    insets.top + Math.max(0, (height - canvasHeight) / 2),
+	    canvasWidth, canvasHeight);
+	ClientScript.aBoolean1690 = true;
+    }
+
     public synchronized void method28(int i) {
 	Container container;
 	if (Class10.frame != null)
@@ -632,8 +661,7 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	Class41.aCanvas778.setSize(IsaacPrng.anInt1087, Deque.anInt919);
 	Class41.aCanvas778.setVisible(true);
 	if (Class10.frame != null) {
-	    Insets insets = Class10.frame.getInsets();
-	    Class41.aCanvas778.setLocation(insets.left, insets.top);
+	    positionGameCanvas();
 	} else
 	    Class41.aCanvas778.setLocation(0, 0);
 	Class41.aCanvas778.addFocusListener(this);
@@ -714,13 +742,12 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	if (Class45.anInt855++ > 50) {
 	    Class45.anInt855 -= 50;
 	    ClientScript.aBoolean1690 = true;
-	    Class41.aCanvas778.setSize(IsaacPrng.anInt1087, Deque.anInt919);
 	    Class41.aCanvas778.setVisible(true);
-	    if (Class10.frame == null)
+	    if (Class10.frame == null) {
+		Class41.aCanvas778.setSize(IsaacPrng.anInt1087, Deque.anInt919);
 		Class41.aCanvas778.setLocation(0, 0);
-	    else {
-		Insets insets = Class10.frame.getInsets();
-		Class41.aCanvas778.setLocation(insets.left, insets.top);
+	    } else {
+		positionGameCanvas();
 	    }
 	}
 	method32(true);

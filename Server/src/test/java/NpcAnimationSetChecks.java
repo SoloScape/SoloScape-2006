@@ -3,7 +3,7 @@ import com.rs2.cache.js5.Definitions;
 import com.rs2.cache.js5.Js5CacheStore;
 import com.rs2.model.npc.NpcDefinition;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.DataInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -18,16 +18,16 @@ public final class NpcAnimationSetChecks {
         NpcDefinition.loadDefinitions();
         Map<Integer, byte[]> sequences = Definitions.readGroup(12);
         int sets = 0;
-        try (Js5CacheStore cache = new Js5CacheStore(new File("cache"))) {
-            for (String line : Files.readAllLines(Paths.get("data/npcs/animations443.txt"),
-                    StandardCharsets.UTF_8)) {
-                String content = line.split("#", 2)[0].trim();
-                if (content.isEmpty()) continue;
-                String[] values = content.split("\\s+");
-                int idle = Integer.parseInt(values[0]);
+        long tableBytes = Files.size(Paths.get("data/npcs/animations.dat"));
+        require(tableBytes > 0 && tableBytes % 16 == 0, "Invalid binary animation table length");
+        try (Js5CacheStore cache = new Js5CacheStore(new File("cache"));
+                DataInputStream table = new DataInputStream(
+                        Files.newInputStream(Paths.get("data/npcs/animations.dat")))) {
+            for (long record = 0; record < tableBytes / 16; record++) {
+                int idle = table.readInt();
                 int rig = verifySequence(cache, sequences.get(idle), -1, idle);
                 for (int i = 1; i < 4; i++) {
-                    int sequence = Integer.parseInt(values[i]);
+                    int sequence = table.readInt();
                     if (sequence != -1) {
                         verifySequence(cache, sequences.get(sequence), rig, sequence);
                     }

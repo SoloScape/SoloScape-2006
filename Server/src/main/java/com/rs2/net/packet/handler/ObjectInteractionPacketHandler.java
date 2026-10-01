@@ -18,6 +18,7 @@ import com.rs2.model.skill.farming.FarmingPatchUtils;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
 import com.rs2.net.packet.IncomingPacket;
+import com.rs2.net.packet.InterfaceBridge;
 import com.rs2.net.packet.PacketHandler;
 import com.rs2.net.packet.PacketReader;
 import com.rs2.net.packet.ClientPackets;
@@ -302,7 +303,9 @@ implements PacketHandler {
                 player.packetSender.sendGameMessage("443 spell-on-object decoded: spell="
                         + spellInterface + ":" + spellChild + " object=" + objectId);
             }
+            int legacySpellButton = SpellWidgets.toLegacySpellButton(spellInterface, spellChild);
             if (!SpellWidgets.isSpellWidget(spellInterface)
+                    || legacySpellButton == InterfaceBridge.UNMAPPED
                     || !SkillActionHelper.isObjectPresent(objectId, x, y,
                     player.getPosition().getPlane())) return;
             closeInterfacesUnlessTutorialOverlay(player);
@@ -311,7 +314,7 @@ implements PacketHandler {
             player.setInteractionTargetY(y);
             player.setInteractionTargetId(objectId);
             player.setInteractionTargetPlane(player.getPosition().getPlane());
-            player.setInteractionSpellButtonId(spellChild);
+            player.setInteractionSpellButtonId(legacySpellButton);
             EntityTargetMovement.clearMovementTarget(player);
             ObjectManager.prepareObjectInteractionMovement(player, objectId, x, y);
             queueObjectInteractionMovement(player);

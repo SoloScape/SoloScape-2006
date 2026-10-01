@@ -581,6 +581,72 @@ public class DirectColorSprite extends DrawingArea
 		      i_112_, i_111_, i_114_, i_113_, i_115_, i_116_);
     }
     
+    /** Draw this sprite with the classic 474+ one-pixel silhouette outline. */
+    public void drawOutlined(int x, int y, int color) {
+        int outlinedWidth = width + 2;
+        int outlinedHeight = height + 2;
+        int[] outlined = new int[outlinedWidth * outlinedHeight];
+        for (int sx = 0; sx < width; sx++) {
+            for (int sy = 0; sy < height; sy++) {
+                int pixel = anIntArray2476[sx + sy * width];
+                if (pixel != 0) {
+                    outlined[(sx + 1) + (sy + 1) * outlinedWidth] = pixel;
+                }
+            }
+        }
+        for (int sx = 0; sx < outlinedWidth; sx++) {
+            for (int sy = 0; sy < outlinedHeight; sy++) {
+                int index = sx + sy * outlinedWidth;
+                if (outlined[index] != 0) continue;
+                if (sx < outlinedWidth - 1 && isOutlineSource(outlined[index + 1])
+                        || sx > 0 && isOutlineSource(outlined[index - 1])
+                        || sy < outlinedHeight - 1 && isOutlineSource(outlined[index + outlinedWidth])
+                        || sy > 0 && isOutlineSource(outlined[index - outlinedWidth])) {
+                    outlined[index] = color;
+                }
+            }
+        }
+        x = x - 1 + anInt2473;
+        y = y - 1 + anInt2472;
+        int destination = x + y * DrawingArea.bufferWidth;
+        int source = 0;
+        int drawHeight = outlinedHeight;
+        int drawWidth = outlinedWidth;
+        int destinationSkip = DrawingArea.bufferWidth - drawWidth;
+        int sourceSkip = 0;
+        if (y < DrawingArea.areaOffsetY) {
+            int clipped = DrawingArea.areaOffsetY - y;
+            drawHeight -= clipped;
+            y = DrawingArea.areaOffsetY;
+            source += clipped * drawWidth;
+            destination += clipped * DrawingArea.bufferWidth;
+        }
+        if (y + drawHeight > DrawingArea.areaHeight)
+            drawHeight -= y + drawHeight - DrawingArea.areaHeight;
+        if (x < DrawingArea.areaOffsetX) {
+            int clipped = DrawingArea.areaOffsetX - x;
+            drawWidth -= clipped;
+            x = DrawingArea.areaOffsetX;
+            source += clipped;
+            destination += clipped;
+            sourceSkip += clipped;
+            destinationSkip += clipped;
+        }
+        if (x + drawWidth > DrawingArea.areaWidth) {
+            int clipped = x + drawWidth - DrawingArea.areaWidth;
+            drawWidth -= clipped;
+            sourceSkip += clipped;
+            destinationSkip += clipped;
+        }
+        if (drawWidth > 0 && drawHeight > 0)
+            method682(DrawingArea.buffer, outlined, 0, source, destination,
+                    drawWidth, drawHeight, destinationSkip, sourceSkip);
+    }
+
+    private static boolean isOutlineSource(int pixel) {
+        return pixel > 0 && pixel != 0xFFFFFF;
+    }
+
     public void method671() {
 	int[] is = new int[width * height];
 	int i = 0;

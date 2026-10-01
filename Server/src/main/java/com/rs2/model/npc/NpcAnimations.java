@@ -1,7 +1,7 @@
 package com.rs2.model.npc;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -15,24 +15,18 @@ final class NpcAnimations {
 
     static void load() throws IOException {
         Map<Integer, int[]> sets = new HashMap<Integer, int[]>();
-        int lineNumber = 0;
-        for (String line : Files.readAllLines(Paths.get("data/npcs/animations443.txt"),
-                StandardCharsets.UTF_8)) {
-            lineNumber++;
-            String content = line.split("#", 2)[0].trim();
-            if (content.isEmpty()) continue;
-            String[] values = content.split("\\s+");
-            try {
-                if (values.length != 4) throw new IllegalArgumentException("Expected four IDs");
-                int idle = Integer.parseInt(values[0]);
-                int[] set = {Integer.parseInt(values[1]), Integer.parseInt(values[2]),
-                        Integer.parseInt(values[3])};
-                if (idle < 0 || set[0] < -1 || set[1] < -1 || set[2] < -1
-                        || sets.put(idle, set) != null) {
-                    throw new IllegalArgumentException("Invalid or duplicate animation set");
-                }
-            } catch (IllegalArgumentException exception) {
-                throw new IOException("Invalid animations443.txt line " + lineNumber, exception);
+        // Each record contains four big-endian signed 32-bit IDs: idle, attack, block, death.
+        ByteBuffer data = ByteBuffer.wrap(Files.readAllBytes(Paths.get("data/npcs/animations.dat")));
+        if (data.remaining() == 0 || data.remaining() % 16 != 0) {
+            throw new IOException("Invalid animations.dat length: expected complete 16-byte records");
+        }
+        while (data.hasRemaining()) {
+            int record = data.position() / 16 + 1;
+            int idle = data.getInt();
+            int[] set = {data.getInt(), data.getInt(), data.getInt()};
+            if (idle < 0 || set[0] < -1 || set[1] < -1 || set[2] < -1
+                    || sets.put(idle, set) != null) {
+                throw new IOException("Invalid or duplicate animations.dat record " + record);
             }
         }
         SETS.clear();

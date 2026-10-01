@@ -31,6 +31,22 @@ public class Class20 {
     public static Deque[][][] groundItems;
     public static int anInt397;
 
+    static boolean isSelectedSpellWidget(Widget widget) {
+        if (widget == null || !IsaacPrng.aBoolean1100 || Class31.anInt570 != -1
+                || Class41.anInt775 != widget.anInt2084) {
+            return false;
+        }
+        int group = widget.anInt2084 >>> 16;
+        return group == 192 || group == 193;
+    }
+
+    static boolean isGuideIconDialogueWidget(Widget widget) {
+        return widget != null
+                && widget.anInt2084 == ((244 << 16) | 0)
+                && widget.anInt2009 == 2
+                && widget.anInt2026 == 0xFFFF;
+    }
+
     public static void method246(long l, byte i) {
         if (l != 0L) {
             for (int i_0_ = 0; i_0_ < Class4.anInt62; i_0_++) {
@@ -437,8 +453,11 @@ public class Class20 {
                                         bool = false;
                                     }
                                 } else {
-                                    class39_sub5_sub10_sub3.method670(x,
-                                            y);
+                                    if (isSelectedSpellWidget(widget)) {
+                                        class39_sub5_sub10_sub3.drawOutlined(x, y, 0xFFFFFF);
+                                    } else {
+                                        class39_sub5_sub10_sub3.method670(x, y);
+                                    }
                                 }
                             } else {
                                 DirectColorSprite class39_sub5_sub10_sub3;
@@ -542,6 +561,15 @@ public class Class20 {
                                 }
                             }
                         } else if (widget.type == 6) {
+                            if (isGuideIconDialogueWidget(widget)) {
+                                DirectColorSprite[] mapFunctions = Projectile.aClass39_Sub5_Sub10_Sub3Array2205;
+                                if (mapFunctions != null && mapFunctions.length > 55 && mapFunctions[55] != null) {
+                                    DirectColorSprite guideIcon = mapFunctions[55];
+                                    guideIcon.method670(x + (widget.quadWidth - guideIcon.width) / 2,
+                                            y + (widget.quadHeight - guideIcon.height) / 2);
+                                }
+                                continue;
+                            }
                             boolean bool_47_ = Huffmans.parseClientScript(widget);
                             int i_48_;
                             if (bool_47_) {
