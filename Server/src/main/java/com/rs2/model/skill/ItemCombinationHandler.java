@@ -155,27 +155,26 @@ public class ItemCombinationHandler {
         return null;
     }
 
-    public static boolean handleToolHeadAttachment(Player player, int value3, int value22) {
-        GatheringToolDefinition[] gatheringToolDefinitionArray = GatheringToolDefinition.values();
-        int length = gatheringToolDefinitionArray.length;
-        int index = 0;
-        while (index < length) {
-            handleToolHeadAttachmentControlExit1: {
-                GatheringToolDefinition gatheringToolDefinition;
-                handleToolHeadAttachmentControlExit2: {
-                    gatheringToolDefinition = gatheringToolDefinitionArray[index];
-                    if (gatheringToolDefinition.getToolHeadItemId() != value3 && gatheringToolDefinition.getToolHeadItemId() != value22) break handleToolHeadAttachmentControlExit1;
-                    GatheringToolDefinition gatheringToolDefinition2 = gatheringToolDefinition;
-                    if (value3 == 0) break handleToolHeadAttachmentControlExit2;
-                    gatheringToolDefinition2 = gatheringToolDefinition;
-                    if (value22 != 0) break handleToolHeadAttachmentControlExit1;
-                }
-                player.getInventoryManager().removeItem(new ItemStack(value3, 1));
-                player.getInventoryManager().removeItem(new ItemStack(value22, 1));
-                player.getInventoryManager().addItem(new ItemStack(gatheringToolDefinition.getToolItemId(), 1));
-                return true;
+    public static boolean handleToolHeadAttachment(Player player, int firstItemId, int secondItemId) {
+        for (GatheringToolDefinition tool : GatheringToolDefinition.values()) {
+            int headId = tool.getToolHeadItemId();
+            int handleId = firstItemId == headId ? secondItemId : firstItemId;
+            if (firstItemId != headId && secondItemId != headId) {
+                continue;
             }
-            ++index;
+            // Dragon heads could also be attached to the ordinary axe handle.
+            if (handleId != tool.getToolHandleItemId()
+                    && !(tool == GatheringToolDefinition.DRAGON_AXE && handleId == 492)) {
+                continue;
+            }
+            if (!player.getInventoryManager().containsItemAmount(headId, 1)
+                    || !player.getInventoryManager().containsItemAmount(handleId, 1)) {
+                return false;
+            }
+            player.getInventoryManager().removeItem(new ItemStack(headId, 1));
+            player.getInventoryManager().removeItem(new ItemStack(handleId, 1));
+            player.getInventoryManager().addItem(new ItemStack(tool.getToolItemId(), 1));
+            return true;
         }
         return false;
     }

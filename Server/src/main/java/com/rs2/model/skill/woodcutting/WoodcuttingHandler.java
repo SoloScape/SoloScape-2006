@@ -122,6 +122,8 @@ public class WoodcuttingHandler {
             player.botRouteActionPending = true;
         }
         int value7 = player.nextActionSequence();
+        player.getUpdateState().setFaceEntity(65535);
+        player.getUpdateState().setFacePosition(new Position(value22, value32, player.getPosition().getPlane()));
         player.packetSender.sendSoundEffect(472, 1, 0);
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(player, value7));
         player.getUpdateState().setAnimation(gatheringToolDefinition.getGatherAnimationId(), 0);

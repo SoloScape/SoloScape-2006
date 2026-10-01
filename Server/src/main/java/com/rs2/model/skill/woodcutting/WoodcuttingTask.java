@@ -91,6 +91,8 @@ extends CycleEvent {
                 return;
             }
             this.player.packetSender.sendSoundEffect(472, 1, 0);
+            this.player.getUpdateState().setFaceEntity(65535);
+            this.player.getUpdateState().setFacePosition(new Position(this.x, this.y, this.player.getPosition().getPlane()));
             World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
             World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
             this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);
@@ -128,6 +130,10 @@ extends CycleEvent {
             if (this.player.botEnabled) {
                 this.player.currentBotTask.startWalkToBank(this.player);
             }
+            return;
+        }
+        if (AxeHeadRandomEvent.tryTrigger(this.player, this.gatheringTool)) {
+            cycleEventContainer.stop();
             return;
         }
         if (SkillActionHelper.shouldTriggerRandomEvent(this.player) && !this.player.botEnabled && !this.player.isInTutorialIsland()) {
@@ -223,6 +229,8 @@ extends CycleEvent {
             return;
         }
         this.player.packetSender.sendSoundEffect(472, 1, 0);
+        this.player.getUpdateState().setFaceEntity(65535);
+        this.player.getUpdateState().setFacePosition(new Position(this.x, this.y, this.player.getPosition().getPlane()));
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
         this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);

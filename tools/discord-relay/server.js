@@ -2,6 +2,15 @@
 
 const http = require('http');
 const https = require('https');
+const { createFormatter } = require('./message-format');
+
+let formatMessage;
+try {
+  formatMessage = createFormatter(process.env.SOLOSCAPE_DISCORD_EMOJIS || '');
+} catch (error) {
+  console.error('Invalid SOLOSCAPE_DISCORD_EMOJIS:', error.message);
+  process.exit(1);
+}
 
 const port = Number.parseInt(process.env.PORT || '3000', 10);
 const discordWebhookUrl = (process.env.DISCORD_WEBHOOK_URL || '').trim();
@@ -74,48 +83,6 @@ function allowRequest(key) {
   }
   current.count += 1;
   return true;
-}
-
-function cleanText(value, maxLength) {
-  if (typeof value !== 'string') {
-    return '';
-  }
-  return value.replace(/[\r\n\t]+/g, ' ').trim().slice(0, maxLength);
-}
-
-function escapeDiscord(value) {
-  return value.replace(/([\\`*_{}\[\]()<>#+\-.!|>~])/g, '\\$1');
-}
-
-function formatMessage(event) {
-  const player = escapeDiscord(cleanText(event.player, 32));
-  const displayName = escapeDiscord(cleanText(event.server, 64));
-  if (!player) {
-    return null;
-  }
-
-  const actor = displayName || player;
-  const account = displayName ? ` on **${player}**` : '';
-
-  if (event.type === 'level_up') {
-    const skill = escapeDiscord(cleanText(event.skill, 32));
-    const level = Number(event.level);
-    if (!skill || !Number.isInteger(level) || level < 1 || level > 255) {
-      return null;
-    }
-    return `🎉 **${actor}** reached **${level} ${skill}**${account}!`;
-  }
-
-  if (event.type === 'boss_kill') {
-    const boss = escapeDiscord(cleanText(event.boss, 64));
-    const npcId = Number(event.npcId);
-    if (!boss || !Number.isInteger(npcId) || npcId < 0) {
-      return null;
-    }
-    return `☠️ **${actor}** defeated **${boss}**${account}!`;
-  }
-
-  return null;
 }
 
 function postToDiscord(content) {

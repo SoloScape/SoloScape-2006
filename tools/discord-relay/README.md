@@ -15,6 +15,7 @@ These are configured only on the relay host (for example Render):
 - `DISCORD_WEBHOOK_URL` - the real Discord channel webhook URL.
 - `SOLOSCAPE_RELAY_KEYS` - comma-separated private keys. Give each friend a different random key so an individual key can be revoked later.
 - `PORT` - optional HTTP port; defaults to `3000`.
+- `SOLOSCAPE_DISCORD_EMOJIS` - optional JSON mapping of skill names and boss names/NPC IDs to custom Discord emoji codes (see below).
 
 Example:
 
@@ -70,6 +71,24 @@ SOLOSCAPE_DISCORD_BOSS_NAMES=Custom Boss,Another Boss
 ```
 
 ## Events
+
+### Inline game icons
+
+Upload PNGs of the game's skill sprites and boss images as custom emojis in the Discord server receiving the webhook. In Discord, send an emoji with a backslash before it (for example, `\:woodcutting:`) to obtain its full code, such as `<:woodcutting:123456789012345678>`.
+
+Set `SOLOSCAPE_DISCORD_EMOJIS` on the relay host to a JSON object like this, replacing the example IDs with your actual emoji IDs:
+
+```json
+{"skills":{"woodcutting":"<:woodcutting:123456789012345678>","fishing":"<:fishing:123456789012345679>"},"bosses":{"50":"<:kbd:123456789012345680>","kalphite queen":"<:kalphite_queen:123456789012345681>"}}
+```
+
+Names are matched without regard to case or surrounding spaces. Boss NPC IDs take priority over boss names. Animated emoji codes (`<a:name:id>`) are also accepted. Restart/redeploy the relay after changing the environment variable; friends' game configs require no changes.
+
+The mapped emoji replaces the leading party/skull emoji and keeps the existing one-line message layout. Missing mappings retain the current default emoji. Invalid JSON or malformed emoji codes stop the relay at startup with a configuration error; a valid code referencing a deleted or inaccessible Discord emoji cannot be detected locally, so keep the mappings up to date.
+
+Item drop notifications are not currently sent by the game. Adding inline item icons would first require an item drop event carrying the item ID.
+
+Run `npm test` in this directory to check icon selection, fallbacks, and message escaping.
 
 Initial event types are:
 

@@ -50,6 +50,10 @@ public enum GatheringToolDefinition {
         return this.toolHeadItemId;
     }
 
+    public final int getToolHandleItemId() {
+        return this.skillId == 14 ? 466 : this == DRAGON_AXE ? 6745 : 492;
+    }
+
     public final int getGatherAnimationId() {
         return this.animationIds[0];
     }
