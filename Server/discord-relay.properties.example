@@ -1,10 +1,13 @@
-# Copy this file to discord-relay.properties and fill in your own values.
-# The real discord-relay.properties file is ignored by Git so relay keys are not committed.
-# Example relay URL: https://your-relay.example/event
+# Copy this file and rename it to discord-relay.properties (removing .example)
+
+# Here is the URL and KEY
+# relay.url is https://soloscape-discord-relay.onrender.com/event
+# The relay.key is 7WtU6vkq4OXaxrsoBowX2pJPeovEs18EtvtRkXxvkpjyzQr1
+# server.name is Your Discord name
 
 relay.url=
 relay.key=
-server.name=My SoloScape
+server.name=
 
 # Optional: extend the built-in boss list.
 boss.ids=
