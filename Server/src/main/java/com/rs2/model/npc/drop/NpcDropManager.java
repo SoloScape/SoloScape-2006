@@ -8,6 +8,7 @@ import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.npc.NpcDefinition;
 import com.rs2.model.player.Player;
+import com.rs2.util.DiscordEventNotifier;
 import com.rs2.util.GameUtil;
 import java.util.ArrayList;
 import java.util.Random;
@@ -125,6 +126,9 @@ public final class NpcDropManager {
 
     public static ItemStack[] rollDrops(Entity entity, int value2, boolean enabled2) {
         NpcDefinition npcDefinition = NpcDefinition.forId(value2);
+        if (!enabled2 && entity != null && entity.isPlayer()) {
+            DiscordEventNotifier.bossKill((Player)entity, value2, npcDefinition.getName());
+        }
         ItemStack[] guaranteedDrops = null;
         NpcDropEntry[] guaranteedEntries = NpcDropManager.getDropTableForNpcId(value2).getGuaranteedDrops(entity);
         if (guaranteedEntries != null && guaranteedEntries.length > 0) {

@@ -7,6 +7,7 @@ import com.rs2.model.player.Player;
 import com.rs2.model.skill.SkillLevelRestoreTask;
 import com.rs2.model.skill.SpecialEnergyRestoreTask;
 import com.rs2.model.task.TickTask;
+import com.rs2.util.DiscordEventNotifier;
 import com.rs2.util.GameUtil;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -369,6 +370,7 @@ public final class SkillManager {
                 this.player.setCombatLevel(this.getCombatLevel());
             }
             this.showLevelUpInterface(experience);
+            DiscordEventNotifier.levelUp(this.player, SKILL_NAMES[experience], value);
             if (this.player.botEnabled) {
                 if (GameUtil.randomInt(5) == 0 && (value % 2 == 0 || value % 5 == 0)) {
                     this.player.queuePublicChatMessage("Yay " + value + " " + SKILL_NAMES[experience] + "!");
@@ -405,6 +407,7 @@ public final class SkillManager {
                 this.player.setCombatLevel(this.getCombatLevel());
             }
             this.showLevelUpInterface(experience);
+            DiscordEventNotifier.levelUp(this.player, SKILL_NAMES[experience], this.getBaseLevel(experience));
         }
         this.refreshSkill(experience);
     }

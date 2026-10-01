@@ -14,3 +14,4 @@ data/messageOfTheWeek.dat
 /.idea
 qa-output/gameplay-trace.log
 *.log
+/discord-relay.properties

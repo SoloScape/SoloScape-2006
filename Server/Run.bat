@@ -2,6 +2,13 @@
 setlocal
 cd /d "%~dp0"
 
+if not exist "discord-relay.properties" if exist "discord-relay.properties.example" (
+    copy /y "discord-relay.properties.example" "discord-relay.properties" >nul
+    echo Created discord-relay.properties from the example file.
+    echo Edit that file to enable Discord level-up and boss-kill announcements.
+    echo.
+)
+
 if not defined PRS_AUDIT443 set "PRS_AUDIT443=true"
 
 rem Promote the fixed revision-443 server after the previous process releases server.jar.
