@@ -5,6 +5,7 @@ import com.rs2.model.EntityUpdateState;
 import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.combat.WeaponProfile;
+import com.rs2.model.item.ItemStack;
 import com.rs2.net.packet.AccessMode;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
@@ -258,36 +259,25 @@ public final class ModernPlayerUpdateTask {
         appearance.writeByte(player.getGender());
         appearance.writeByte(player.getPrayerHeadIcon());
         appearance.writeByte(player.getSkullIcon());
-        appearance.writeByte(0); // head equipment
-        appearance.writeByte(0); // cape
-        appearance.writeByte(0); // amulet
-        if (player.getEquipmentManager().getContainer().hasItemAtSlot(3)
-        && !player.shouldHideHeldItemsInAppearance()
-        && player.getEquipmentManager().getContainer().getItemAt(3).isEquippable()) {
-    appearance.writeShort(512
-            + player.getEquipmentManager().getContainer().getItemAt(3).getId());
-} else {
-    appearance.writeByte(0);
-}
-        appearance.writeShort(256 + player.getAppearanceParts()[0]);
-        if (player.getEquipmentManager().getContainer().hasItemAtSlot(5)
-        && !player.shouldHideHeldItemsInAppearance()
-        && player.getEquipmentManager().getContainer().getItemAt(5).isEquippable()) {
-    appearance.writeShort(512
-            + player.getEquipmentManager().getContainer().getItemAt(5).getId());
-} else {
-    appearance.writeByte(0);
-}
-        appearance.writeShort(256 + player.getAppearanceParts()[1]);
-        appearance.writeShort(256 + player.getAppearanceParts()[2]);
-        appearance.writeShort(256 + player.getAppearanceParts()[3]);
-        appearance.writeShort(256 + player.getAppearanceParts()[4]);
-        appearance.writeShort(256 + player.getAppearanceParts()[5]);
-        if (player.getGender() == 0) {
-            appearance.writeShort(256 + player.getAppearanceParts()[6]);
-        } else {
-            appearance.writeByte(0);
-        }
+        ItemStack head = visibleEquipment(player, 0);
+        ItemStack body = visibleEquipment(player, 4);
+        int headType = head == null ? 0 : head.getDefinition().getEquipmentAppearanceType();
+        int bodyType = body == null ? 0 : body.getDefinition().getEquipmentAppearanceType();
+        int[] parts = player.getAppearanceParts();
+        writeAppearancePart(appearance, head, 0);
+        writeAppearancePart(appearance, visibleEquipment(player, 1), 0);
+        writeAppearancePart(appearance, visibleEquipment(player, 2), 0);
+        writeAppearancePart(appearance, visibleEquipment(player, 3), 0);
+        writeAppearancePart(appearance, body, 256 + parts[0]);
+        writeAppearancePart(appearance, visibleEquipment(player, 5), 0);
+        // Platebodies include sleeves; full helmets also replace hair and/or beard.
+        writeAppearancePart(appearance, null, bodyType == 1 ? 0 : 256 + parts[1]);
+        writeAppearancePart(appearance, visibleEquipment(player, 7), 256 + parts[2]);
+        writeAppearancePart(appearance, null, headType == 2 || headType == 3 ? 0 : 256 + parts[3]);
+        writeAppearancePart(appearance, visibleEquipment(player, 9), 256 + parts[4]);
+        writeAppearancePart(appearance, visibleEquipment(player, 10), 256 + parts[5]);
+        writeAppearancePart(appearance, null,
+                player.getGender() == 0 && headType != 2 && headType != 4 ? 256 + parts[6] : 0);
         for (int color : player.getAppearanceColors()) {
             appearance.writeByte(color);
         }
@@ -305,5 +295,22 @@ public final class ModernPlayerUpdateTask {
         appearance.writeByte(player.getCombatLevel());
         appearance.writeShort(0); // 0 makes the client display combat level instead of Skill
         return appearance;
+    }
+
+    private static ItemStack visibleEquipment(Player player, int slot) {
+        if ((slot == 3 || slot == 5) && player.shouldHideHeldItemsInAppearance()) {
+            return null;
+        }
+        ItemStack item = player.getEquipmentManager().getContainer().getItemAt(slot);
+        return item != null && item.isEquippable() ? item : null;
+    }
+
+    private static void writeAppearancePart(PacketWriter appearance, ItemStack item, int fallback) {
+        int value = item == null ? fallback : 512 + item.getId();
+        if (value == 0) {
+            appearance.writeByte(0);
+        } else {
+            appearance.writeShort(value);
+        }
     }
 }
