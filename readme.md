@@ -1,7 +1,17 @@
 # SoloScape
 
-From the repository root, use Windows PowerShell with a JDK (`java`, `javac`,
-and `jar`) on PATH:
+Install a Java 8 JDK (any update, including 8u101 and 8u491). The batch scripts
+automatically find it through `JAVA_HOME`, PATH, the Windows registry, or common
+installation folders. For a custom location, set `JAVA_HOME` to the JDK folder.
+A JRE alone or Java 11+ cannot build the client. Keep `java8.bat` and `java8.ps1`
+in the repository root when distributing the scripts.
+
+If no Java 8 JDK is found, the scripts download a free Eclipse Temurin Java 8
+JDK from Adoptium, verify its SHA-256 checksum, and extract it under
+`%LOCALAPPDATA%\SoloScape\java8`. This requires internet access on the first run
+and no administrator permissions. Later runs reuse that installation offline.
+
+From the repository root, use Windows PowerShell:
 
 ```powershell
 .\scape.ps1 build          # Build both

@@ -19,8 +19,9 @@ validation.
 ## Requirements
 
 - Windows (the included build and run scripts are batch files)
-- JDK 1.8.0\_101 (Java SE Development Kit 8u101) - [Oracle Java SE 8 Archive Downloads](https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html)
-- Make sure to set `java`, `javac`on `PATH` in Enviroment Variables
+- A Java 8 JDK, any update (for example 8u101 or 8u491)
+- The batch scripts detect Java 8 automatically. For a custom installation folder, set `JAVA_HOME` to that folder. Java 11+ and JRE-only installations are skipped.
+- If none is found, the scripts automatically download and install a free Temurin Java 8 JDK under `%LOCALAPPDATA%\SoloScape\java8`, with no administrator permissions required.
 - The Client is `2006sp client`
 - About 1 GB of free RAM
 
