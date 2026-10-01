@@ -48,6 +48,8 @@ public final class EquipmentWindowChecks {
                             ClientPackets.INTERFACE_BUTTON, 4, PacketBuffer.wrapReader(open)));
                     require(player.getOpenInterfaceId() == 15106, "Stats window did not open");
                     byte[] opened = drain(client);
+                    require(opened.length >= 5 && opened[opened.length - 4] == 3,
+                            "Stats window did not select the inventory sidebar tab");
                     require(opened[opened.length - 2] == 1 && (opened[opened.length - 1] & 255) == 81,
                             "Viewport open was not the last packet (tutorial could close it)");
                     require(hasContainer(opened, 1205), "Equipped dagger not sent to stats window");

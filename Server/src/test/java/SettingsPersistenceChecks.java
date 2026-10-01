@@ -40,6 +40,10 @@ public final class SettingsPersistenceChecks {
                     transport.close();
                     player.packetSender.sendPostLoginState();
                     require(player.loginInitializationComplete, "Login incomplete at tutorial stage " + stage);
+                    player.setPublicChatEffects(1);
+                    click(player, 1);
+                    require(player.getPublicChatEffects() == 0, "Chat effects toggle ignored");
+                    player.setPublicChatAnimation(5);
                     for (int brightness = 1; brightness <= 4; brightness++) {
                         click(player, 6 + brightness);
                         require(player.getBrightness() == brightness, "Brightness click ignored");
@@ -100,6 +104,7 @@ public final class SettingsPersistenceChecks {
     }
 
     private static void check(Player player, int areaVolume) {
+        require(player.getPublicChatEffects() == 0, "Chat effects preference lost after login");
         require(player.getBrightness() == 4, "Brightness lost after login");
         require(player.getMusicVolume() == 4, "Music volume lost after login");
         require(player.getEffectVolume() == 4, "Effect volume lost after login");

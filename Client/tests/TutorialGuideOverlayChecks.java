@@ -12,12 +12,12 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
 
-/** Skill/quest guides must keep Tutorial Island instructions beneath them. */
+/** Guides and smithing must keep Tutorial Island instructions beneath them. */
 public final class TutorialGuideOverlayChecks {
     public static void main(String[] args) throws Exception {
         Field mode = JSocket.class.getDeclaredField("tutorialInstructionMode");
         mode.setAccessible(true);
-        for (int group : new int[] {275, 308}) {
+        for (int group : new int[] {275, 308, 312}) {
             for (boolean tutorial : new boolean[] {false, true}) {
                 mode.setBoolean(null, tutorial);
                 Class39_Sub5_Sub4.widgetsLoaded = new boolean[500];
@@ -55,7 +55,7 @@ public final class TutorialGuideOverlayChecks {
                         "Guide closing lost instructions for group " + group);
             }
         }
-        System.out.println("Tutorial guide overlay checks passed for quest and skill guides.");
+        System.out.println("Tutorial overlay checks passed for quest/skill guides and smithing.");
     }
 
     private static void require(boolean condition, String message) {

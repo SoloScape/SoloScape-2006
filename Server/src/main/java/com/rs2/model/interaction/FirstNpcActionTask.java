@@ -33,6 +33,9 @@ extends TickTask {
             this.stop();
             return;
         }
+        if (this.player.isOverlapping(this.npc)) {
+            return;
+        }
         if (this.npc.isBanker() || this.npc.getNpcId() == 736 || this.npc.getNpcId() == 745 || this.npc.getNpcId() == 3859 || this.npc.getNpcId() == 482) {
             if (this.npc.isFacingInteractionPosition(this.player.getPosition(), 2)) {
                 this.npc.getUpdateState().setFaceEntity(this.player.getEncodedIndex());

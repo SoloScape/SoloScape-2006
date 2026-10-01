@@ -779,8 +779,8 @@ extends QuestScript {
             itemStackArray.packetSender.closeInterfaces();
             value2 = itemStackArray;
             GameplayHelper.updateWalkableInterface(itemStackArray, -1);
-            itemStackArray.getDialogueManager().showFiveLineStatement(
-                    "Welcome to Lumbridge! To get more help, simply click on the",
+            itemStackArray.getDialogueManager().showTutorialWelcomeStatement(
+                "Welcome to Lumbridge! To get more help, simply click on the",
                     "Lumbridge Guide or one of the Tutors - these can be found by",
                     "looking for the question mark icon on your mini-map. If you find",
                     "you are lost at any time, look for a signpost or use the Lumbridge",
@@ -1543,10 +1543,9 @@ extends QuestScript {
                         return true;
                     }
                     if (value32 == 2) {
-                        // "No" returns to Terrova's previous line. Continuing
-                        // from there asks the mainland question again.
-                        player.getDialogueManager().showNpcTwoLineDialogue("Well you're all finished here now. I'll give you a", "reasonable number of runes when you leave.", 591);
-                        player.getDialogueManager().setNextDialogueStep(2);
+                        player.getDialogueManager().resetDialogueState();
+                        player.getDialogueManager().finishDialogue();
+                        player.getQuestManager().refreshQuestJournal();
                         return true;
                     }
                     player.getDialogueManager().finishDialogue();

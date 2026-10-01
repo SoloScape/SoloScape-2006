@@ -657,19 +657,23 @@ public final class PacketSender {
     }
 
     public final PacketSender selectMagicSidebarTab(int value2) {
+        return selectSidebarTab(6);
+    }
+
+    public final PacketSender selectSidebarTab(int tab) {
         if (this.player.isBot) {
             return this;
         }
         if (ServerSettings.clientBuild == 443) {
             PacketWriter packetWriter = PacketBuffer.allocateWriter(2);
             packetWriter.writeOpcode(this.player.getOutboundCipher(), 10);
-            packetWriter.writeByte(6);
+            packetWriter.writeByte(tab);
             this.player.writePacketBuffer(packetWriter.getBuffer());
             return this;
         }
         PacketWriter packetWriter = PacketBuffer.allocateWriter(2);
         packetWriter.writeOpcode(this.player.getOutboundCipher(), 106);
-        packetWriter.writeByte(6, ByteTransform.NEGATE);
+        packetWriter.writeByte(tab, ByteTransform.NEGATE);
         this.player.writePacketBuffer(packetWriter.getBuffer());
         return this;
     }

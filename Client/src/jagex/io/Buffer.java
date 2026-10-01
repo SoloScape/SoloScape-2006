@@ -404,103 +404,10 @@ public class Buffer extends Node {
                                         FrameBuffer.outgoingGameBuffer.putJstr((byte) 81,
                                                 Class66.aClass3_1160.method85(i ^ ~0x5e, 2));
                                     } else {
-                                        int i_37_ = 0;
-                                        int i_38_ = 0;
-                                        JString class3 = Class66.aClass3_1160.method77();
-                                        if (!class3.method65((Class39_Sub5_Sub4_Sub2.aClass3_2218),
-                                                false)) {
-                                            if (class3.method65(Class39_Sub12.aClass3_1485,
-                                                    false)) {
-                                                Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                        Class39_Sub12.aClass3_1485.getLength()));
-                                                i_37_ = 1;
-                                            } else if (!class3.method65(JMouseListener.aClass3_795,
-                                                    false)) {
-                                                if (!class3.method65(JSocket.aClass3_308,
-                                                        false)) {
-                                                    if (class3.method65((Npc.aClass3_2496),
-                                                            false)) {
-                                                        i_37_ = 4;
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(i - 161,
-                                                                (Npc.aClass3_2496.getLength())));
-                                                    } else if (class3.method65((Canvas_Sub1.aClass3_13),
-                                                            false)) {
-                                                        i_37_ = 5;
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(i ^ ~0x5e,
-                                                                (Canvas_Sub1.aClass3_13.getLength())));
-                                                    } else if (class3.method65((JImage.aClass3_1585),
-                                                            false)) {
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (JImage.aClass3_1585.getLength())));
-                                                        i_37_ = 6;
-                                                    } else if (class3.method65((Class39_Sub10.aClass3_1448),
-                                                            false)) {
-                                                        i_37_ = 7;
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (Class39_Sub10.aClass3_1448.getLength())));
-                                                    } else if (class3.method65((Class13.aClass3_198),
-                                                            false)) {
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (Class13.aClass3_198.getLength())));
-                                                        i_37_ = 8;
-                                                    } else if (class3.method65((FrameBuffer.aClass3_2144),
-                                                            false)) {
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (FrameBuffer.aClass3_2144.getLength())));
-                                                        i_37_ = 9;
-                                                    } else if (class3.method65((Class63.aClass3_1129),
-                                                            false)) {
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (Class63.aClass3_1129.getLength())));
-                                                        i_37_ = 10;
-                                                    } else if (class3.method65((Class39_Sub5_Sub7.aClass3_1787),
-                                                            false)) {
-                                                        i_37_ = 11;
-                                                        Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                                (Class39_Sub5_Sub7.aClass3_1787.getLength())));
-                                                    }
-                                                } else {
-                                                    Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                            (JSocket.aClass3_308.getLength())));
-                                                    i_37_ = 3;
-                                                }
-                                            } else {
-                                                i_37_ = 2;
-                                                Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                        JMouseListener.aClass3_795.getLength()));
-                                            }
-                                        } else {
-                                            i_37_ = 0;
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(i - 161,
-                                                    Class39_Sub5_Sub4_Sub2.aClass3_2218.getLength()));
-                                        }
-                                        class3 = Class66.aClass3_1160.method77();
-                                        if (class3.method65((Class53.aClass3_958),
-                                                false)) {
-                                            i_38_ = 1;
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(i ^ ~0x5e,
-                                                    Class53.aClass3_958.getLength()));
-                                        } else if (class3.method65((Class39_Sub5_Sub12.aClass3_1850),
-                                                false)) {
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                    Class39_Sub5_Sub12.aClass3_1850.getLength()));
-                                            i_38_ = 2;
-                                        } else if (class3.method65(Class46.aClass3_877,
-                                                false)) {
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(i - 161,
-                                                    Class46.aClass3_877.getLength()));
-                                            i_38_ = 3;
-                                        } else if (class3.method65(Class55.aClass3_1253,
-                                                false)) {
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                    Class55.aClass3_1253.getLength()));
-                                            i_38_ = 4;
-                                        } else if (class3.method65(Class34.aClass3_615,
-                                                false)) {
-                                            i_38_ = 5;
-                                            Class66.aClass3_1160 = (Class66.aClass3_1160.method85(-58,
-                                                    Class34.aClass3_615.getLength()));
-                                        }
+                                        unpackaged.ChatEffects effects = unpackaged.ChatEffects.parse(Class66.aClass3_1160);
+                                        int i_37_ = effects.colour;
+                                        int i_38_ = effects.animation;
+                                        Class66.aClass3_1160 = effects.text;
                                         FrameBuffer.outgoingGameBuffer.putFrame(4);
                                         FrameBuffer.outgoingGameBuffer.putByte(0);
                                         int offset = (FrameBuffer.outgoingGameBuffer.offset);

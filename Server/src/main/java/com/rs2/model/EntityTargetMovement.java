@@ -107,6 +107,10 @@ public class EntityTargetMovement {
         if (this.entity.isMovementLocked() || this.entity.isStunned()) {
             return;
         }
+        if (this.entity.isPlayer() && entity.isNpc() && this.entity.isOverlapping(entity)) {
+            this.stepPlayerAwayFromNpc(entity);
+            return;
+        }
         if (this.entity.isPlayer() && entity.isNpc() && (((Npc)entity).isBanker() || ((Npc)entity).getNpcId() == 736 || ((Npc)entity).getNpcId() == 745 || ((Npc)entity).getNpcId() == 3859 || ((Npc)entity).getNpcId() == 482)) {
             Player player = (Player)this.entity;
             value = ((Npc)entity).getFacingInteractionPosition(2);
@@ -279,6 +283,57 @@ public class EntityTargetMovement {
 
     public static boolean isDiagonalTo(Position position, Position position2) {
         return position.getX() != position2.getX() && position.getY() != position2.getY();
+    }
+
+    private void stepPlayerAwayFromNpc(Entity target) {
+        MovementQueue queue = this.entity.getMovementQueue();
+        queue.clear();
+        int x = this.entity.getPosition().getX();
+        int y = this.entity.getPosition().getY();
+        // Prefer a straight step. Diagonals use the same collision checks as
+        // normal walking, including both edges of a corner.
+        int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1},
+                {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+        for (int[] offset : offsets) {
+            if (!this.entity.canStepToOffset(offset[0], offset[1])) {
+                continue;
+            }
+            int nextX = x + offset[0];
+            int nextY = y + offset[1];
+            boolean occupied = false;
+            for (Npc npc : World.getNpcs()) {
+                if (npc == null || npc.isDead()
+                        || npc.getPosition().getPlane() != this.entity.getPosition().getPlane()) {
+                    continue;
+                }
+                if (nextX < npc.getPosition().getX() + npc.getSize()
+                        && nextX + this.entity.getSize() > npc.getPosition().getX()
+                        && nextY < npc.getPosition().getY() + npc.getSize()
+                        && nextY + this.entity.getSize() > npc.getPosition().getY()) {
+                    occupied = true;
+                    break;
+                }
+            }
+            // Also check the target when it is not in the world list yet.
+            if (occupied || (nextX < target.getPosition().getX() + target.getSize()
+                    && nextX + this.entity.getSize() > target.getPosition().getX()
+                    && nextY < target.getPosition().getY() + target.getSize()
+                    && nextY + this.entity.getSize() > target.getPosition().getY())) {
+                continue;
+            }
+            queue.addStep(new Position(nextX, nextY, this.entity.getPosition().getPlane()));
+            queue.removeFirstStep();
+            return;
+        }
+        // Inside a large NPC, leaving its footprint may require several ticks.
+        // Use a clipped route to its edge, but take only one step this tick.
+        if (target.getSize() > 1 && PathFinder.findPathToAdjacent(this.entity,
+                target.getPosition().getX(), target.getPosition().getY(),
+                target.getSize(), target.getSize(), false)) {
+            while (queue.getSteps().size() > 1) {
+                queue.getSteps().removeLast();
+            }
+        }
     }
 }
 

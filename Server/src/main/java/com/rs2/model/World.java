@@ -114,6 +114,9 @@ public final class World {
                         if (ServerSettings.clientBuild != 443 || ((Player)value2).isBot) {
                             ((Player)value2).process();
                         } else {
+                            // NPCs can move after the client's initial click route.
+                            // Keep pending interactions following their live target.
+                            ((Player)value2).getTargetMovement().process();
                             ((Player)value2).processConnectionTimeout();
                         }
                     }

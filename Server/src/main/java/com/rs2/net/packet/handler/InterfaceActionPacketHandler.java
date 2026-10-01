@@ -313,6 +313,7 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 player.getQuestManager().refreshQuestJournal();
             }
             // Open the viewport after the tutorial chatbox refresh so it stays visible.
+            player.packetSender.selectSidebarTab(3);
             player.packetSender.showInterface(15106);
             return;
         }
@@ -418,6 +419,14 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
         if (packedWidgetId == (90 << 16 | 5)
                 && (operation == -1 || parameter == 0)) {
             buttonHandler.handleButton(player, 353);
+            return;
+        }
+        // Cache group 261 child 1 toggles varp 171 (0 = show effects, 1 = hide).
+        if (packedWidgetId == (261 << 16 | 1)
+                && (operation == -1 || parameter == 0)) {
+            int setting = player.getPublicChatEffects() == 0 ? 1 : 0;
+            player.setPublicChatEffects(setting);
+            player.packetSender.sendConfig(171, setting);
             return;
         }
         if (handleDialogueContinue(player, packedWidgetId)) return;

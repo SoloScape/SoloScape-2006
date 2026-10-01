@@ -33,8 +33,8 @@ public final class TutorialClassicFlowAuditChecks {
         InterfaceDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
-        require(!ServerSettings.tutorialSkipPromptEnabled,
-                "Historical 443 Tutorial unexpectedly enables the custom skip prompt");
+        require(ServerSettings.tutorialSkipPromptEnabled,
+                "Tutorial Island skip prompt is disabled by default");
 
         Npc instructor = new Npc(944);
         instructor.setIndex(0);
@@ -64,6 +64,18 @@ public final class TutorialClassicFlowAuditChecks {
                 player.setOutboundCipher(new IsaacCipher(new int[4]));
                 player.setPosition(new Position(3073, 3090, 0));
                 player.setRunEnergyPercent(100);
+
+                player.setQuestState(0, 2);
+                tutorial.handleNpcDialogue(player, 945, 1, 0, 2);
+                require(drain(client).contains("Would you like to skip tutorial?"),
+                        "RuneScape Guide did not offer the tutorial skip");
+                tutorial.handleNpcDialogue(player, 945, 2, 2, 2);
+                require(Boolean.TRUE.equals(player.getAttributes().get("tutorialSkipDeclined")),
+                        "Declining the skip was not remembered");
+                drain(client);
+                tutorial.handleNpcDialogue(player, 945, 1, 0, 2);
+                require(!drain(client).contains("Would you like to skip tutorial?"),
+                        "RuneScape Guide repeated the skip prompt after it was declined");
 
                 player.setQuestState(0, 22);
                 tutorial.refreshQuestJournal(player, 22);

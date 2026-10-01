@@ -54,6 +54,7 @@ public class DialogueManager {
     private int dialogueStep;
     private int dialogueContextId;
     private int dialogueNpcId;
+    private boolean tutorialWelcomePending;
 
     public DialogueManager(Player player) {
         this.player = player;
@@ -90,7 +91,15 @@ public class DialogueManager {
     }
 
     public final boolean continueTutorialStatement() {
-        if (!this.isDialogueInactive() || this.player.getQuestState(0) == 1) {
+        if (!this.isDialogueInactive()) {
+            return false;
+        }
+        if (this.tutorialWelcomePending && this.player.getOpenInterfaceId() == 374) {
+            this.resetDialogueState();
+            this.player.packetSender.closeInterfaces();
+            return true;
+        }
+        if (this.player.getQuestState(0) == 1) {
             return false;
         }
         switch (this.player.getOpenInterfaceId()) {
@@ -136,6 +145,7 @@ public class DialogueManager {
     }
 
     public final void resetDialogueState() {
+        this.tutorialWelcomePending = false;
         int index = 0;
         DialogueManager dialogueManager = this;
         this.dialogueStep = index;
@@ -621,6 +631,14 @@ public class DialogueManager {
             value = this.player.getDialogueManager();
             this.player.getDialogueManager().dialogueStep = 9001;
         }
+    }
+
+    public final void showTutorialWelcomeStatement(String line1, String line2, String line3,
+                                                   String line4, String line5) {
+        this.resetDialogueState();
+        this.showFiveLineStatement(line1, line2, line3, line4, line5);
+        this.finishDialogue();
+        this.tutorialWelcomePending = true;
     }
 
     public final void showOneLineChatboxMessage(String text2) {

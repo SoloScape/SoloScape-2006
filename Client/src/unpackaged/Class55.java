@@ -90,10 +90,7 @@ public class Class55 implements Interface2
     
     public static void method999(int i) {
 	boolean preserveTutorialInstructions = Class39_Sub5_Sub14.anInt1912 == 214
-		&& (characterDesignActive || (Class39_Sub11.anInt1478 == 275
-		|| Class39_Sub11.anInt1478 == 308 || Class39_Sub11.anInt1478 == 465
-		|| Class39_Sub11.anInt1478 == 12)
-		&& jagex.io.JSocket.isTutorialInstructionMode());
+		&& characterDesignActive;
 	characterDesignActive = false;
 	FrameBuffer.outgoingGameBuffer.putFrame(70);
 	if (StillGraphic.anInt2338 != -1) {
@@ -104,16 +101,12 @@ public class Class55 implements Interface2
 	    Class39_Sub14.aBoolean1520 = true;
 	    Class39_Sub10.anInt1420 = -1;
 	}
-	if (Class39_Sub5_Sub14.anInt1912 != -1 && !preserveTutorialInstructions) {
-	    Class62_Sub2.method1084((byte) 122, Class39_Sub5_Sub14.anInt1912);
-	    Class39_Sub5_Sub14.anInt1912 = -1;
+	if (preserveTutorialInstructions) {
+	    // Character design can precede the tutorial mode marker on login.
 	    Class14.aBoolean245 = true;
 	    Class39_Sub10.anInt1420 = -1;
-	} else if (preserveTutorialInstructions) {
-	    // Keep the tutorial instructions alive when accepting character design
-	    // or closing equipment stats/the bank.
-	    Class14.aBoolean245 = true;
-	    Class39_Sub10.anInt1420 = -1;
+	} else {
+	    Class39_Sub5_Sub14.closeChatboxInterface();
 	}
 	if (SubNode.anInt1348 != -1) {
 	    Class62_Sub2.method1084((byte) 119, SubNode.anInt1348);

@@ -30,7 +30,8 @@ implements PacketHandler {
                 return;
             }
             if (player.getQuestState(0) != 1) return;
-            player.setPublicChatEffects(effects);
+            if (color > 11 || effects > 5) return;
+            player.setPublicChatAnimation(effects);
             player.setPublicChatColor(color);
             player.setPublicChatPayload(compressed);
             player.flagAppearanceUpdate(true);
@@ -65,7 +66,8 @@ implements PacketHandler {
         if (player.getQuestState(0) != 1) {
             return;
         }
-        player.setPublicChatEffects(effects);
+        if (color < 0 || color > 11 || effects < 0 || effects > 5) return;
+        player.setPublicChatAnimation(effects);
         player.setPublicChatColor(color);
         player.setPublicChatPayload(payload);
         player.flagAppearanceUpdate(true);

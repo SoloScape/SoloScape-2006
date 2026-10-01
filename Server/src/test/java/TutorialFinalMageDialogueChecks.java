@@ -3,6 +3,7 @@ import com.rs2.cache.InterfaceDefinition;
 import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.dialogue.DialogueManager;
+import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.npc.Npc;
 import com.rs2.model.npc.NpcDefinition;
 import com.rs2.model.player.Player;
@@ -12,6 +13,7 @@ import com.rs2.net.packet.ClientPackets;
 import com.rs2.net.packet.IncomingPacket;
 import com.rs2.net.packet.PacketBuffer;
 import com.rs2.net.packet.handler.InterfaceActionPacketHandler;
+import com.rs2.net.packet.handler.InterfaceInputPacketHandler;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
@@ -28,6 +30,7 @@ public final class TutorialFinalMageDialogueChecks {
         QuestDefinition.loadDefinitions();
         InterfaceDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
+        ItemDefinition.loadDefinitions();
         Npc mage = new Npc(946);
         mage.setIndex(0);
         mage.setPosition(new Position(3141, 3088, 0));
@@ -51,18 +54,20 @@ public final class TutorialFinalMageDialogueChecks {
                 drain(client);
                 require(player.getDialogueManager().handleOptionButton(2462), "No option was not handled");
                 String declined = drain(client);
-                require(player.getOpenInterfaceId() == 4887, "No did not return to Terrova's previous dialogue");
-                require(declined.contains("Well you're all finished here now. I'll give you a")
-                        && declined.contains("reasonable number of runes when you leave."),
-                        "No did not restore the previous Terrova dialogue text");
-                require(player.getDialogueManager().getDialogueStep() == 1,
-                        "No did not rewind the dialogue cursor for the mainland question");
+                require(player.getOpenInterfaceId() == 6179, "No did not restore tutorial instructions");
+                require(declined.contains("You have almost completed the tutorial!")
+                        && declined.contains("with Terrova and he'll teleport you to Lumbridge Castle."),
+                        "No did not restore the final tutorial instruction text");
+                require(player.getDialogueManager().isDialogueInactive(), "No left the conversation active");
+                require(player.getQuestState(0) == 67, "No advanced the tutorial");
+
+                require(DialogueManager.continueDialogue(player, 946, 1, 0), "Terrova could not be reopened");
+                drain(client);
                 clickTwoLineContinue(player);
-                String questionAgain = drain(client);
-                require(player.getOpenInterfaceId() == 2459, "Continue did not reopen mainland Yes/No question");
-                require(questionAgain.contains("Do you want to go to the mainland?")
-                        && questionAgain.contains("Yes.") && questionAgain.contains("No."),
-                        "Mainland question did not reappear after returning to previous dialogue");
+                drain(client);
+                require(player.getDialogueManager().handleOptionButton(2461), "Yes option was not handled");
+                require(drain(client).contains("When you get to the mainland you will find yourself in"),
+                        "Yes did not continue the mainland directions");
 
                 require(DialogueManager.continueDialogue(player, 946, 4, 0), "White-beard page missing");
                 require(drain(client).contains("a question mark on the end. He also has a white beard"),
@@ -90,6 +95,25 @@ public final class TutorialFinalMageDialogueChecks {
                 require(player.getOpenInterfaceId() == 4893, "Continue did not replace Guide page");
                 require(website.contains("If all else fails, visit the RuneScape website for a whole"),
                         "Continue got stuck instead of showing website page");
+
+                for (boolean nativeContinue : new boolean[] {false, true}) {
+                    player.setQuestState(0, 67);
+                    require(DialogueManager.continueDialogue(player, 946, 8, 0), "Tutorial departure failed");
+                    require(drain(client).contains("Welcome to Lumbridge!"), "Arrival statement missing");
+                    require(player.getQuestState(0) == 1 && player.getOpenInterfaceId() == 374,
+                            "Arrival did not complete tutorial with welcome statement open");
+                    if (nativeContinue) {
+                        ByteBuffer payload = ByteBuffer.allocate(6);
+                        payload.putShort((short) -1).putInt((214 << 16) | 5).flip();
+                        new InterfaceActionPacketHandler().handle(player,
+                                new IncomingPacket(ClientPackets.WIDGET_SELECT, 6, PacketBuffer.wrapReader(payload)));
+                    } else {
+                        new InterfaceInputPacketHandler().handle(player, new IncomingPacket(40, 0, null));
+                    }
+                    require(player.getOpenInterfaceId() == 0, "Welcome Continue did not restore normal chatbox");
+                    require(drain(client).length() == 1, "Welcome Continue did not send the close-modal packet");
+                    require(player.getQuestState(0) == 1, "Welcome Continue changed tutorial completion");
+                }
             }
         }
         System.out.println("Tutorial final mage dialogue checks passed (two Guide-icon pages + native Continue). ");

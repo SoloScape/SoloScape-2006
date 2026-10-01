@@ -4,6 +4,7 @@ import com.rs2.model.Entity;
 import com.rs2.model.EntityUpdateState;
 import com.rs2.model.Position;
 import com.rs2.model.World;
+import com.rs2.model.combat.WeaponProfile;
 import com.rs2.net.packet.AccessMode;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
@@ -235,7 +236,7 @@ public final class ModernPlayerUpdateTask {
 
     private static void writePublicChat(Player player, PacketWriter masks) {
         int colorEffects = ((player.getPublicChatColor() & 0xFF) << 8)
-                | player.getPublicChatEffects() & 0xFF;
+                | player.getPublicChatAnimation() & 0xFF;
         byte[] payload = player.getPublicChatPayload();
         masks.writeShort(colorEffects);
         masks.writeByte(player.getPlayerRights());
@@ -291,7 +292,10 @@ public final class ModernPlayerUpdateTask {
             appearance.writeByte(color);
         }
         appearance.writeShort(player.getStandAnimation());
-        appearance.writeShort(player.getWalkAnimation());
+        // The second slot is a standing turn, not forward walking. Weapons
+        // without a separate turn sequence retain their idle pose while turning.
+        appearance.writeShort(player.getWalkAnimation() == WeaponProfile.FISTS.getMovementAnimations()[1]
+                ? 823 : player.getStandAnimation());
         appearance.writeShort(player.getWalkAnimation());
         appearance.writeShort(player.getWalkAnimation());
         appearance.writeShort(player.getWalkAnimation());

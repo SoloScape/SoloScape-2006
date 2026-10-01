@@ -565,8 +565,12 @@ public class Class20 {
                                 DirectColorSprite[] mapFunctions = Projectile.aClass39_Sub5_Sub10_Sub3Array2205;
                                 if (mapFunctions != null && mapFunctions.length > 55 && mapFunctions[55] != null) {
                                     DirectColorSprite guideIcon = mapFunctions[55];
-                                    guideIcon.method670(x + (widget.quadWidth - guideIcon.width) / 2,
-                                            y + (widget.quadHeight - guideIcon.height) / 2);
+                                    int scale = 5;
+                                    int iconWidth = guideIcon.anInt2475 * scale;
+                                    int iconHeight = guideIcon.anInt2477 * scale;
+                                    guideIcon.method687(x + (widget.quadWidth - iconWidth) / 2,
+                                            y + (widget.quadHeight - iconHeight) / 2,
+                                            iconWidth, iconHeight);
                                 }
                                 continue;
                             }

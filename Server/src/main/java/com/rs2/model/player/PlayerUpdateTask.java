@@ -346,7 +346,7 @@ public class PlayerUpdateTask {
         if (player.getUpdateState().isAppearanceUpdateRequired() && !enabled22) {
             PacketWriter chatWriter = packetWriter;
             Player player2 = player;
-            chatWriter.writeShort(((player2.getPublicChatColor() & 0xFF) << 8) + (player2.getPublicChatEffects() & 0xFF), ByteOrder.LITTLE);
+            chatWriter.writeShort(((player2.getPublicChatColor() & 0xFF) << 8) + (player2.getPublicChatAnimation() & 0xFF), ByteOrder.LITTLE);
             chatWriter.writeByte(player2.getPublicChatPayload().length, ByteTransform.NEGATE);
             byte[] publicChatPayload = player2.getPublicChatPayload();
             int value2 = publicChatPayload.length - 1;

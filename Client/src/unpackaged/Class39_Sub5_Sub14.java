@@ -44,6 +44,21 @@ public class Class39_Sub5_Sub14 extends SubNode
     public int anInt1917;
     public static JString aClass3_1918;
     public static int anInt1919;
+
+    /** Tutorial instructions belong to the HUD, not the interface being closed. */
+    public static void closeChatboxInterface() {
+        if (anInt1912 == 214 && jagex.io.JSocket.isTutorialInstructionMode()) {
+            Class14.aBoolean245 = true;
+            Class39_Sub10.anInt1420 = -1;
+            return;
+        }
+        if (anInt1912 != -1) {
+            Class62_Sub2.method1084((byte) 122, anInt1912);
+            anInt1912 = -1;
+            Class14.aBoolean245 = true;
+            Class39_Sub10.anInt1420 = -1;
+        }
+    }
     
     public void method726(int i, Buffer class39_sub6, byte i_0_,
 			  int i_1_) {

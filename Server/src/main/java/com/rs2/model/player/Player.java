@@ -322,6 +322,7 @@ extends Entity {
     private int brightness;
     private int mouseButtons;
     private int publicChatEffects;
+    private int publicChatAnimation;
     private int splitPrivateChat;
     private int privateChatMode;
     private int publicChatMode;
@@ -1022,7 +1023,7 @@ extends Entity {
         int value3 = ChatTextCodec.encode(message, byteValues);
         byte[] byteValues2 = new byte[value3];
         ChatTextCodec.encode(message, byteValues2);
-        this.publicChatEffects = publicChatEffects;
+        this.publicChatAnimation = publicChatEffects;
         this.publicChatColor = publicChatColor;
         this.publicChatPayload = byteValues2;
         this.publicChatUpdatePending = true;
@@ -3947,6 +3948,14 @@ extends Entity {
 
     public final int getPublicChatEffects() {
         return this.publicChatEffects;
+    }
+
+    public final void setPublicChatAnimation(int animation) {
+        this.publicChatAnimation = animation;
+    }
+
+    public final int getPublicChatAnimation() {
+        return this.publicChatAnimation;
     }
 
     public final void setPublicChatPayload(byte[] publicChatPayload) {

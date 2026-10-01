@@ -160,9 +160,9 @@ public class Class32
 				if (i_17_ == 0) {
 				    i_15_++;
 				    if (i_18_ > 0 && i_18_ < 110)
-					class39_sub5_sub10_sub1.method647
+					class39_sub5_sub10_sub1.method635
 					    (Class2.aClass3Array52[i_16_], 4,
-					     i_18_, 0);
+					     i_18_, 0, false);
 				}
 				if ((i_17_ == 1 || i_17_ == 2)
 				    && (i_17_ == 1 || Bzip2Block.anInt1051 == 0

@@ -32,7 +32,9 @@ implements PacketHandler {
                     || player.getOpenInterfaceId() == 5292
                     || player.getOpenInterfaceId() == 8714
                     || player.getOpenInterfaceId() == 8134
-                    || player.getQuestState(0) == 52 && player.getOpenInterfaceId() == 6179)) {
+                    || player.getOpenInterfaceId() == 994
+                    || (player.getQuestState(0) == 38 || player.getQuestState(0) == 52)
+                    && player.getOpenInterfaceId() == 6179)) {
                 // The native X button already closed the viewport and kept
                 // the tutorial chatbox. A global close/reopen would make it flicker.
                 player.setOpenInterfaceId(6179);

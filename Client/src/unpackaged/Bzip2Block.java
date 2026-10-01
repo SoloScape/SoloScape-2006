@@ -450,11 +450,7 @@ public class Bzip2Block {
                             StillGraphic.anInt2338);
                     StillGraphic.anInt2338 = -1;
                 }
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
-                    Class62_Sub2.method1084((byte) -127,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 if (SubNode.anInt1348 != i_51_) {
                     Class62_Sub2.method1084((byte) -69,
                             SubNode.anInt1348);
@@ -533,16 +529,7 @@ public class Bzip2Block {
             if (Class4.frameId == 146) {
                 int i_60_ = Class39_Sub5_Sub11.gameBuffer.method833((byte) 120);
                 int i_61_ = Class39_Sub5_Sub11.gameBuffer.getUword();
-                // Keep Tutorial Island instructions beneath the bank window.
-                if (Class39_Sub5_Sub14.anInt1912 != -1
-                        && !(i_60_ == 12 && i_61_ == 15
-                        && Class39_Sub5_Sub14.anInt1912 == 214
-                        && JSocket.isTutorialInstructionMode())) {
-                    Class62_Sub2.method1084((byte) 109,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                    Class14.aBoolean245 = true;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 if (SubNode.anInt1348 != -1) {
                     Class62_Sub2.method1084((byte) 113,
                             SubNode.anInt1348);
@@ -732,12 +719,7 @@ public class Bzip2Block {
             if (Class4.frameId == 149) {
                 int i_78_ = Class39_Sub5_Sub11.gameBuffer.method818(-1);
                 Varbit.method594(-98, i_78_);
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
-                    Class62_Sub2.method1084((byte) 115,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                    Class14.aBoolean245 = true;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 if (SubNode.anInt1348 != -1) {
                     Class62_Sub2.method1084((byte) 127,
                             SubNode.anInt1348);
@@ -782,17 +764,9 @@ public class Bzip2Block {
                     IsaacPrng.aBoolean1089 = true;
                     StillGraphic.anInt2338 = -1;
                 }
-                // Character design can arrive before the fresh-login tutorial mode latch,
-                // so preserve its instruction chatbox independently of that flag.
-                if (Class39_Sub5_Sub14.anInt1912 != -1
-                        && !((i_79_ == 269
-                        || ((i_79_ == 275 || i_79_ == 308 || i_79_ == 312 || i_79_ == 465)
-                        && JSocket.isTutorialInstructionMode()))
-                        && Class39_Sub5_Sub14.anInt1912 == 214)) {
-                    Class62_Sub2.method1084((byte) 115,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class14.aBoolean245 = true;
-                    Class39_Sub5_Sub14.anInt1912 = -1;
+                // Character design can precede the tutorial mode marker on login.
+                if (!(i_79_ == 269 && Class39_Sub5_Sub14.anInt1912 == 214)) {
+                    Class39_Sub5_Sub14.closeChatboxInterface();
                 }
                 if (SubNode.anInt1348 != -1) {
                     Class62_Sub2.method1084((byte) 100,
@@ -1354,11 +1328,7 @@ public class Bzip2Block {
                 return true;
             }
             if (Class4.frameId == 32) {
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
-                    Class62_Sub2.method1084((byte) -40,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 Class4.frameId = -1;
                 Class14.aBoolean245 = true;
                 Class39_Sub5_Sub4_Sub4.anInt2285 = 1;
@@ -1387,12 +1357,7 @@ public class Bzip2Block {
                     Class39_Sub14.aBoolean1520 = true;
                     StillGraphic.anInt2338 = -1;
                 }
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
-                    Class62_Sub2.method1084((byte) -99,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class14.aBoolean245 = true;
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 if (SubNode.anInt1348 != -1) {
                     Class62_Sub2.method1084((byte) -125,
                             SubNode.anInt1348);
@@ -1461,11 +1426,7 @@ public class Bzip2Block {
                 return true;
             }
             if (Class4.frameId == 51) {
-                if (Class39_Sub5_Sub14.anInt1912 != -1) {
-                    Class62_Sub2.method1084((byte) -41,
-                            Class39_Sub5_Sub14.anInt1912);
-                    Class39_Sub5_Sub14.anInt1912 = -1;
-                }
+                Class39_Sub5_Sub14.closeChatboxInterface();
                 Class4.frameId = -1;
                 Class39_Sub5_Sub4_Sub4.anInt2285 = 2;
                 Class39_Sub12.aBoolean1489 = false;
