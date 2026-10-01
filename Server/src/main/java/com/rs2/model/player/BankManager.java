@@ -289,7 +289,14 @@ public final class BankManager {
         }
         ItemStack[] inventoryItems = player.getInventoryManager().getContainer().getRawItems();
         player.packetSender.sendItemContainer(7423, inventoryItems);
-        player.packetSender.showInterfaceWithInventory(4465, 197);
+        if (ServerSettings.clientBuild == 443) {
+            // The native deposit box contains its own inventory grid. Legacy 197
+            // maps to the Wilderness overlay and would blank the sidebar.
+            player.setInventoryOverlayInterfaceId(0);
+            player.packetSender.showInterface(4465);
+        } else {
+            player.packetSender.showInterfaceWithInventory(4465, 197);
+        }
         player.getAttributes().put("isBanking", Boolean.TRUE);
     }
 

@@ -96,7 +96,8 @@ implements PacketHandler {
                 if (GameplayTrace.enabled() && (player.getSelectedInterfaceId() == 3900 || player.getSelectedInterfaceId() == 3823)) {
                     GameplayTrace.log("shop item amount-custom input player=" + GameplayTrace.describe(player) + " interfaceId=" + player.getSelectedInterfaceId() + " slot=" + player.getSelectedInterfaceSlot() + " itemId=" + player.getSelectedInterfaceItemId() + " amount=" + amount + " openInterfaceId=" + player.getOpenInterfaceId() + " currentShopId=" + player.getCurrentShopId());
                 }
-                if (player.getSelectedInterfaceId() == 5064 && player.getOpenInterfaceId() == 5292) {
+                if (player.getSelectedInterfaceId() == 5064 && player.getOpenInterfaceId() == 5292
+                        || player.getSelectedInterfaceId() == 7423 && player.getOpenInterfaceId() == 4465) {
                     BankManager.depositInventoryItem(player, player.getSelectedInterfaceSlot(), player.getSelectedInterfaceItemId(), amount);
                     return;
                 }

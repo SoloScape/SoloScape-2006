@@ -288,6 +288,7 @@ public final class InterfaceBridge {
         // Bank: stock 443 group 12 plus its inventory overlay group 15.
         put(mappings, 5382, 12, 89); // bank item container
         put(mappings, 5064, 15, 0);  // inventory while banking
+        put(mappings, 7423, 11, 61); // inventory inside the deposit box
         put(mappings, 5386, 12, 92); // withdraw as note
         put(mappings, 5387, 12, 93); // withdraw as item
         put(mappings, 8130, 12, 98); // swap rearrange mode
@@ -663,6 +664,8 @@ public final class InterfaceBridge {
     }
 
     public static int toLegacyComponent(int packedId) {
+        // Also resolve deposit clicks after HotSwap, before maps are reinitialized.
+        if (packedId == (11 << 16 | 61)) return 7423;
         if (packedId == (465 << 16 | 103)) return 1688;
         // Keep newly-added spell mappings visible to a live HotSwap server; the
         // static reverse table is built only once when this class is first loaded.

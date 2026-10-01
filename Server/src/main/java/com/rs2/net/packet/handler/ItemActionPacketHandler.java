@@ -96,6 +96,9 @@ import java.nio.ByteBuffer;
 public final class ItemActionPacketHandler
 implements PacketHandler {
     private static boolean isItemActionInterfaceOpen(Player player, int interfaceId, InterfaceDefinition interfaceDefinition) {
+        if (ServerSettings.clientBuild == 443 && interfaceId == 7423) {
+            return player.getOpenInterfaceId() == 4465;
+        }
         return player.isInterfaceIdOpen(interfaceId)
                 || player.getOpenInterfaceId() == 5292
                 && BankManager.isBankItemContainerInterfaceId(interfaceId);
@@ -761,7 +764,7 @@ implements PacketHandler {
     private static boolean handleRevision443BankShopItemOption(Player player, int packedInterface,
                                                                   int slot, int itemId, int option) {
         int interfaceId = InterfaceBridge.toLegacyComponent(packedInterface);
-        if (interfaceId != 5064 && interfaceId != 5382
+        if (interfaceId != 5064 && interfaceId != 7423 && interfaceId != 5382
                 && interfaceId != 3900 && interfaceId != 3823) {
             return false;
         }
@@ -770,11 +773,11 @@ implements PacketHandler {
             return true;
         }
         player.setSelectedItemSlot(slot);
-        if (interfaceId == 5064) {
+        if (interfaceId == 5064 || interfaceId == 7423) {
             if (option == 5) {
                 player.setSelectedInterfaceSlot(slot);
                 player.setSelectedInterfaceItemId(itemId);
-                player.packetSender.sendEnterInputPrompt(5064);
+                player.packetSender.sendEnterInputPrompt(interfaceId);
                 return true;
             }
             int amount = option == 1 ? 1 : option == 2 ? 5 : option == 3 ? 10

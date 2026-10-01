@@ -1,6 +1,5 @@
 package com.rs2.net.packet;
 
-import com.rs2.CacheRevisionInfo;
 import com.rs2.Server;
 import com.rs2.ServerSettings;
 import com.rs2.cache.InterfaceDefinition;
@@ -338,29 +337,7 @@ public final class PacketSender {
                 ((PacketSender)value4).sendInterfaceText(((MessageOfTheWeek)value3).getLines()[0], value != 0 ? 15491 : ((MessageOfTheWeek)value3).getInterfaceId() + 2);
                 ((PacketSender)value4).sendInterfaceText(((MessageOfTheWeek)value3).getLines()[1], value != 0 ? 15492 : ((MessageOfTheWeek)value3).getInterfaceId() + 3);
             }
-            this.sendGameMessage("Welcome to " + ServerSettings.serverName + "." + (ServerSettings.showServerEmulatorInWelcome ? " (Emulation run by: " + ServerSettings.serverEmulatorName + ")" : ""));
-            String text = "";
-            CacheRevisionInfo cacheRevisionInfo = CacheRevisionInfo.forRevision(ServerSettings.cacheVersion);
-            if (cacheRevisionInfo != null) {
-                if (cacheRevisionInfo.releaseDate != null) {
-                    text = " (From: " + cacheRevisionInfo.releaseDate + ")";
-                }
-                if (cacheRevisionInfo.updateNotes != null) {
-                    text = String.valueOf(text) + " - Updates:";
-                }
-            }
-            this.sendGameMessage("Running RS2 Build #" + ServerSettings.cacheVersion + text);
-            if (cacheRevisionInfo != null && cacheRevisionInfo.updateNotes != null) {
-                int index2 = 0;
-                while (index2 < cacheRevisionInfo.updateNotes.length) {
-                    boolean enabled2 = false;
-                    int value6 = index2++;
-                    value4 = cacheRevisionInfo;
-                    value = value6;
-                    value2 = value4;
-                    this.sendGameMessage(String.valueOf(((CacheRevisionInfo)value2).updateNotes[value]) + "#url#");
-                }
-            }
+            this.sendGameMessage("Welcome to RuneScape.");
             if (this.player.loadedCharacterFromBackup) {
                 this.sendGameMessage("Your account file was somehow corrupted and had to be loaded from backup.");
             }
