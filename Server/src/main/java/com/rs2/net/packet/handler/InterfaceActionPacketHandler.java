@@ -303,6 +303,9 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
         }
         if (widgetGroup == 387 && widgetChild == 24
                 && (operation == -1 || parameter == 0)) {
+            if (player.getQuestState(0) == 42) {
+                player.setTutorialEquipmentStatsOpened();
+            }
             player.getEquipmentManager().refresh();
             player.packetSender.sendItemContainer(15107,
                     player.getEquipmentManager().getContainer().getRawItems());
@@ -375,6 +378,10 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 player.getUpdateState().setGraphic(712);
             } else if (widgetChild == 35) {
                 player.getUpdateState().setGraphic(1244);
+            }
+            if (player.getQuestState(0) == 23 && !player.isTutorialEmoteCompleted()) {
+                player.setTutorialEmoteCompleted();
+                player.getQuestManager().refreshQuestJournal();
             }
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("443 emote click player=" + GameplayTrace.describe(player)

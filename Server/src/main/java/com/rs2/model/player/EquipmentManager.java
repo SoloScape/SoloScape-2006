@@ -259,6 +259,11 @@ public final class EquipmentManager {
             this.player.getQuestManager().refreshQuestJournal();
         }
         if (itemStack.getId() == 1205 && this.player.getQuestState(0) == 42) {
+            if (!this.player.isTutorialEquipmentStatsOpened()) {
+                this.player.getDialogueManager().showOneLineStatement(
+                        "First click the Equipment Stats button on your worn inventory.");
+                return;
+            }
             this.player.advanceTutorialStage();
         }
         if (this.player.isInDuelArena()) {

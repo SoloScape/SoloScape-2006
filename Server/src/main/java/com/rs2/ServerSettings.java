@@ -154,7 +154,10 @@ public final class ServerSettings {
     static {
         botLoginIdLimit = 1990;
         grandExchangeEnabled = false;
-        tutorialSkipPromptEnabled = true;
+        // Revision 443 (18 Dec 2006) did not offer a Tutorial Island skip or
+        // Ironman-style game-mode selection. Keep the custom prompt available
+        // as a server option, but historical behaviour is the default.
+        tutorialSkipPromptEnabled = false;
         serverName = "RuneScape";
         serverEmulatorName = "Progressive";
         showServerEmulatorInWelcome = true;

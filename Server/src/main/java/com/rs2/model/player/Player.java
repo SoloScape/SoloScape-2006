@@ -1042,9 +1042,40 @@ extends Entity {
         return this.getQuestState(questId, false);
     }
 
+    private static final int TUTORIAL_EMOTE_COMPLETED_FLAG = 1;
+    private static final int TUTORIAL_RUN_SETTINGS_OPENED_FLAG = 2;
+    private static final int TUTORIAL_EQUIPMENT_STATS_OPENED_FLAG = 4;
+
+    public final boolean isTutorialEmoteCompleted() {
+        return (this.questProgressFlags[0] & TUTORIAL_EMOTE_COMPLETED_FLAG) != 0;
+    }
+
+    public final void setTutorialEmoteCompleted() {
+        this.questProgressFlags[0] |= TUTORIAL_EMOTE_COMPLETED_FLAG;
+    }
+
+    public final boolean isTutorialRunSettingsOpened() {
+        return (this.questProgressFlags[0] & TUTORIAL_RUN_SETTINGS_OPENED_FLAG) != 0;
+    }
+
+    public final void setTutorialRunSettingsOpened() {
+        this.questProgressFlags[0] |= TUTORIAL_RUN_SETTINGS_OPENED_FLAG;
+    }
+
+    public final boolean isTutorialEquipmentStatsOpened() {
+        return (this.questProgressFlags[0] & TUTORIAL_EQUIPMENT_STATS_OPENED_FLAG) != 0;
+    }
+
+    public final void setTutorialEquipmentStatsOpened() {
+        this.questProgressFlags[0] |= TUTORIAL_EQUIPMENT_STATS_OPENED_FLAG;
+    }
+
     public final boolean isTutorialRunUnlocked() {
         int tutorialStage = this.getQuestState(0);
-        return tutorialStage == 1 || tutorialStage >= 23;
+        if (tutorialStage == 1 || tutorialStage > 23) {
+            return true;
+        }
+        return tutorialStage == 23 && this.isTutorialRunSettingsOpened();
     }
 
     public final int getQuestState(int questId, boolean questId2) {

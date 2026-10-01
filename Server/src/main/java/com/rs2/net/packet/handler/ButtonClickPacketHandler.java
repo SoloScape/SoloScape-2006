@@ -334,8 +334,9 @@ implements PacketHandler {
                 return;
             }
             case 153: {
-                if (!player.isTutorialRunUnlocked()) {
+                if (!player.isTutorialRunUnlocked() || player.getRunEnergyPercent() <= 0) {
                     player.getMovementQueue().setRunning(false);
+                    player.packetSender.sendRunEnergy();
                     return;
                 }
                 boolean tutorialRunPrompt = player.getQuestState(0) == 23;

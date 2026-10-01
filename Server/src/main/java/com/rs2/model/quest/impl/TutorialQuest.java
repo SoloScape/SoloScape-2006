@@ -38,6 +38,16 @@ extends QuestScript {
             case 63:
                 player.advanceTutorialStage();
                 break;
+            case 23:
+                // Stage 23 contains two historical sub-steps without changing
+                // the saved tutorial stage numbering: perform an emote, then
+                // open the flashing player-settings tab before enabling Run.
+                if (player.isTutorialEmoteCompleted()
+                        && !player.isTutorialRunSettingsOpened()) {
+                    player.setTutorialRunSettingsOpened();
+                    player.getQuestManager().refreshQuestJournal();
+                }
+                break;
             default:
                 break;
         }
@@ -475,15 +485,45 @@ extends QuestScript {
         if (value3 == 22) {
             value2 = itemStackArray;
             itemStackArray.packetSender.flashSidebarIcon(QuestConstants.EMOTES_TAB_INTERFACE[0]);
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("It's only a short distance to the next guide", "", "Why not try running there. Start by opening the player", "controls, that's the flashing icon of a running man.", "", true);
+            itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                    "Emotes.", "", "Now, how about showing some feelings? You will see a flashing",
+                    "icon in the shape of a person. Click on that to access your", "emotes.", true);
         }
         if (value3 == 23) {
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Running.", "In this menu you will see many options from waving to walking.", "At the top of the panel there are two buttons. One is walk the", "other one is run. Click the run button.", "", true);
+            boolean emoteCompleted = itemStackArray.isTutorialEmoteCompleted();
+            boolean runSettingsOpened = itemStackArray.isTutorialRunSettingsOpened();
+            if (!emoteCompleted) {
+                itemStackArray.getDialogueManager().showScrollableTutorialInstructionOverlay(
+                        "Emotes.",
+                        "For those situations where words don't quite describe how you",
+                        "feel, try an emote. Go ahead, try one out! You might notice",
+                        "that some of the emotes are grey and cannot be used now.",
+                        "Don't worry! As you progress further into the game you'll gain",
+                        "access to all sorts of things including more fun emotes like",
+                        "these.", true);
+            } else if (!runSettingsOpened) {
+                itemStackArray.packetSender.flashSidebarIcon(QuestConstants.OPTIONS_TAB_INTERFACE[0]);
+                itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                        "Running.", "It's only a short distance to the next guide.",
+                        "Why not try running there? Start by opening the player",
+                        "settings, that's the flashing icon of a wrench.", "", true);
+            } else {
+                itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                        "Running.", "In this menu you will see many options. At the bottom in the",
+                        "middle is a button with the symbol of a running shoe. You can",
+                        "turn this button on or off to select run or walk. Give it a go,",
+                        "click on the run button now.", true);
+            }
         }
         if (value3 == 24) {
             value2 = itemStackArray;
             itemStackArray.packetSender.sendPositionHintIcon(3086, 3126, 130, 5);
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Run to the next guide.", "Now that you have the run turned on follow the path, until you", "come to the end. You may notice that your energy left goes", "down. If this reaches zero you'll stop running. Click on the door", "to pass through it.", true);
+            itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                    "Run to the next guide.",
+                    "Now that you have the run button turned on, follow the path",
+                    "until you come to the end. You may notice the number on the",
+                    "button goes down. This is your run energy. If it reaches zero",
+                    "you'll stop running. Click on the door to pass through it.", true);
         }
         if (value3 == 25) {
             value2 = itemStackArray;
@@ -569,12 +609,31 @@ extends QuestScript {
             itemStackArray.getDialogueManager().showTutorialInstructionOverlay("", "@bla@Wielding weapons.", "You now have access to a new interface. Click on the flashing", "icon of a man, the one to the right of your backpack icon.", "", true);
         }
         if (value3 == 42) {
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("This is your worn inventory.", "From here you can see what items you have equipped. Let's", "get one of those slots filled, go back to your inventory", "and right click your dagger, select wield from the menu.", "", true);
+            boolean equipmentStatsOpened = itemStackArray.isTutorialEquipmentStatsOpened();
+            if (!equipmentStatsOpened) {
+                itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                        "This is your worn inventory.",
+                        "From here you can see what items you have equipped. You will",
+                        "notice the button with the helm and shield. Click on this now",
+                        "to display the details of what you have equipped.", "", true);
+            } else {
+                itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                        "Worn interface.",
+                        "You can see what items you are wearing in the worn inventory",
+                        "to the left of the screen with their combined statistics on the",
+                        "right. Let's add something. Left click your dagger to 'wield' it.",
+                        "", true);
+            }
         }
         if (value3 == 43) {
             value2 = itemStackArray;
             itemStackArray.packetSender.sendEntityHintIcon(1, Npc.findByDefinitionId(944).getIndex());
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("You're now holding your dagger.", "Clothes, armour, weapons and many other items are equipped", "like this. You can unequip items by clicking on the item in the", "worn inventory. Speak to the Combat Instructor to continue.", "", true);
+            itemStackArray.getDialogueManager().showTutorialInstructionOverlay(
+                    "You're now holding your dagger.",
+                    "Clothes, armour, weapons and many other items are equipped",
+                    "like this. You can unequip items by clicking on the item in the",
+                    "worn inventory. You can close this window with the small x.",
+                    "Speak to the Combat Instructor to continue.", true);
         }
         if (value3 == 44) {
             itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Unequipping items.", "In your worn inventory panel, right click on the dagger and", "select remove option from the drop down list. After you've", "unequipped the dagger, wield the sword and shield. As you", "pass the mouse over an item you will see it's name.", true);
@@ -587,7 +646,14 @@ extends QuestScript {
         if (value3 == 46) {
             value2 = itemStackArray;
             itemStackArray.packetSender.sendPositionHintIcon(3110, 9518, 120, 4);
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("This is your combat interface.", "From this interface you can select the type of attack your", "character will use. Different monsters have different", "weaknesses. Now you have the tools needed for battle why", "not slay some rats. Click on the gate indicated to continue.", true);
+            itemStackArray.getDialogueManager().showScrollableTutorialInstructionOverlay(
+                    "This is your combat interface.",
+                    "From this interface you can select the type of attack your",
+                    "character will use. Different monsters have different",
+                    "weaknesses. If you hover your mouse over the buttons, you",
+                    "will see the type of XP you will receive from each attack.",
+                    "Now you have the tools needed for battle, why not slay some",
+                    "rats? Click on the gate indicated to continue.", true);
         }
         if (value3 == 47) {
             value2 = itemStackArray;
@@ -682,7 +748,13 @@ extends QuestScript {
         if (value3 == 65) {
             value2 = itemStackArray;
             itemStackArray.packetSender.sendEntityHintIcon(1, Npc.findByDefinitionId(951).getIndex());
-            itemStackArray.getDialogueManager().showTutorialInstructionOverlay("Cast Wind Strike at a chicken.", "Now you have runes you should see the Wind Strike icon at the", "top left corner of the Magic interface - first in from the", "left. Walk over to the caged chickens, click the Wind Strike icon", "and then select one of the chickens to cast it on.", true);
+            itemStackArray.getDialogueManager().showScrollableTutorialInstructionOverlay(
+                    "Cast Wind Strike at a chicken.",
+                    "Now you have runes you should see the Wind Strike icon at the",
+                    "top left corner of the Magic interface - second in from the",
+                    "left. Walk over to the caged chickens, click the Wind Strike icon",
+                    "and then select one of the chickens to cast it on. It may take",
+                    "several tries. If you need more runes, ask Terrova.", "", true);
         }
         if (value3 == 66) {
             value2 = itemStackArray;
@@ -707,7 +779,12 @@ extends QuestScript {
             itemStackArray.packetSender.closeInterfaces();
             value2 = itemStackArray;
             GameplayHelper.updateWalkableInterface(itemStackArray, -1);
-            itemStackArray.getDialogueManager().showFiveLineStatement("Welcome to Lumbridge! To get more help, simply click on the", "Lumbridge Guide and he will give you some tips.", "He can be found by looking for the question mark icon on", "your minimap. If you find that you are lost any time, look for", "other players, they might help you to make your way back.");
+            itemStackArray.getDialogueManager().showFiveLineStatement(
+                    "Welcome to Lumbridge! To get more help, simply click on the",
+                    "Lumbridge Guide or one of the Tutors - these can be found by",
+                    "looking for the question mark icon on your mini-map. If you find",
+                    "you are lost at any time, look for a signpost or use the Lumbridge",
+                    "Home spell.");
             Player player2 = itemStackArray;
             itemStackArray.getInventoryManager().getContainer().clear();
             player2.getEquipmentManager().getContainer().clear();
@@ -725,6 +802,13 @@ extends QuestScript {
                 ++index;
             }
             itemStackArray.setQuestState(0, 1);
+            // Arrive on the mainland with a clean run state. A player can use
+            // most of their energy between the running lesson and Terrova;
+            // carrying zero energy into Lumbridge makes the run toggle appear
+            // enabled while movement can only walk.
+            itemStackArray.setRunEnergyPercent(100);
+            itemStackArray.getMovementQueue().setRunning(false);
+            itemStackArray.packetSender.sendRunEnergy();
             if (itemStackArray.loginRestrictionExempt) {
                 ItemStack itemStack = new ItemStack(7956, 1);
                 itemStackArray.getInventoryManager().addItem(itemStack);

@@ -186,10 +186,6 @@ public class CombatAction {
             if (combatAction.getAttacker().isPlayer() && combatAction.getTarget().isNpc() && !((Player)combatAction.getAttacker()).getSlayerManager().canAttackSlayerMonster((Npc)combatAction.getTarget())) {
                 combatAction.hitSuccessful = false;
             }
-            if (combatAction.attacker.isPlayer() && ((Player)combatAction.attacker).getQuestState(0) == 65) {
-                ((Player)combatAction.attacker).advanceTutorialStage();
-                combatAction.hitSuccessful = false;
-            }
             if (combatAction.hitSuccessful) {
                 value4 = CombatManager.calculateDefenceRoll(combatAction.target, combatAction.hitDefinition);
                 value3 = CombatManager.calculateAttackRoll(combatAction.attacker, combatAction.hitDefinition);
@@ -646,8 +642,10 @@ public class CombatAction {
                             ((Player)value2).packetSender.sendGameMessage("Chronozon weakens...");
                         }
                     }
-                    if (this.damage > 0 && ((Player)updateState).getQuestState(0) == 66) {
-                        ((Player)updateState).advanceTutorialStage();
+                    int tutorialState = ((Player)updateState).getQuestState(0);
+                    if (this.damage > 0 && (tutorialState == 65 || tutorialState == 66)) {
+                        ((Player)updateState).setQuestState(0, 67);
+                        ((Player)updateState).getQuestManager().refreshQuestJournal();
                         return;
                     }
                 }

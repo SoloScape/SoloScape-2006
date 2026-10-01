@@ -150,10 +150,11 @@ public final class MovementQueue {
                     if (((Player)entity).getRunEnergyPercent() <= 0) {
                         this.setRunning(false);
                     }
-                    value = entity;
-                    if (ServerSettings.clientBuild != 443 || ((Player)value).isBot) {
-                        ((Player)value).packetSender.sendRunEnergy();
-                    }
+                    // Keep the client's run-energy orb synchronized with the
+                    // server while running. Revision 443 uses opcode 226 for
+                    // this update; suppressing it left the client showing stale
+                    // energy after the server had already exhausted it.
+                    ((Player)entity).packetSender.sendRunEnergy();
                 }
             }
             this.entity.getPosition().translate(value3, value2);
