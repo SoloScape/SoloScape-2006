@@ -348,7 +348,7 @@ extends CycleEvent {
         if (spellDefinition == SpellDefinition.LUMBRIDGE_TELEPORT
                 && player.isInTutorialIsland() && player.getQuestState(0) != 1) {
             player.getDialogueManager().showOneLineStatement(
-                    "You can't cast this spell until you have completed the tutorial.");
+                    "You can't cast this spell until you have completed the Tutorial.");
             return;
         }
         MagicSpellAction action = new SelfCastSpellAction(player, spellDefinition, spellDefinition, player);
