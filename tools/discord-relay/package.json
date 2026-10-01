@@ -1,0 +1,13 @@
+{
+  "name": "soloscape-discord-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Small relay that keeps the shared Discord webhook secret from local SoloScape servers.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
