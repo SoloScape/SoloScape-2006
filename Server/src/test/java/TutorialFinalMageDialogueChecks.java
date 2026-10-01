@@ -44,6 +44,26 @@ public final class TutorialFinalMageDialogueChecks {
                 player.setOutboundCipher(new IsaacCipher(new int[4]));
                 player.setPosition(new Position(3141, 3088, 0));
                 player.setQuestState(0, 67);
+
+                require(DialogueManager.continueDialogue(player, 946, 1, 0), "Final Terrova opening missing");
+                drain(client);
+                require(DialogueManager.continueDialogue(player, 946, 2, 0), "Mainland question missing");
+                drain(client);
+                require(player.getDialogueManager().handleOptionButton(2462), "No option was not handled");
+                String declined = drain(client);
+                require(player.getOpenInterfaceId() == 4887, "No did not return to Terrova's previous dialogue");
+                require(declined.contains("Well you're all finished here now. I'll give you a")
+                        && declined.contains("reasonable number of runes when you leave."),
+                        "No did not restore the previous Terrova dialogue text");
+                require(player.getDialogueManager().getDialogueStep() == 1,
+                        "No did not rewind the dialogue cursor for the mainland question");
+                clickTwoLineContinue(player);
+                String questionAgain = drain(client);
+                require(player.getOpenInterfaceId() == 2459, "Continue did not reopen mainland Yes/No question");
+                require(questionAgain.contains("Do you want to go to the mainland?")
+                        && questionAgain.contains("Yes.") && questionAgain.contains("No."),
+                        "Mainland question did not reappear after returning to previous dialogue");
+
                 require(DialogueManager.continueDialogue(player, 946, 4, 0), "White-beard page missing");
                 require(drain(client).contains("a question mark on the end. He also has a white beard"),
                         "Wrong page before Guide directions");
@@ -74,6 +94,13 @@ public final class TutorialFinalMageDialogueChecks {
         }
         System.out.println("Tutorial final mage dialogue checks passed (two Guide-icon pages + native Continue). ");
         System.exit(0);
+    }
+
+    private static void clickTwoLineContinue(Player player) {
+        ByteBuffer payload = ByteBuffer.allocate(6);
+        payload.putShort((short) -1).putInt((242 << 16) | 4).flip();
+        new InterfaceActionPacketHandler().handle(player,
+                new IncomingPacket(ClientPackets.WIDGET_SELECT, 6, PacketBuffer.wrapReader(payload)));
     }
 
     private static void clickContinue(Player player) {

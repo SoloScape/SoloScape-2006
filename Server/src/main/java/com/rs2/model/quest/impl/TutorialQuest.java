@@ -1458,6 +1458,13 @@ extends QuestScript {
                         player.getDialogueManager().setNextDialogueStep(4);
                         return true;
                     }
+                    if (value32 == 2) {
+                        // "No" returns to Terrova's previous line. Continuing
+                        // from there asks the mainland question again.
+                        player.getDialogueManager().showNpcTwoLineDialogue("Well you're all finished here now. I'll give you a", "reasonable number of runes when you leave.", 591);
+                        player.getDialogueManager().setNextDialogueStep(2);
+                        return true;
+                    }
                     player.getDialogueManager().finishDialogue();
                     return false;
                 }
