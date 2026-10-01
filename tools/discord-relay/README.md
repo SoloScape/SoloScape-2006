@@ -10,6 +10,8 @@ The real Discord webhook URL exists only on the relay host. Do not put it in the
 
 ## Relay environment variables
 
+These are configured only on the relay host (for example Render):
+
 - `DISCORD_WEBHOOK_URL` - the real Discord channel webhook URL.
 - `SOLOSCAPE_RELAY_KEYS` - comma-separated private keys. Give each friend a different random key so an individual key can be revoked later.
 - `PORT` - optional HTTP port; defaults to `3000`.
@@ -33,26 +35,39 @@ npm start
 
 For internet use, put the relay behind HTTPS (for example a normal HTTPS reverse proxy or a hosting service that supplies HTTPS). Do not expose it as plain HTTP over the public internet.
 
-## Each friend's SoloScape environment variables
+## Each friend's SoloScape config file
 
-Each friend's local server needs:
+The easiest setup for each friend is a local properties file. `Server/Run.bat` creates `Server/discord-relay.properties` from the included example on first run if the file does not already exist.
+
+Edit `Server/discord-relay.properties`:
+
+```properties
+relay.url=https://your-relay.example/event
+relay.key=their-own-private-key
+server.name=Callum's SoloScape
+
+# Optional: extend the built-in boss list.
+boss.ids=50,1158,1160,2745,3200
+boss.names=Custom Boss,Another Boss
+```
+
+Only `relay.url`, `relay.key`, and `server.name` are normally needed. `boss.ids` and `boss.names` extend the built-in common boss-name list and are useful for custom bosses or caches where IDs/names differ.
+
+The real `Server/discord-relay.properties` file is ignored by Git so a friend's private relay key is not accidentally committed. `Server/discord-relay.properties.example` is the safe template that stays in the repository.
+
+If either `relay.url` or `relay.key` is missing, Discord event sending is disabled.
+
+### Optional environment-variable overrides
+
+Environment variables are still supported and take priority over matching values in the properties file:
 
 ```text
 SOLOSCAPE_DISCORD_RELAY_URL=https://your-relay.example/event
 SOLOSCAPE_DISCORD_RELAY_KEY=their-own-private-key
 SOLOSCAPE_DISCORD_SERVER_NAME=Callum's SoloScape
-```
-
-Optional boss configuration:
-
-```text
 SOLOSCAPE_DISCORD_BOSS_IDS=50,1158,1160,2745,3200
 SOLOSCAPE_DISCORD_BOSS_NAMES=Custom Boss,Another Boss
 ```
-
-`SOLOSCAPE_DISCORD_BOSS_IDS` and `SOLOSCAPE_DISCORD_BOSS_NAMES` extend the built-in common boss-name list. They are useful for custom bosses or caches where IDs/names differ.
-
-If either `SOLOSCAPE_DISCORD_RELAY_URL` or `SOLOSCAPE_DISCORD_RELAY_KEY` is missing, Discord event sending is simply disabled.
 
 ## Events
 
@@ -70,3 +85,4 @@ The game sends the HTTP request from a daemon worker thread, so a slow or unavai
 - If one key is leaked, remove only that key from `SOLOSCAPE_RELAY_KEYS` and issue that friend a new one.
 - The relay disables Discord mentions in webhook messages, so a player/boss name cannot trigger `@everyone` or role mentions.
 - The relay rate-limits each key to 30 events per minute in memory.
+- A friend who controls their own local server and relay key can forge events using that key. The relay protects the Discord webhook and supports revocation/rate limits, but it is not an anti-cheat authority.
