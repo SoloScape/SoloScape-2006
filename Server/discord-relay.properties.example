@@ -1,8 +1,9 @@
 # Copy this file to discord-relay.properties and fill in your own values.
 # The real discord-relay.properties file is ignored by Git so relay keys are not committed.
+# Example relay URL: https://your-relay.example/event
 
-relay.url=https://your-relay.example/event
-relay.key=YOUR_PRIVATE_RELAY_KEY
+relay.url=
+relay.key=
 server.name=My SoloScape
 
 # Optional: extend the built-in boss list.
