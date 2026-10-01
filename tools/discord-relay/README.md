@@ -44,14 +44,14 @@ Edit `Server/discord-relay.properties`:
 ```properties
 relay.url=https://your-relay.example/event
 relay.key=their-own-private-key
-server.name=Callum's SoloScape
+server.name=Callum
 
 # Optional: extend the built-in boss list.
 boss.ids=50,1158,1160,2745,3200
 boss.names=Custom Boss,Another Boss
 ```
 
-Only `relay.url`, `relay.key`, and `server.name` are normally needed. `boss.ids` and `boss.names` extend the built-in common boss-name list and are useful for custom bosses or caches where IDs/names differ.
+Only `relay.url`, `relay.key`, and `server.name` are normally needed. `server.name` is the person's Discord/display name. The in-game username is read automatically from the logged-in player, so a level-up appears like `Callum reached 2 Woodcutting on Tester!` when the Discord name is Callum and the in-game username is Tester. `boss.ids` and `boss.names` extend the built-in common boss-name list and are useful for custom bosses or caches where IDs/names differ.
 
 The real `Server/discord-relay.properties` file is ignored by Git so a friend's private relay key is not accidentally committed. `Server/discord-relay.properties.example` is the safe template that stays in the repository.
 
@@ -64,7 +64,7 @@ Environment variables are still supported and take priority over matching values
 ```text
 SOLOSCAPE_DISCORD_RELAY_URL=https://your-relay.example/event
 SOLOSCAPE_DISCORD_RELAY_KEY=their-own-private-key
-SOLOSCAPE_DISCORD_SERVER_NAME=Callum's SoloScape
+SOLOSCAPE_DISCORD_SERVER_NAME=Callum
 SOLOSCAPE_DISCORD_BOSS_IDS=50,1158,1160,2745,3200
 SOLOSCAPE_DISCORD_BOSS_NAMES=Custom Boss,Another Boss
 ```
