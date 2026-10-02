@@ -112,6 +112,8 @@ public abstract class Class46
     public abstract int method939(int i, int i_14_, int i_15_);
     
     public static void method940(byte i) {
+        // Canvas_Sub1.method39 has already composed modal interfaces into this
+        // buffer. Present it every frame, including while the exchange is open.
 	try {
 	    Graphics graphics = Class41.aCanvas778.getGraphics();
 	    Class23.aClass57_435.draw(graphics, 4, 4);

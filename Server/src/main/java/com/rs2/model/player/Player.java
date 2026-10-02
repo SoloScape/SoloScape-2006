@@ -1393,29 +1393,25 @@ extends Entity {
             }
         }
         this.getTargetMovement().process();
-        boolean shouldRestoreRunEnergy = false;
-        if (this.getMovementTarget() != null) {
-            if (this.getMovementTarget().isPlayer()) {
-                Player player = (Player)this.getMovementTarget();
-                if (!player.isRunningMovement()) {
-                    shouldRestoreRunEnergy = true;
-                }
-            } else if (!this.isRunningMovement()) {
-                shouldRestoreRunEnergy = true;
-            }
-        } else if (!this.isRunningMovement()) {
-            shouldRestoreRunEnergy = true;
+        this.processConnectionTimeout();
+    }
+
+    /** Called once per world tick after movement, for every client revision. */
+    public final void restoreRunEnergy() {
+        // The run toggle and a following target do not describe movement that
+        // actually happened. A second step does, including the final run step.
+        if (this.getRunDirection() != -1 || this.forcedMovementActive
+                || this.getRunEnergyRaw() >= 10000) {
+            return;
         }
-        if (this.getRunEnergyPercent() < 100 && shouldRestoreRunEnergy) {
-            int agilityLevel = this.skillManager.getCurrentLevels()[16];
-            if (ServerSettings.freeToPlayWorld) {
-                agilityLevel = 1;
-            }
-            int restoreAmount = agilityLevel / 6 + 8;
-            this.addRunEnergyRaw(restoreAmount);
+        int agilityLevel = ServerSettings.freeToPlayWorld
+                ? 1 : this.skillManager.getCurrentLevels()[16];
+        // Pre-rework recovery: 100 raw units = 1%, one tick = 0.6 seconds.
+        int previousPercent = this.getRunEnergyPercent();
+        this.addRunEnergyRaw(8 + agilityLevel / 6);
+        if (this.getRunEnergyPercent() != previousPercent) {
             this.packetSender.sendRunEnergy();
         }
-        this.processConnectionTimeout();
     }
 
     public final void processConnectionTimeout() {

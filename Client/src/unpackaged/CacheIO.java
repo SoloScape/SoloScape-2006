@@ -421,7 +421,10 @@ public class CacheIO
     public static void method127(int i) {
 	try {
 	    Graphics graphics = Class41.aCanvas778.getGraphics();
-	    TraversalMap.aClass57_514.draw(graphics, i, 357);
+	    if (GrandExchangeWidgets.searching)
+		GrandExchangeSearch.drawToScreen(graphics);
+	    else
+		TraversalMap.aClass57_514.draw(graphics, i, 357);
 	} catch (Exception exception) {
 	    Class41.aCanvas778.repaint();
 	}

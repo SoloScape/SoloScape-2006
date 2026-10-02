@@ -72,6 +72,7 @@ public class ScriptState
 	    if (i_6_ >= 2000)
 		i_6_ -= 2000;
 	    int i_7_ = NameTable.anIntArray176[i];
+	    if (i_6_ == 20 && GrandExchangeWidgets.click(i_5_)) return;
 	    if (Class39_Sub5_Sub4_Sub4.anInt2285 != 0 && i_6_ != 1002) {
 		Class14.aBoolean245 = true;
 		Class39_Sub5_Sub4_Sub4.anInt2285 = 0;

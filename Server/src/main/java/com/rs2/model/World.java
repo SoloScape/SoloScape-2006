@@ -160,6 +160,7 @@ public final class World {
             value2 = entityArray[index];
             if (value2 != null) {
                 ((Entity)value2).getMovementQueue().process();
+                ((Player)value2).restoreRunEnergy();
             }
             ++index;
         }

@@ -85,6 +85,8 @@ public class Class20 {
         boolean bool = true;
         for (int i_11_ = 0; i_11_ < widgets.length; i_11_++) {
             Widget widget = widgets[i_11_];
+            if (widget != null && (widget.anInt2084 >>> 16) >= 500
+                    && (widget.anInt2084 >>> 16) <= 504 && widget.aBoolean2055) continue;
             if (widget != null
                     && widget.anInt2050 == i_4_) {
                 if (widget.anInt2078 > 0) {
@@ -155,6 +157,7 @@ public class Class20 {
                         && (!widget.aBoolean2013
                         || !widget.method754(125, HashTable.aBoolean361))) {
                     if (widget.type == 0) {
+                        if (widget.runtimeSprite != null) widget.runtimeSprite.method670(x, y);
                         if (!widget.aBoolean2013
                                 && widget.method754(127, HashTable.aBoolean361)
                                 && !ItemDefinition.method473(i, -1, i_11_)) {
@@ -377,6 +380,7 @@ public class Class20 {
                                 DrawingArea.drawQuadOutlineOverlay(x, y, widget.quadWidth, widget.quadHeight, color, -(fillAlpha & 0xff) + 256);
                             }
                         } else if (widget.type == 4) {
+                            if (widget.runtimeSprite != null) widget.runtimeSprite.method670(x, y);
                             BitmapFont font = widget.getFont();
                             if (font == null) {
                                 if (Class39_Sub5_Sub12.aBoolean1856) {

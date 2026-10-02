@@ -584,9 +584,7 @@ public class Client extends ClientApplet {
                 Class25.tableFile = null;
                 Class14.tableCache = null;
             }
-            if (Class39_Sub5_Sub6.mode != 0) {
-                OndemandRequest.aBoolean1718 = true;
-            }
+            OndemandRequest.aBoolean1718 = false;
             Class65.aClass39_Sub5_Sub17_1136 = new Widget();
         }
     }

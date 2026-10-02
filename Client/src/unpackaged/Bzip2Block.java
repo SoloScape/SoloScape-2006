@@ -197,6 +197,8 @@ public class Bzip2Block {
     }
 
     public static boolean readFrame() {
+        // HotSwap does not rerun Client's static packet-size initialization.
+        Client.incomingSizes[18] = 3;
         if (Class37.gameSocket == null) {
             return false;
         }
@@ -239,6 +241,10 @@ public class Bzip2Block {
             FileLoader.anInt1283 = Class63.anInt1117;
             Class39_Sub5_Sub11.anInt1827 = 0;
             Class63.anInt1117 = Class4.frameId;
+            if (Class4.frameId == 178 || Class4.frameId == 160 || Class4.frameId == 146
+                    || Class4.frameId == 32 || Class4.frameId == 51) {
+                GrandExchangeWidgets.cancelSearch();
+            }
             if (Class4.frameId == 205) {
                 int i_24_ = Class39_Sub5_Sub11.gameBuffer.getUwordLe();
                 if (i_24_ == 65535) {
@@ -330,7 +336,11 @@ public class Bzip2Block {
                     i_34_ = -1;
                 }
                 Widget class39_sub5_sub17 = Class37.getWidget(i_33_);
-                if (!class39_sub5_sub17.aBoolean2013) {
+                if (GrandExchangeWidgets.isItemIcon(i_33_)) {
+                    class39_sub5_sub17.anInt1997 = i_34_;
+                    class39_sub5_sub17.anInt2096 = i_33_ == GrandExchangeWidgets.packed(19008) ? i_32_ : 1;
+                    GrandExchangeWidgets.itemChosen(i_33_, i_34_);
+                } else if (!class39_sub5_sub17.aBoolean2013) {
                     if (i_34_ == -1) {
                         Class4.frameId = -1;
                         class39_sub5_sub17.anInt2009 = 0;
@@ -564,6 +574,7 @@ public class Bzip2Block {
                 }
                 Class39_Sub4.method457(59, Class39_Sub11.anInt1478);
                 Class39_Sub4.method457(106, StillGraphic.anInt2338);
+                GrandExchangeWidgets.opened(Class39_Sub11.anInt1478);
                 Class4.frameId = -1;
                 return true;
             }
@@ -793,6 +804,7 @@ public class Bzip2Block {
                     Class39_Sub5_Sub4_Sub4.anInt2285 = 0;
                 }
                 Class39_Sub4.method457(65, Class39_Sub11.anInt1478);
+                GrandExchangeWidgets.opened(Class39_Sub11.anInt1478);
                 Class4.frameId = -1;
                 return true;
             }
@@ -992,6 +1004,13 @@ public class Bzip2Block {
                 Node.anInt728 = Class39_Sub5_Sub11.gameBuffer.getUbyte();
                 Class39_Sub14.aBoolean1520 = true;
                 IsaacPrng.aBoolean1089 = true;
+                Class4.frameId = -1;
+                return true;
+            }
+            if (Class4.frameId == 18) {
+                int component = Class39_Sub5_Sub11.gameBuffer.getUword();
+                int progress = Class39_Sub5_Sub11.gameBuffer.getUbyte();
+                GrandExchangeWidgets.progress(component, progress);
                 Class4.frameId = -1;
                 return true;
             }

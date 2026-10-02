@@ -42,15 +42,15 @@ try {
             Invoke-Build 'Server'
             Invoke-Build 'Client'
             Start-Component 'Server' 'Start-Server.bat' '--auto-start'
-            Write-Host 'Waiting 5 seconds for the server before starting the client...'
-            Start-Sleep -Seconds 5
+            Write-Host 'Waiting 10 seconds for the server before starting the client...'
+            Start-Sleep -Seconds 10
             Start-Component 'Client' 'Play-Client.bat'
             Write-Host 'Server and client launched in separate consoles.'
         }
         'dev' {
             Start-Component 'Server' 'Start-Server-Dev-Mode.bat'
-            Write-Host 'Waiting 5 seconds for the server before starting the client...'
-            Start-Sleep -Seconds 5
+            Write-Host 'Waiting 10 seconds for the server before starting the client...'
+            Start-Sleep -Seconds 10
             Start-Component 'Client' 'Start-Client-Dev-Mode.bat'
             Write-Host 'Live recompilation started in separate consoles. Close each application to stop its watcher.'
         }

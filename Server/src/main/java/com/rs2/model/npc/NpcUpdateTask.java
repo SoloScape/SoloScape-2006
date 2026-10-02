@@ -98,8 +98,8 @@ public final class NpcUpdateTask {
         packet.writeByte(mask);
         if ((mask & 0x2) != 0) {
             Position face = state.getFacePosition();
-            packet.writeShort(face == null ? 0 : (face.getX() << 1) + 1);
-            packet.writeShort(face == null ? 0 : (face.getY() << 1) + 1, ByteOrder.LITTLE);
+            packet.writeShort(face == null ? 0 : state.getFacePositionHalfX());
+            packet.writeShort(face == null ? 0 : state.getFacePositionHalfY(), ByteOrder.LITTLE);
         }
         if ((mask & 0x20) != 0) {
             packet.writeShort(state.getAnimationId(), ByteTransform.ADD, ByteOrder.LITTLE);

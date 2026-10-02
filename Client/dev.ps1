@@ -41,6 +41,7 @@ function Compile-AllClientClasses {
     if ($LASTEXITCODE -ne 0) {
         throw "Initial client compilation failed with exit code $LASTEXITCODE."
     }
+    Copy-Item -LiteralPath (Join-Path $SourceRoot 'assets') -Destination $ClassesDir -Recurse -Force
 }
 
 function Build-HotSwapAgent {

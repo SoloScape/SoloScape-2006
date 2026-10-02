@@ -30,6 +30,7 @@ echo Compiling client...
 if errorlevel 1 exit /b 1
 
 echo Creating build\client.jar...
+if exist "src\assets" xcopy /e /i /y "src\assets" "build\classes\assets" >nul
 "%JAVA_HOME%\bin\jar.exe" cfe "build\client.jar" unpackaged.Client -C "build\classes" .
 if errorlevel 1 exit /b 1
 

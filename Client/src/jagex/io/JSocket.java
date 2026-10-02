@@ -646,6 +646,7 @@ public class JSocket implements Runnable {
     }
 
     public static boolean loadWidget(int parent) {
+        if (unpackaged.GrandExchangeWidgets.load(parent)) return true;
         if (parent < 0
                 || parent >= Class39_Sub5_Sub4.widgetsLoaded.length
                 || parent >= Class62_Sub1.widgets.length) {

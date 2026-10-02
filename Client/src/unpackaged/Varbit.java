@@ -34,15 +34,15 @@ public class Varbit extends SubNode
 	try {
 	    Graphics graphics = Class41.aCanvas778.getGraphics();
 	    FrameBuffer.aClass57_2155.draw(graphics, 0, 4);
-	    Class55.aClass57_1248.draw(graphics, 0, 357);
+	    GrandExchangeSearch.drawBehindSearch(Class55.aClass57_1248, graphics, 0, 357);
 	    JImage.aClass57_1576.draw(graphics, 722, 4);
 	    NameTable.aClass57_182.draw(graphics, 743, 205);
 	    Class43.aClass57_812.draw(graphics, 0, 0);
 	    Class63.aClass57_1122.draw(graphics, 516, 4);
 	    TraversalMap.aClass57_516.draw(graphics, 516, 205);
-	    Widget.aClass57_2114.draw(graphics, 496,
+	    GrandExchangeSearch.drawBehindSearch(Widget.aClass57_2114, graphics, 496,
 							357);
-	    Queue.aClass57_981.draw(graphics, 0, 338);
+	    GrandExchangeSearch.drawBehindSearch(Queue.aClass57_981, graphics, 0, 338);
 	} catch (Exception exception) {
 	    Class41.aCanvas778.repaint();
 	}

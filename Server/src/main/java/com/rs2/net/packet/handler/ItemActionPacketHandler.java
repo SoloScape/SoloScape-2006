@@ -382,6 +382,8 @@ implements PacketHandler {
         if (opcode == ClientPackets.ITEM_EXAMINE) {
             int itemId = packet.getReader().readSignedShort(ByteTransform.ADD) & 0xFFFF;
             traceRevision443Item(player, "item-examine", itemId, -1, -1, -1, -1, -1);
+            String examine = ItemDefinition.forId(itemId).getDescription();
+            player.packetSender.sendGameMessage(examine == null || examine.isEmpty() ? "It's an item!" : examine);
             if (player.isInteractionDebugEnabled()) {
                 player.packetSender.sendGameMessage("443 examine item: " + itemId);
             }
@@ -617,6 +619,21 @@ implements PacketHandler {
         traceRevision443Item(player, widgetOption ? "widget-item-option-" + option : "item-option-" + option,
                 itemId, slot, packedInterface, -1, -1, -1);
         int interfaceId = InterfaceBridge.toLegacyComponent(packedInterface);
+        if (widgetOption && interfaceId == 19102) {
+            if (player.getOpenInterfaceId() == 18939 && option == 1 && slot < 28) {
+                GrandExchangeManager.selectSellOfferItem(player, slot, itemId, 1);
+            }
+            return;
+        }
+        if (widgetOption && interfaceId == 19006) {
+            int offer = player.selectedGrandExchangeSlot;
+            if (player.getOpenInterfaceId() == 18984 && option == 1 && slot < 2 && offer >= 0 && offer < 6) {
+                int expected = (slot == 0) == player.grandExchangeSellOfferFlags[offer]
+                        ? 995 : player.grandExchangeItemIds[offer];
+                if (itemId == expected) GrandExchangeManager.collectOfferItem(player, slot, itemId, 1);
+            }
+            return;
+        }
         if (interfaceId == InterfaceBridge.UNMAPPED) {
             debugItemAction(player, "rejected", "443-option-" + option, packedInterface, slot,
                     itemId, null, "unmapped-widget");

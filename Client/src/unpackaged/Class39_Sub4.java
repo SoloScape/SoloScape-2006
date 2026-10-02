@@ -198,6 +198,7 @@ public class Class39_Sub4 extends Node
 	    for (int i_29_ = 0; i_29_ < class39_sub5_sub17s.length; i_29_++) {
 		Widget class39_sub5_sub17
 		    = class39_sub5_sub17s[i_29_];
+                if (class39_sub5_sub17 != null && !GrandExchangeSearch.acceptsInput(class39_sub5_sub17)) continue;
 		if (class39_sub5_sub17 != null
 		    && i_23_ == class39_sub5_sub17.anInt2050
 		    && (!class39_sub5_sub17.aBoolean2013

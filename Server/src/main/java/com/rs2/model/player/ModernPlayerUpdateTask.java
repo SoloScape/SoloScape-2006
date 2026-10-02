@@ -193,9 +193,9 @@ public final class ModernPlayerUpdateTask {
             masks.writeShort(state.getFaceEntityId(), ByteTransform.ADD, ByteOrder.LITTLE);
         }
         if ((mask & 0x2) != 0) {
-            masks.writeShort((state.getFacePosition().getX() << 1) + 1,
+            masks.writeShort(state.getFacePositionHalfX(),
                     ByteTransform.ADD, ByteOrder.LITTLE);
-            masks.writeShort((state.getFacePosition().getY() << 1) + 1, ByteOrder.LITTLE);
+            masks.writeShort(state.getFacePositionHalfY(), ByteOrder.LITTLE);
         }
         if ((mask & 0x8) != 0) {
             masks.writeShort(state.getAnimationId(), ByteTransform.ADD, ByteOrder.LITTLE);

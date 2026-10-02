@@ -9,7 +9,11 @@ import com.rs2.model.quest.QuestDefinition;
 import com.rs2.model.skill.runecrafting.RunecraftingHandler;
 import com.rs2.util.ByteArrayReader;
 import com.rs2.util.FileUtil;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -79,7 +83,7 @@ public class ItemDefinition {
         ItemDefinition definition = new ItemDefinition(
                 DRAGON_CLAWS_ID,
                 "Dragon claws",
-                "A pair of vicious dragon claws.",
+                "A set of fighting claws.",
                 "WEAPON",
                 false, false, false,
                 -1, -1, true,
@@ -496,6 +500,23 @@ public class ItemDefinition {
                 if (original != null) {
                     original.hasNote = true;
                     original.notedId = definition.id;
+                }
+            }
+        }
+        load2009scapeExamines();
+    }
+
+    private static void load2009scapeExamines() throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream("./data/content/itemExamines2009scape.tsv"), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty() || line.charAt(0) == '#') continue;
+                String[] parts = line.split("\t", 2);
+                if (parts.length != 2) continue;
+                int id = Integer.parseInt(parts[0]);
+                if (id >= 0 && id < definitionsById.length && definitionsById[id] != null) {
+                    definitionsById[id].description = parts[1];
                 }
             }
         }

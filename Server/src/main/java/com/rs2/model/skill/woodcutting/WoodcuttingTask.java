@@ -91,8 +91,7 @@ extends CycleEvent {
                 return;
             }
             this.player.packetSender.sendSoundEffect(472, 1, 0);
-            this.player.getUpdateState().setFaceEntity(65535);
-            this.player.getUpdateState().setFacePosition(new Position(this.x, this.y, this.player.getPosition().getPlane()));
+            WoodcuttingHandler.faceTree(this.player, this.treeObjectId, this.x, this.y);
             World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
             World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
             this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);
@@ -229,8 +228,7 @@ extends CycleEvent {
             return;
         }
         this.player.packetSender.sendSoundEffect(472, 1, 0);
-        this.player.getUpdateState().setFaceEntity(65535);
-        this.player.getUpdateState().setFacePosition(new Position(this.x, this.y, this.player.getPosition().getPlane()));
+        WoodcuttingHandler.faceTree(this.player, this.treeObjectId, this.x, this.y);
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence));
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(this.player, this.actionSequence, 3, 0));
         this.player.getUpdateState().setAnimation(this.gatheringTool.getGatherAnimationId(), 0);

@@ -96,6 +96,7 @@ public final class ClientPackets {
     }
 
     public static int getLength(int opcode) {
+        if (opcode == 19) return 2; // paired client exchange item selection
         if (opcode == WALK || opcode == MINIMAP_WALK || opcode == INTERACTION_WALK) {
             return -1;
         }

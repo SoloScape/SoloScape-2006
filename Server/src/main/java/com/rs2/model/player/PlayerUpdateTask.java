@@ -490,8 +490,8 @@ public class PlayerUpdateTask {
             appearanceWriter.writeBuffer(packetWriter2.getBuffer());
         }
         if (player.getUpdateState().isFacePositionUpdateRequired()) {
-            packetWriter.writeShort((player.getUpdateState().getFacePosition().getX() << 1) + 1, ByteTransform.ADD, ByteOrder.LITTLE);
-            packetWriter.writeShort((player.getUpdateState().getFacePosition().getY() << 1) + 1, ByteOrder.LITTLE);
+            packetWriter.writeShort(player.getUpdateState().getFacePositionHalfX(), ByteTransform.ADD, ByteOrder.LITTLE);
+            packetWriter.writeShort(player.getUpdateState().getFacePositionHalfY(), ByteOrder.LITTLE);
         }
         if (player.getUpdateState().isPrimaryHitUpdateRequired()) {
             packetWriter.writeByte(player.getUpdateState().getPrimaryHitDamage());

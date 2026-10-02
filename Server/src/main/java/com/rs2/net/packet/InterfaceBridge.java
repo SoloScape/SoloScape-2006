@@ -20,6 +20,11 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createGroupMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        mappings.put(18890, 500);
+        mappings.put(18939, 501);
+        mappings.put(18984, 502);
+        mappings.put(19018, 503);
+        mappings.put(19101, 504);
         mappings.put(3917, 320); // skills
         mappings.put(8714, 308); // legacy skill guide -> revision 443 skill guide
         mappings.put(638, 274);  // quest journal
@@ -108,6 +113,11 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        putRange(mappings, 18890, 500, 0, 49);
+        putRange(mappings, 18939, 501, 0, 45);
+        putRange(mappings, 18984, 502, 0, 34);
+        putRange(mappings, 19018, 503, 0, 83);
+        putRange(mappings, 19101, 504, 0, 2);
         // Native prayer click targets are children 0..17 of group 271.
         putRange(mappings, 5609, 271, 0, 15);
         putRange(mappings, 683, 271, 15, 3);
@@ -664,6 +674,13 @@ public final class InterfaceBridge {
     }
 
     public static int toLegacyComponent(int packedId) {
+        int exchangeGroup = packedId >>> 16;
+        if (exchangeGroup >= 500 && exchangeGroup <= 504) {
+            int[] roots = {18890, 18939, 18984, 19018, 19101};
+            int[] sizes = {49, 45, 34, 83, 2};
+            int child = packedId & 65535;
+            return child < sizes[exchangeGroup - 500] ? roots[exchangeGroup - 500] + child : UNMAPPED;
+        }
         // Also resolve deposit clicks after HotSwap, before maps are reinitialized.
         if (packedId == (11 << 16 | 61)) return 7423;
         if (packedId == (465 << 16 | 103)) return 1688;

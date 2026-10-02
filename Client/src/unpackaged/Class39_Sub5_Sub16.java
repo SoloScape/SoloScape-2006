@@ -167,7 +167,7 @@ public class Class39_Sub5_Sub16 extends SubNode
 	    Graphics graphics = Class41.aCanvas778.getGraphics();
 	    NpcDefinition.aClass57_1867.draw(graphics, 516,
 							160);
-	    BufferedFile.aClass57_346.draw(graphics, 496, 466);
+	    GrandExchangeSearch.drawBehindSearch(BufferedFile.aClass57_346, graphics, 496, 466);
 	} catch (Exception exception) {
 	    Class41.aCanvas778.repaint();
 	}

@@ -3276,8 +3276,8 @@ public class GameplayHelper {
                 packetWriter.writeShort(0, ByteOrder.LITTLE);
                 return;
             }
-            packetWriter.writeShort((position.getX() << 1) + 1, ByteOrder.LITTLE);
-            packetWriter.writeShort((position.getY() << 1) + 1, ByteOrder.LITTLE);
+            packetWriter.writeShort(npc.getUpdateState().getFacePositionHalfX(), ByteOrder.LITTLE);
+            packetWriter.writeShort(npc.getUpdateState().getFacePositionHalfY(), ByteOrder.LITTLE);
         }
     }
 

@@ -61,6 +61,7 @@ public class Class37
     }
     
     public static Widget getWidget(int widgetHash) {
+	GrandExchangeWidgets.load(widgetHash >>> 16);
 	int child = widgetHash & 0xffff;
 	int parent = widgetHash >> 16;
 	if (parent < 0 || parent >= Class62_Sub1.widgets.length)

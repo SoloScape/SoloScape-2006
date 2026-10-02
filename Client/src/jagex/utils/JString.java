@@ -885,9 +885,11 @@ public class JString implements Interface1 {
                     Class39_Sub14.aBoolean1520 = true;
                 }
                 Projectile.anInt2197 = -1;
-                if (IsaacPrng.anInt1091 > 17 && Class33.anInt599 > 357
-                        && IsaacPrng.anInt1091 < 496 && Class33.anInt599 < 453) {
-                    if (Class39_Sub5_Sub14.anInt1912 == -1) {
+                if (unpackaged.GrandExchangeWidgets.searching || (IsaacPrng.anInt1091 > 17 && Class33.anInt599 > 357
+                        && IsaacPrng.anInt1091 < 496 && Class33.anInt599 < 453)) {
+                    if (unpackaged.GrandExchangeWidgets.searching) {
+                        unpackaged.GrandExchangeSearch.menuScreen(IsaacPrng.anInt1091, Class33.anInt599);
+                    } else if (Class39_Sub5_Sub14.anInt1912 == -1) {
                         if (IsaacPrng.anInt1095 == -1) {
                             if (Class33.anInt599 < 434
                                     && IsaacPrng.anInt1091 < 426) {

@@ -22,7 +22,8 @@ implements PacketHandler {
                 if (reader < 0 || reader > 11883) {
                     return;
                 }
-                if (reader == 995 || player.getOpenInterfaceId() != 18890 || ((ItemStack)(value = new ItemStack(reader, 1))).getDefinition().isUntradeable()) break;
+                value = new ItemStack(reader, 1);
+                if (reader == 995 || player.getOpenInterfaceId() != 18890 || !GrandExchangeManager.isExchangeableItem(reader)) break;
                 if (((ItemStack)value).getDefinition().isMembersOnly() && reader != 7999 && reader != 8000) {
                     if (player.isMember()) {
                         if (ServerSettings.freeToPlayWorld) {
@@ -37,8 +38,10 @@ implements PacketHandler {
                 player.selectedGrandExchangeItemId = reader;
                 player.selectedGrandExchangeQuantity = 1;
                 player.selectedGrandExchangeUnitPrice = GrandExchangeManager.getGuidePrice(reader);
+                String examine = ((ItemStack)value).getDefinition().getDescription();
                 value = player;
                 ((Player)value).packetSender.sendInterfaceItemModel(18938, player.selectedGrandExchangeItemId);
+                ((Player)value).packetSender.sendInterfaceText(examine == null ? "" : examine, 18918);
                 value = player;
                 ((Player)value).packetSender.sendInterfaceText(GameUtil.formatNumber(GrandExchangeManager.getGuidePrice(reader)), 18919);
                 value = player;

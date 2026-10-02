@@ -27,6 +27,7 @@ import jagex.utils.Cache;
 
 public class Widget extends SubNode
 {
+    public DirectColorSprite runtimeSprite;
     public int anInt1994;
     public static Cache varbitCache;
     public int anInt1996;
@@ -164,6 +165,13 @@ public class Widget extends SubNode
     }
     
     public BitmapFont getFont() {
+        if ((anInt2084 >>> 16) >= 500 && (anInt2084 >>> 16) <= 504) {
+            if (anInt2105 == 496 && Class32.aClass39_Sub5_Sub10_Sub1_587 != null)
+                return Class32.aClass39_Sub5_Sub10_Sub1_587;
+            if (anInt2105 == 494 && Npc.aClass39_Sub5_Sub10_Sub1_2495 != null)
+                return Npc.aClass39_Sub5_Sub10_Sub1_2495;
+            return Class39_Sub5_Sub14.p12fullFont;
+        }
 	Class39_Sub5_Sub12.aBoolean1856 = false;
 	if (anInt2105 == -1)
 	    return null;
@@ -1042,6 +1050,7 @@ public class Widget extends SubNode
     
     public DirectColorSprite method774(int i, boolean bool) {
 	Class39_Sub5_Sub12.aBoolean1856 = false;
+        if (runtimeSprite != null) return runtimeSprite;
 	int i_60_;
 	if (!bool)
 	    i_60_ = anInt2093;

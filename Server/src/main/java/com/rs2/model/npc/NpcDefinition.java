@@ -646,6 +646,10 @@ public final class NpcDefinition {
         if (npcDefinition == null) {
             npcDefinition = NpcDefinition.createFallback(value2);
         }
+        if (ServerSettings.clientBuild == 443 && value2 == 3863) {
+            npcDefinition.name = "Grand Exchange Clerk";
+            npcDefinition.actions = new String[] {"Talk-to", "Exchange", null, null, null};
+        }
         return npcDefinition;
     }
 

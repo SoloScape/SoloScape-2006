@@ -24,6 +24,8 @@ public class EntityUpdateState {
     private int faceEntityId = -1;
     private boolean facePositionUpdateRequired;
     private Position facePosition;
+    private int facePositionWidth = 1;
+    private int facePositionLength = 1;
     private boolean primaryHitUpdateRequired;
     private boolean secondaryHitUpdateRequired;
     private int queuedPrimaryHitDamage = -1;
@@ -159,7 +161,14 @@ public class EntityUpdateState {
     }
 
     public void setFacePosition(Position position) {
+        setFacePosition(position, 1, 1);
+    }
+
+    /** Face the centre of a footprint, retaining half-tile precision on the wire. */
+    public void setFacePosition(Position position, int width, int length) {
         this.facePosition = position;
+        this.facePositionWidth = Math.max(1, width);
+        this.facePositionLength = Math.max(1, length);
         this.facePositionUpdateRequired = true;
         this.updateRequired = true;
     }
@@ -265,10 +274,20 @@ public class EntityUpdateState {
 
     public void setFacePositionValue(Position position) {
         this.facePosition = position;
+        this.facePositionWidth = 1;
+        this.facePositionLength = 1;
     }
 
     public Position getFacePosition() {
         return this.facePosition;
+    }
+
+    public int getFacePositionHalfX() {
+        return (this.facePosition.getX() << 1) + this.facePositionWidth;
+    }
+
+    public int getFacePositionHalfY() {
+        return (this.facePosition.getY() << 1) + this.facePositionLength;
     }
 
     public void setPrimaryHitUpdateRequired(boolean primaryHitUpdateRequired) {

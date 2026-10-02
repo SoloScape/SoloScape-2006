@@ -12,6 +12,7 @@ import com.rs2.model.npc.Npc;
 import com.rs2.model.npc.NpcDefinition;
 import com.rs2.model.objects.DynamicObject;
 import com.rs2.model.objects.ObjectManager;
+import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.objects.WorldObject;
 import com.rs2.model.player.Player;
 import com.rs2.model.skill.GatheringToolDefinition;
@@ -122,8 +123,7 @@ public class WoodcuttingHandler {
             player.botRouteActionPending = true;
         }
         int value7 = player.nextActionSequence();
-        player.getUpdateState().setFaceEntity(65535);
-        player.getUpdateState().setFacePosition(new Position(value22, value32, player.getPosition().getPlane()));
+        faceTree(player, value8, value22, value32);
         player.packetSender.sendSoundEffect(472, 1, 0);
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(player, value7));
         player.getUpdateState().setAnimation(gatheringToolDefinition.getGatherAnimationId(), 0);
@@ -143,6 +143,23 @@ public class WoodcuttingHandler {
         }
         player.setActiveCycleEvent(new WoodcuttingTask(player, value7, (TreeDefinition)((Object)value6), value22, value32, gatheringToolDefinition, value8));
         CycleEventHandler.getInstance().schedule(player, player.getActiveCycleEvent(), 4);
+    }
+
+    static void faceTree(Player player, int objectId, int x, int y) {
+        int plane = player.getPosition().getPlane();
+        int width = 1;
+        int length = 1;
+        // Ent NPC IDs must not be interpreted as object definitions.
+        if (TreeDefinition.forObjectId(objectId) != null) {
+            ObjectDefinition definition = ObjectDefinition.forId(objectId);
+            if (definition != null) {
+                int orientation = SkillActionHelper.getObjectOrientation(objectId, x, y, plane);
+                width = definition.getWidthForOrientation(orientation);
+                length = definition.getLengthForOrientation(orientation);
+            }
+        }
+        player.getUpdateState().setFaceEntity(65535);
+        player.getUpdateState().setFacePosition(new Position(x, y, plane), width, length);
     }
 
     public WoodcuttingHandler(Position position, int sourceSize, Position position2, int targetIndex, ProjectileDefinition projectileDefinition) {

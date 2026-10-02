@@ -191,7 +191,7 @@ public class ArchiveWorker implements Runnable {
                     25, 16777215, true, 1, 1, 0);
             try {
                 Graphics graphics = Class41.aCanvas778.getGraphics();
-                Class39_Sub5_Sub18.aClass57_2130.draw(graphics, 0,
+                GrandExchangeSearch.drawBehindSearch(Class39_Sub5_Sub18.aClass57_2130, graphics, 0,
                         453);
             } catch (Exception exception) {
                 Class41.aCanvas778.repaint();
@@ -201,16 +201,26 @@ public class ArchiveWorker implements Runnable {
 
     public static NpcDefinition getNpcDefinition(int id) {
         NpcDefinition definition = ((NpcDefinition) Class39_Sub5_Sub11.npcDefinitionCache.get((long) id));
-        if (definition != null) {
+        if (definition != null && (id != 3863 || definition.aClass3_1881.isEqual(
+                Class39_Sub5_Sub9.createJstring("Grand Exchange Clerk")))) {
             return definition;
         }
-        byte[] is = Varbit.npcFileLoader.lookupFile(9, id);
+        // The exchange is custom content; 3863 is a quest suspect in cache 443.
+        if (definition != null) Class39_Sub5_Sub11.npcDefinitionCache.method131(id, 0);
+        byte[] is = Varbit.npcFileLoader.lookupFile(9, id == 3863 ? 494 : id);
         definition = new NpcDefinition();
         definition.id = id;
         if (is != null) {
             definition.decode(new Buffer(is));
         }
         definition.method724((byte) 93);
+        if (id == 3863) {
+            definition.aClass3_1881 = Class39_Sub5_Sub9.createJstring("Grand Exchange Clerk");
+            definition.aClass3Array1866 = new JString[] {
+                GrandExchangeWidgets.literal("Talk-to"),
+                Class39_Sub5_Sub9.createJstring("Exchange"), null, null, null
+            };
+        }
         Class39_Sub5_Sub11.npcDefinitionCache.put(definition, (long) id, (byte) 104);
         return definition;
     }

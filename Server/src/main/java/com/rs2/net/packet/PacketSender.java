@@ -1051,7 +1051,7 @@ public final class PacketSender {
             return this;
         }
         if (ServerSettings.clientBuild == 443) {
-            return this.sendInterfaceModel(interfaceId, 1, value2);
+            return this.sendInterfaceModel(interfaceId, interfaceId >= 18890 && interfaceId <= 19102 ? 100 : 1, value2);
         }
         PacketWriter packetWriter = PacketBuffer.allocateWriter(5);
         packetWriter.writeOpcode(this.player.getOutboundCipher(), 16);

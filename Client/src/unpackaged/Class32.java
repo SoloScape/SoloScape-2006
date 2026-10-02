@@ -73,9 +73,11 @@ public class Class32
 	IsaacPrng.method1043(-1540585334);
 	if (!Class39_Sub12.aBoolean1489) {
 	    if (Class39_Sub5_Sub4_Sub4.anInt2285 != 1) {
-		if (Class39_Sub5_Sub4_Sub4.anInt2285 == 2) {
+                if (GrandExchangeWidgets.searching) {
+                    GrandExchangeSearch.draw();
+                } else if (Class39_Sub5_Sub4_Sub4.anInt2285 == 2) {
 		    aClass39_Sub5_Sub10_Sub1_587.method629
-			(StillGraphic.aClass3_2340, 239, 40, 0);
+                        (StillGraphic.aClass3_2340, 239, 40, 0);
 		    aClass39_Sub5_Sub10_Sub1_587.method629
 			(Class39_Sub5_Sub11.method708((new JString[]
 						       { Class66.aClass3_1151,
@@ -373,6 +375,8 @@ public class Class32
 	if (Class39_Sub12.aBoolean1493 && Class37.anInt653 == 2)
 	    Class1.method49(-53);
 	CacheIO.method127(17);
+	if (GrandExchangeWidgets.searching)
+	    jagex.world.map.TraversalMap.aClass57_514.method1006(0);
     }
     
     public Class32(int i, int i_23_, int i_24_, int i_25_, int i_26_,

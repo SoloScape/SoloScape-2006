@@ -1,6 +1,7 @@
 package com.rs2.model.player;
 
 import com.rs2.ServerSettings;
+import com.rs2.model.grandexchange.GrandExchangeCatalog;
 import com.rs2.model.grandexchange.GrandExchangeOffer;
 import com.rs2.model.grandexchange.GrandExchangePriceSample;
 import com.rs2.model.item.ItemDefinition;
@@ -232,7 +233,10 @@ public final class GrandExchangeManager {
                 Player player4 = player;
                 player4.packetSender.sendInterfaceText(GameUtil.formatNumber(GrandExchangeManager.getGuidePrice(player.grandExchangeItemIds[player.selectedGrandExchangeSlot])), 18997);
                 player4 = player;
-                player4.packetSender.sendInterfaceItemModel(19008, player.grandExchangeItemIds[player.selectedGrandExchangeSlot]);
+                // The paired client's sprite widget uses the model packet's first value as its stack count.
+                player4.packetSender.sendInterfaceModel(19008,
+                        ServerSettings.clientBuild == 443 ? player.selectedGrandExchangeQuantity : 100,
+                        player.selectedGrandExchangeItemId);
                 player4 = player;
                 player4.packetSender.sendInterfaceText(GameUtil.formatNumber(player.selectedGrandExchangeQuantity), 18998);
                 player4 = player;
@@ -380,7 +384,15 @@ public final class GrandExchangeManager {
             }
             case 18896: 
             case 18945: {
-                if (player.selectedGrandExchangeItemId < 0 || player.selectedGrandExchangeQuantity < 0 || player.selectedGrandExchangeSlot < 0 || player.selectedGrandExchangeSlot > 5 || player.selectedGrandExchangeUnitPrice * player.selectedGrandExchangeQuantity < 0) return true;
+                if (player.selectedGrandExchangeItemId < 0 || player.selectedGrandExchangeQuantity <= 0 || player.selectedGrandExchangeSlot < 0 || player.selectedGrandExchangeSlot > 5) return true;
+                if (player.selectedGrandExchangeUnitPrice < 1) {
+                    player.packetSender.sendGameMessage("Grand Exchange offers must be at least 1 coin each.");
+                    return true;
+                }
+                if (!GrandExchangeCatalog.isExchangeable(player.selectedGrandExchangeItemId)) {
+                    player.packetSender.sendGameMessage("That item cannot be traded on this Grand Exchange.");
+                    return true;
+                }
                 int initialValue = 1;
                 if (player.getOpenInterfaceId() == 18890) {
                     initialValue = 0;
@@ -530,21 +542,24 @@ public final class GrandExchangeManager {
         instantPriceFluctuationPercent = value;
     }
 
-    public static int getGuidePrice(int value4) {
-        double value2;
-        double value3;
-        if (value4 == 995) {
-            return 1;
+    public static boolean isExchangeableItem(int itemId) {
+        return GrandExchangeCatalog.isExchangeable(itemId);
+    }
+
+    public static int getGuidePrice(int itemId) {
+        if (itemId == 995) return 1;
+        ItemDefinition definition = ItemDefinition.forId(itemId);
+        int unnotedId = definition.isNote() ? definition.getUnnotedId() : definition.getId();
+        int price = GrandExchangePriceSample.getAveragePrice(unnotedId);
+        if (price == -1) {
+            price = GrandExchangeCatalog.getGuidePrice(unnotedId);
+            if (price == -1) price = definition.getValue();
         }
-        ItemDefinition itemDefinition = ItemDefinition.forId(value4);
-        int unnotedId = itemDefinition.isNote() ? itemDefinition.getUnnotedId() : itemDefinition.getId();
-        if ((unnotedId = GrandExchangePriceSample.getAveragePrice(unnotedId)) == -1) {
-            unnotedId = itemDefinition.getValue();
+        if (ServerSettings.instantGrandExchangeEnabled && ServerSettings.instantGrandExchangePriceFluctuationEnabled) {
+            price += price / 100 * instantPriceFluctuationPercent;
+            if (price <= 0) price = 1;
         }
-        if (ServerSettings.instantGrandExchangeEnabled && ServerSettings.instantGrandExchangePriceFluctuationEnabled && (unnotedId = (int)(value3 = (double)unnotedId + (value2 = (double)(unnotedId / 100 * instantPriceFluctuationPercent)))) <= 0) {
-            unnotedId = 1;
-        }
-        return unnotedId;
+        return price;
     }
 
     public static void setSelectedOfferQuantity(Player player, int quantity) {
@@ -652,9 +667,6 @@ public final class GrandExchangeManager {
         if (inventoryManager == null || ((ItemStack)inventoryManager).getId() != value2 || !((ItemStack)inventoryManager).isValid()) {
             return;
         }
-        if (((ItemStack)inventoryManager).getDefinition().isUntradeable()) {
-            return;
-        }
         player.getInventoryManager().getContainer().getItemAmount(value2);
         value2 = ((ItemStack)inventoryManager).getDefinition().isNote() ? 1 : 0;
         if (((ItemStack)inventoryManager).getDefinition().getId() > 11883) {
@@ -665,6 +677,10 @@ public final class GrandExchangeManager {
         if ((value2 = value2 != 0 ? ((ItemStack)inventoryManager).getDefinition().getUnnotedId() : ((ItemStack)inventoryManager).getDefinition().getId()) == 995) {
             return;
         }
+        if (!GrandExchangeCatalog.isExchangeable(value2)) {
+            ((Player)inventoryManager).packetSender.sendGameMessage("That item cannot be traded on this Grand Exchange.");
+            return;
+        }
         player.selectedGrandExchangeItemId = value2;
         player.selectedGrandExchangeQuantity = ((ItemStack)inventoryManager).getAmount();
         player.selectedGrandExchangeUnitPrice = GrandExchangeManager.getGuidePrice(value2);
@@ -672,6 +688,8 @@ public final class GrandExchangeManager {
         ((Player)inventoryManager).packetSender.sendInterfaceText(GameUtil.formatNumber(player.selectedGrandExchangeUnitPrice), 18968);
         inventoryManager = player;
         ((Player)inventoryManager).packetSender.sendInterfaceItemModel(18983, value2);
+        String examine = ItemDefinition.forId(value2).getDescription();
+        ((Player)inventoryManager).packetSender.sendInterfaceText(examine == null ? "" : examine, 18967);
         GrandExchangeManager.refreshSelectedOfferTotals(player);
     }
 }

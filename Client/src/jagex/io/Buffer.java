@@ -321,6 +321,7 @@ public class Buffer extends Node {
 
     public static void method814(int i) {
         while (Class39_Sub5_Sub7.method588(-4)) {
+            if (unpackaged.GrandExchangeSearch.key(Class15.anInt287, Projectile.anInt2191)) continue;
             if (Class39_Sub11.anInt1478 == -1
                     || Class26.anInt473 != Class39_Sub11.anInt1478) {
                 if (!Class39_Sub12.aBoolean1489) {
@@ -332,19 +333,22 @@ public class Buffer extends Node {
                                         Class66.aClass3_1151.getLength() - 1));
                                 Class14.aBoolean245 = true;
                             }
-                            if ((Class37.method352((byte) 56,
+                            if (((unpackaged.GrandExchangeWidgets.searching && Class26.method290(Projectile.anInt2191, -160)) || Class37.method352((byte) 56,
                                     (Projectile.anInt2191))
                                     || Projectile.anInt2191 == 32)
-                                    && Class66.aClass3_1151.getLength() < 12) {
+                                    && Class66.aClass3_1151.getLength() < (unpackaged.GrandExchangeWidgets.searching ? 40 : 12)) {
                                 Class66.aClass3_1151 = (Class66.aClass3_1151.createConcatChar(Projectile.anInt2191));
                                 Class14.aBoolean245 = true;
                             }
                             if (Class15.anInt287 == 84) {
                                 if (Class66.aClass3_1151.getLength()
                                         > 0) {
-                                    FrameBuffer.outgoingGameBuffer.putFrame(22);
-                                    FrameBuffer.outgoingGameBuffer.putQword(Class66.aClass3_1151.encodeBase37());
+                                    if (!unpackaged.GrandExchangeWidgets.submitSearch(Class66.aClass3_1151)) {
+                                        FrameBuffer.outgoingGameBuffer.putFrame(22);
+                                        FrameBuffer.outgoingGameBuffer.putQword(Class66.aClass3_1151.encodeBase37());
+                                    }
                                 }
+                                unpackaged.GrandExchangeWidgets.searching = false;
                                 Class39_Sub5_Sub4_Sub4.anInt2285 = 0;
                                 Class14.aBoolean245 = true;
                             }
@@ -629,7 +633,8 @@ public class Buffer extends Node {
             Class39_Sub14.aBoolean1520 = false;
             RuntimeException_Sub1.method1124((byte) 44);
         }
-        if (Class39_Sub5_Sub14.anInt1912 == -1) {
+        unpackaged.GrandExchangeSearch.mouseScreen(IsaacPrng.anInt1091, Class33.anInt599);
+        if (Class39_Sub5_Sub14.anInt1912 == -1 && !unpackaged.GrandExchangeWidgets.searching) {
             Class65.aClass39_Sub5_Sub17_1136.anInt1994 = -Node.anInt741 - 77 + Deque.anInt912;
             if (IsaacPrng.anInt1091 > 17 && IsaacPrng.anInt1091 < 560
                     && Class33.anInt599 > 332) {
