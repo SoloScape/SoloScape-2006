@@ -1740,10 +1740,16 @@ public class DialogueManager {
         player.getDialogueManager().setDialogueId(dialogueId);
         player.getDialogueManager().setDialogueType(0);
         player.getDialogueManager().setDialogueNpcId(npcId);
+        if (dialogueId >= HistoricalNpcDialogues.ID_BASE) {
+            return HistoricalNpcDialogues.continueDialogue(player, dialogueId, dialogueStep, optionIndex);
+        }
         if (player.getQuestManager().handleNpcDialogue(dialogueId, dialogueStep, optionIndex, npcId)) {
             return true;
         }
         if (DialogueManager.continueUtilityNpcDialogue(player, dialogueId, optionIndex)) {
+            return true;
+        }
+        if (dialogueStep == 1 && dialogueId == npcId && HistoricalNpcDialogues.start(player, npcId)) {
             return true;
         }
         continueContextDialogueControlSwitch1 : switch (dialogueId) {

@@ -1,6 +1,8 @@
 package com.rs2.model.skill;
 
+import com.rs2.ServerSettings;
 import com.rs2.model.Position;
+import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.player.Player;
 import com.rs2.model.skill.GatheringToolComparator;
@@ -94,7 +96,13 @@ public class ItemCombinationHandler {
         int index = 0;
         while (index < length) {
             GatheringToolDefinition gatheringToolDefinition = gatheringToolDefinitionArray[index];
-            if (gatheringToolDefinition.getSkillId() == value2 && player.getSkillManager().getCurrentLevels()[value2] >= gatheringToolDefinition.getRequiredLevel() && (player.getEquipmentManager().getItemIdAtSlot(3) == gatheringToolDefinition.getToolItemId() || player.getInventoryManager().containsItem(gatheringToolDefinition.getToolItemId()))) {
+            boolean memberToolBlocked = ItemDefinition.isDefined(gatheringToolDefinition.getToolItemId())
+                    && ItemDefinition.forId(gatheringToolDefinition.getToolItemId()).isMembersOnly()
+                    && (!player.isMember() || ServerSettings.freeToPlayWorld);
+            if (!memberToolBlocked && gatheringToolDefinition.getSkillId() == value2
+                    && player.getSkillManager().getCurrentLevels()[value2] >= gatheringToolDefinition.getRequiredLevel()
+                    && (player.getEquipmentManager().getItemIdAtSlot(3) == gatheringToolDefinition.getToolItemId()
+                        || player.getInventoryManager().containsItem(gatheringToolDefinition.getToolItemId()))) {
                 return gatheringToolDefinition;
             }
             ++index;

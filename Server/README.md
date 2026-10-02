@@ -99,6 +99,38 @@ Keep the project directory structure intact. `Start-Server.bat` uses the project
 the working directory so the relative paths to `config/`, `data/`, `cache/`, and
 `lib/` resolve correctly.
 
+## Interaction coverage and revision 443 routing
+
+Run `powershell -ExecutionPolicy Bypass -File tools\interaction-audit.ps1 -Check`
+from the repository root to compile an isolated audit build, inventory the loaded
+cache, and run the interaction regression checks. The output is
+`qa-output/interaction-audit/interactions.csv` and `summary.md`.
+
+The report includes NPC actions, object actions, inventory and ground-item actions,
+native widgets, and interface-group bridge targets. It includes unused cache
+content. `semantic` means an action has a named gameplay owner, not that every
+NPC, item or quest has been play-tested. `review-legacy` and
+`review-native-or-unmapped` need inspection; they are not automatically broken.
+`missing-*` records missing bindings or data. The client's generated Grand
+Exchange groups are listed separately from cache interface groups.
+
+Revision 443 NPC clicks now resolve their loaded action names instead of assuming
+that the old server's numeric menu slots still match. Talk-to retains quest and
+dialogue dispatch; bank, trade, pickpocket, fishing, supported teleports, tanning,
+shearing, healing and the Rewards Guardian use their existing gameplay services.
+Registered regional fishing variants resolve paired Net/Bait, Lure/Bait,
+Cage/Harpoon and Net/Harpoon actions. Specialised NPC actions keep their legacy
+handlers pending an audited mapping. Object routing also identifies bank-booth
+operations and supported tree/rock gathering. Inventory routing identifies common
+consumption, equipment and disposal actions; other item options retain their
+legacy handlers.
+
+Runtime interaction traces record the selected action and route, and record
+missing NPC data and unmapped widget actions as `unhandled`. Add regression checks
+when binding additional actions; preserve movement, cancellation, ownership,
+membership and quest requirements. This audit provides a backlog for completing
+the migration, rather than claiming all game content is implemented.
+
 ## Configuration and data
 
 - `config/server.cfg` controls membership, XP rates, bots, shops, drops,
@@ -113,6 +145,33 @@ the working directory so the relative paths to `config/`, `data/`, `cache/`, and
 The client defaults to `127.0.0.1:43594`. Leave LAN support disabled for a
 local-only game. If you enable LAN connections, ensure your firewall and network
 settings allow the selected server port.
+
+Tree respawns use `[EFFECTIVE_WORLD_POPULATION];1250` in `config/server.cfg`.
+Set 0..2000 to emulate a world population, or -1 to use connected players
+(including bots). Restart the server after changing it. Larger populations
+make oak, willow, maple, yew and magic trees respawn faster. At the default
+1250, elapsed delays are approximately 11.4s, 11.4s, 50.4s, 82.8s and 162s.
+Other tree types retain their existing delays; NPCs and mining are unaffected.
+
+The curves reconstruct the linear timing table supplied for 750..2000 players,
+with linear extrapolation below 750 and population clamped to 0..2000. They are
+not a verified revision 443 formula. Delays round up to 600ms ticks and account
+for ObjectManager restoring one tick after its countdown reaches zero.
+Jagex confirmed the former population dependency in
+[Boss Pets and Spawn Rates](https://secure.runescape.com/m=news/boss-pets-and-spawn-rates?oldschool=1).
+
+Woodcutting rolls Tree Spirits only on a validated initial tree interaction
+(1/2001), before scheduling chopping. Axe-head loss rolls on that initial hit
+(1/2001) and less often on continued four-tick chopping cycles (1/20001).
+Either event interrupts chopping before a log can be awarded. Existing Ent
+interactions use their own axe-breaking path rather than these initial rolls.
+The initial-attempt description comes from the
+[Tree Spirit history](https://runescape.fandom.com/wiki/Tree_spirit), and the
+initial-hit bias for axe separation comes from the
+[period Woodcutting guide](https://2007rshelp.com/skill/11/woodcutting).
+These sources do not establish exact odds; the chosen rates are approximations.
+Ents retain the existing two scheduled warning checks before axe breakage;
+the exact historical delay remains unverified.
 
 ## Project layout
 

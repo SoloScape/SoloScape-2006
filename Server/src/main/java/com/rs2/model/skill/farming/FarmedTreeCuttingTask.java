@@ -1,7 +1,5 @@
 package com.rs2.model.skill.farming;
 
-import com.rs2.model.ground.GroundItem;
-import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemService;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.player.Player;
@@ -9,6 +7,9 @@ import com.rs2.model.skill.GatheringToolDefinition;
 import com.rs2.model.skill.farming.TreePatch;
 import com.rs2.model.skill.farming.TreePatchManager;
 import com.rs2.model.skill.woodcutting.TreeDefinition;
+import com.rs2.model.skill.woodcutting.WoodcuttingChanceTable;
+import com.rs2.model.skill.woodcutting.BirdNestDropTable;
+import com.rs2.model.skill.woodcutting.BirdNestDrop;
 import com.rs2.model.task.CycleEvent;
 import com.rs2.model.task.CycleEventContainer;
 import com.rs2.net.packet.PacketSender;
@@ -49,12 +50,13 @@ extends CycleEvent {
         if (TreePatchManager.getPlayer((TreePatchManager)this.manager).temporaryActionValue % 4 != 0) {
             return;
         }
-        if (GameUtil.randomInclusive(256) == 0) {
-            value = new GroundItem(new ItemStack(5070 + GameUtil.randomInclusive(4)), TreePatchManager.getPlayer(this.manager));
-            GroundItemManager.getInstance().spawn((GroundItem)value);
+        if (BirdNestDropTable.shouldDropNest(TreePatchManager.getPlayer(this.manager), 257)) {
+            BirdNestDrop.spawn(TreePatchManager.getPlayer(this.manager),
+                    BirdNestDropTable.rollNest(TreePatchManager.getPlayer(this.manager)));
         }
         TreePatchManager.getPlayer(this.manager).getUpdateState().setAnimation(this.animationId);
-        if (GameUtil.rollLevelScaledChance(this.treeDefinition.getCutChanceLow(), this.treeDefinition.getCutChanceHigh(), TreePatchManager.getPlayer(this.manager).getSkillManager().getCurrentLevels()[8], this.gatheringTool.getToolSpeed())) {
+        if (WoodcuttingChanceTable.roll(this.treeDefinition, this.gatheringTool,
+                TreePatchManager.getPlayer(this.manager).getSkillManager().getCurrentLevels()[8])) {
             TreePatchManager.getPlayer(this.manager).getInventoryManager().addItem(new ItemStack(this.treeDefinition.getLogItemId()));
             value = TreePatchManager.getPlayer(this.manager);
             PacketSender packetSender = ((Player)value).packetSender;

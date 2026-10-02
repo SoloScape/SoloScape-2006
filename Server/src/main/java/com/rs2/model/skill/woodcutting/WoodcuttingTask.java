@@ -2,18 +2,14 @@ package com.rs2.model.skill.woodcutting;
 
 import com.rs2.ServerSettings;
 import com.rs2.model.Entity;
-import com.rs2.model.GameplayHelper;
 import com.rs2.model.Position;
 import com.rs2.model.World;
-import com.rs2.model.ground.GroundItem;
-import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.npc.Npc;
 import com.rs2.model.objects.DynamicObject;
 import com.rs2.model.objects.ObjectManager;
 import com.rs2.model.player.Player;
-import com.rs2.model.randomevent.SkillRandomEventNpc;
 import com.rs2.model.skill.GatheringToolDefinition;
 import com.rs2.model.skill.ItemCombinationHandler;
 import com.rs2.model.skill.SkillActionHelper;
@@ -116,8 +112,10 @@ extends CycleEvent {
             }
             return;
         }
+        boolean hollowTree = this.treeDefinition == TreeDefinition.HOLLOW_TREE;
         dynamicObjectAt = new ItemStack(this.treeDefinition.getLogItemId(), 1);
-        if (((ItemStack)dynamicObjectAt).getId() > 0 && this.player.getInventoryManager().getContainer().getFirstFreeSlot() == -1) {
+        if (!hollowTree && ((ItemStack)dynamicObjectAt).getId() > 0
+                && this.player.getInventoryManager().getContainer().getFirstFreeSlot() == -1) {
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("woodcutting stop full-inventory player=" + GameplayTrace.describe(this.player) + " seq=" + this.actionSequence + " tree=" + this.treeDefinition + " logItemId=" + ((ItemStack)dynamicObjectAt).getId());
             }
@@ -135,37 +133,46 @@ extends CycleEvent {
             cycleEventContainer.stop();
             return;
         }
-        if (SkillActionHelper.shouldTriggerRandomEvent(this.player) && !this.player.botEnabled && !this.player.isInTutorialIsland()) {
-            GameplayHelper.spawnSkillRandomEventNpc(this.player, SkillRandomEventNpc.TREE_SPIRIT);
-        }
-        if (this.player.isMember() && !ServerSettings.freeToPlayWorld && GameUtil.randomInt(256) == 0 && !this.player.botEnabled && !this.player.isInTutorialIsland() && ItemDefinition.isDefined(value = 5070 + GameUtil.randomInclusive(4))) {
-            GroundItem groundItem = new GroundItem(new ItemStack(value), this.player);
-            GroundItemManager.getInstance().spawn(groundItem);
-        }
-        if (GameUtil.rollLevelScaledChance(this.treeDefinition.getCutChanceLow(), this.treeDefinition.getCutChanceHigh(), this.player.getSkillManager().getCurrentLevels()[8], this.gatheringTool.getToolSpeed())) {
+        if (WoodcuttingChanceTable.roll(this.treeDefinition, this.gatheringTool,
+                this.player.getSkillManager().getCurrentLevels()[8])) {
+            if (this.player.isMember() && !ServerSettings.freeToPlayWorld && BirdNestDropTable.shouldDropNest(this.player, 256) && !this.player.botEnabled && !this.player.isInTutorialIsland() && ItemDefinition.isDefined(value = BirdNestDropTable.rollNest(this.player))) {
+                BirdNestDrop.spawn(this.player, value);
+            }
             boolean tutorialTreeCut = this.player.getQuestState(0) == 8;
-            this.player.getSkillManager().addExperience(8, this.treeDefinition.getExperience());
-            if (((ItemStack)dynamicObjectAt).getId() > 0) {
+            // Hollow trees usually award XP without an item; the uncommon bark outcome
+            // instead gives 357.7 XP. The exact 443 bark rate is not published, so 1/8
+            // remains an explicit reconstruction rather than pretending every cut yields bark.
+            boolean hollowBark = hollowTree && GameUtil.randomInt(8) == 0;
+            if (hollowBark && this.player.getInventoryManager().getContainer().getFirstFreeSlot() == -1) {
+                this.player.packetSender.sendGameMessage("Your inventory is too full to hold any more bark.");
+                this.player.packetSender.sendSoundEffect(1878, 1, 0);
+                this.player.getUpdateState().setAnimation(-1);
+                cycleEventContainer.stop();
+                return;
+            }
+            double awardedExperience = hollowBark ? 357.7 : this.treeDefinition.getExperience();
+            this.player.getSkillManager().addExperience(8, awardedExperience);
+            if ((!hollowTree || hollowBark) && ((ItemStack)dynamicObjectAt).getId() > 0) {
                 this.player.getInventoryManager().addItem((ItemStack)dynamicObjectAt);
                 if (GameplayTrace.enabled()) {
-                    GameplayTrace.log("woodcutting success player=" + GameplayTrace.describe(this.player) + " seq=" + this.actionSequence + " tree=" + this.treeDefinition + " logItemId=" + ((ItemStack)dynamicObjectAt).getId() + " logName=" + ((ItemStack)dynamicObjectAt).getDefinition().getName() + " xp=" + this.treeDefinition.getExperience() + " x=" + this.x + " y=" + this.y);
+                    GameplayTrace.log("woodcutting success player=" + GameplayTrace.describe(this.player) + " seq=" + this.actionSequence + " tree=" + this.treeDefinition + " logItemId=" + ((ItemStack)dynamicObjectAt).getId() + " logName=" + ((ItemStack)dynamicObjectAt).getDefinition().getName() + " xp=" + awardedExperience + " x=" + this.x + " y=" + this.y);
                 }
-                WoodcuttingTask woodcuttingTask = this;
-                woodcuttingTask.player.rollActionReward();
+                this.player.rollActionReward();
                 if (this.player.getQuestState(0) == 9) {
                     this.player.getDialogueManager().showItemMessage("you get some logs.", new ItemStack(1511));
                     this.player.getDialogueManager().finishDialogue();
                     this.player.setInteractionTargetId(0);
                 } else if (this.treeDefinition != TreeDefinition.DRAMEN_TREE && this.treeDefinition != TreeDefinition.STRANGE_MUSICAL_TREE) {
-                    value2 = this.player;
-                    ((Player)value2).packetSender.sendGameMessage("You get some " + ((ItemStack)dynamicObjectAt).getDefinition().getName().toLowerCase() + ".");
+                    this.player.packetSender.sendGameMessage("You get some " + ((ItemStack)dynamicObjectAt).getDefinition().getName().toLowerCase() + ".");
                 } else if (this.treeDefinition == TreeDefinition.DRAMEN_TREE) {
-                    value2 = this.player;
-                    ((Player)value2).packetSender.sendGameMessage("You cut a branch from the Dramen tree.");
+                    this.player.packetSender.sendGameMessage("You cut a branch from the Dramen tree.");
                 } else if (this.treeDefinition == TreeDefinition.STRANGE_MUSICAL_TREE) {
-                    value2 = this.player;
-                    ((Player)value2).packetSender.sendGameMessage("You cut a branch from the strangely musical tree.");
+                    this.player.packetSender.sendGameMessage("You cut a branch from the strangely musical tree.");
                 }
+            } else if (GameplayTrace.enabled()) {
+                GameplayTrace.log("woodcutting success-no-item player=" + GameplayTrace.describe(this.player)
+                        + " seq=" + this.actionSequence + " tree=" + this.treeDefinition
+                        + " xp=" + awardedExperience + " x=" + this.x + " y=" + this.y);
             }
             if (this.treeDefinition != TreeDefinition.DRAMEN_TREE && this.treeDefinition != TreeDefinition.STRANGE_MUSICAL_TREE && GameUtil.rollChance(TreeDefinition.getDepletionChance(this.treeDefinition))) {
                 if (this.treeDefinition != TreeDefinition.VINES) {
@@ -178,8 +185,8 @@ extends CycleEvent {
                     ((Player)value2).packetSender.sendSoundEffect(1312, 1, 0);
                 }
                 int objectOrientation = SkillActionHelper.getObjectOrientation(this.treeObjectId, this.x, this.y, this.player.getPosition().getPlane());
-                int respawnTicksLow = GameUtil.randomBetweenInclusive(this.treeDefinition.getRespawnTicksLow(), this.treeDefinition.getRespawnTicksHigh());
-                new DynamicObject(this.treeDefinition.getStumpObjectId(), this.x, this.y, this.player.getPosition().getPlane(), objectOrientation, 10, this.treeObjectId, respawnTicksLow, this.treeDefinition != TreeDefinition.VINES);
+                int respawnTicks = this.treeDefinition.getRespawnTicks();
+                new DynamicObject(this.treeDefinition.getStumpObjectId(), this.x, this.y, this.player.getPosition().getPlane(), objectOrientation, 10, this.treeObjectId, respawnTicks, this.treeDefinition != TreeDefinition.VINES);
                 if (tutorialTreeCut) {
                     this.player.packetSender.sendEntityHintIcon(1, -1);
                     this.player.advanceTutorialStage();
@@ -212,7 +219,8 @@ extends CycleEvent {
                 return;
             }
         }
-        if (((ItemStack)dynamicObjectAt).getId() > 0 && this.player.getInventoryManager().getContainer().getFreeSlots() <= 0) {
+        if (!hollowTree && ((ItemStack)dynamicObjectAt).getId() > 0
+                && this.player.getInventoryManager().getContainer().getFreeSlots() <= 0) {
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("woodcutting stop no-space-after-roll player=" + GameplayTrace.describe(this.player) + " seq=" + this.actionSequence + " tree=" + this.treeDefinition + " logItemId=" + ((ItemStack)dynamicObjectAt).getId());
             }

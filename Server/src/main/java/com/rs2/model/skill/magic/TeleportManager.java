@@ -27,7 +27,35 @@ public final class TeleportManager {
         this.player = player;
     }
 
+    public final boolean castHomeTeleport() {
+        long now = System.currentTimeMillis();
+        long remaining = this.player.homeTeleportAvailableAtMillis - now;
+        if (remaining > 0) {
+            long minutes = (remaining + 59999L) / 60000L;
+            this.player.packetSender.sendGameMessage("You can use Lumbridge Home Teleport again in "
+                    + minutes + " minute" + (minutes == 1 ? "" : "s") + ".");
+            return false;
+        }
+        if (!this.canCastSpellbookTeleport()) {
+            return false;
+        }
+        this.player.setActionLocked(true);
+        HomeTeleportTask task = new HomeTeleportTask(this.player);
+        task.start();
+        CycleEventHandler.getInstance().schedule(this.player, task, 1);
+        this.player.homeTeleportAvailableAtMillis = now + 30L * 60L * 1000L;
+        return true;
+    }
+
     public final boolean castSpellbookTeleport(Position position) {
+        if (!this.canCastSpellbookTeleport()) {
+            return false;
+        }
+        this.startMagicTeleportTask(position.getX(), position.getY(), position.getPlane(), this.player.getSpellbook() == Spellbook.ANCIENT);
+        return true;
+    }
+
+    private boolean canCastSpellbookTeleport() {
         if (this.player.getEnchantmentChamberController().isInsideChamber() || this.player.getAlchemistPlaygroundController().isInsidePlayground() || this.player.getCreatureGraveyardController().isInsideGraveyard() || this.player.getTelekineticTheatreController().isInsideTheatre()) {
             Player player = this.player;
             player.packetSender.sendGameMessage("You can't teleport out of here.");
@@ -48,7 +76,6 @@ public final class TeleportManager {
             player.packetSender.sendGameMessage("You can't teleport from here.");
             return false;
         }
-        this.startMagicTeleportTask(position.getX(), position.getY(), position.getPlane(), this.player.getSpellbook() == Spellbook.ANCIENT);
         return true;
     }
 

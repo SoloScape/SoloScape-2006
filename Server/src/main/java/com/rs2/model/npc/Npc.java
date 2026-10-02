@@ -10,6 +10,7 @@ import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.clue.ClueKeyHandler;
 import com.rs2.model.combat.CombatType;
+import com.rs2.model.combat.hit.HitType;
 import com.rs2.model.gameplay.abyss.AbyssManager;
 import com.rs2.model.gameplay.godwars.GodWarsDungeonManager;
 import com.rs2.model.gameplay.partyroom.PartyRoomManager;
@@ -29,6 +30,7 @@ import com.rs2.model.npc.NpcStatRestoreTask;
 import com.rs2.model.npc.combat.NpcCombatDefinition;
 import com.rs2.model.npc.drop.NpcDropManager;
 import com.rs2.model.player.Player;
+import com.rs2.model.skill.woodcutting.UndeadTreeCutting;
 import com.rs2.model.task.CycleEventHandler;
 import com.rs2.model.task.TickTask;
 import com.rs2.util.GameUtil;
@@ -67,6 +69,7 @@ extends Entity {
     private boolean faceEntityUpdateDisabled = false;
     private Entity forcedCombatTarget = null;
     private int removalDelayTicks = -1;
+    private int undeadTreeAttackTicks;
     public Player questOwnerPlayer = null;
     public boolean teleportUpdateRequired = false;
     public boolean chronozonHitByWindBlast = false;
@@ -335,6 +338,7 @@ extends Entity {
             }
             GameplayHelper.unregisterTemporaryNpc(npc);
         }
+        this.processUndeadTreeAttack();
         if (this.removalDelayTicks == 0) {
             boolean enabled = false;
             value = this;
@@ -348,6 +352,26 @@ extends Entity {
 
     public final void setRemovalDelayTicks(int delayTicks) {
         this.removalDelayTicks = delayTicks;
+    }
+
+    /** Ambient hazard, independent of chopping, quest progress and combat aggression. */
+    private void processUndeadTreeAttack() {
+        if (!UndeadTreeCutting.isUndeadTree(this.npcId) || !this.active || this.isDead()) return;
+        if (this.undeadTreeAttackTicks > 0) {
+            --this.undeadTreeAttackTicks;
+            if (this.undeadTreeAttackTicks > 0) return;
+        }
+        for (Player player : World.getPlayers()) {
+            if (player == null || player.isDead() || player.getCurrentHitpoints() <= 0
+                    || player.isTeleporting() || player.getPosition().getPlane() != this.getPosition().getPlane()
+                    || !this.isWithinReach(player, 1) || this.isOverlapping(player)) continue;
+            this.getUpdateState().setFacePosition(player.getPosition());
+            this.getUpdateState().setAnimation(73, 0);
+            player.applyDirectHit(GameUtil.randomInclusive(3), HitType.NORMAL);
+            // Four ticks is an approximation; the exact 443 swipe cadence is undocumented.
+            this.undeadTreeAttackTicks = 4;
+            return;
+        }
     }
 
     private void processStatRestoration() {

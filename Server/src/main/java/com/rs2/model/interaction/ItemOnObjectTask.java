@@ -26,6 +26,7 @@ import com.rs2.model.skill.smithing.DragonSquareShieldSmithing;
 import com.rs2.model.skill.smithing.DragonfireShieldSmithing;
 import com.rs2.model.skill.smithing.SmeltingHandler;
 import com.rs2.model.skill.smithing.SmithingHandler;
+import com.rs2.model.skill.woodcutting.JungleCutting;
 import com.rs2.model.task.TickTask;
 import com.rs2.util.GameplayTrace;
 import com.rs2.util.GameUtil;
@@ -91,6 +92,11 @@ extends TickTask {
             GameplayTrace.log("item-on-object task reached player=" + GameplayTrace.describe(this.player) + " itemId=" + this.itemId + " item=" + ItemDefinition.forId(this.itemId).getName() + " objectId=" + this.objectId + " object=" + ((ObjectDefinition)interactionTargetId).name + " x=" + this.objectX + " y=" + this.objectY + " plane=" + this.objectPlane);
         }
         if (this.player.getQuestManager().handleItemOnObject(this.itemId, this.objectId)) {
+            this.stop();
+            return;
+        }
+        if (JungleCutting.handleItemOnObject(this.player, this.itemId, this.objectId,
+                this.objectX, this.objectY, this.objectPlane)) {
             this.stop();
             return;
         }

@@ -7,7 +7,7 @@ public enum GatheringToolDefinition {
     RUNE_AXE(1359, 41, 3.5, new int[]{867, 868}, 0, 520, 506, 8),
     ADAMANT_AXE(1357, 31, 3.0, new int[]{869, 870}, 0, 518, 504, 8),
     MITHRIL_AXE(1355, 21, 2.5, new int[]{871, 872}, 0, 516, 502, 8),
-    BLACK_AXE(1361, 11, 2.25, new int[]{873, 874}, 0, 514, 500, 8),
+    BLACK_AXE(1361, 6, 2.25, new int[]{873, 874}, 0, 514, 500, 8),
     STEEL_AXE(1353, 6, 2.0, new int[]{875, 876}, 0, 512, 498, 8),
     IRON_AXE(1349, 1, 1.5, new int[]{877, 878}, 0, 510, 496, 8),
     BRONZE_AXE(1351, 1, 1.0, new int[]{879, 880}, 0, 508, 494, 8),

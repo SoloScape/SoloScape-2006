@@ -9,6 +9,7 @@ import com.rs2.ServerSettings;
 import java.util.ArrayList;
 
 public final class SkillGuideManager {
+    // Icon bounds for the 443 cache; historical content is curated in the guide entries.
     private static final int REVISION_443_MAX_ITEM_ID = 10886;
     private Player player;
     public int selectedSkillIndex;
@@ -692,17 +693,13 @@ public final class SkillGuideManager {
         skillGuideCategory8 = skillGuideCategory7;
         skillGuideCategory8.addEntry((SkillGuideEntry)value, false);
         skillGuideCategory7.addEntry(new SkillGuideEntry(60, "Dragon", 1215));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(60, "Barrelchest Anchor (with 40 Strength)", 10887));
         skillGuideCategory7.addEntry(new SkillGuideEntry(60, "Obsidian weapons", 6523));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Saradomin sword", 11730));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Zamorakian spear", 11716));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Abyssal whip", 4151));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Ahrim's staff (with 70 Magic)", 4710));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Dharok's greataxe (with 70 Strength)", 4718));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Torag's hammers (with 70 Strength)", 4747));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Verac's flail", 4755));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Guthan's warspear", 4726));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(75, "Godswords", 11700));
         SkillGuideManager.addCategoryIfNotEmpty(attackCategories, skillGuideCategory6);
         skillGuideCategory7 = skillGuideCategory6 = new SkillGuideCategory("Hitpoints");
         skillGuideCategory6.addEntry(new SkillGuideEntry("Hitpoints are used to tell you how", 4049));
@@ -771,7 +768,6 @@ public final class SkillGuideManager {
         skillGuideCategory7.addEntry(new SkillGuideEntry(30, "Adamant warhammer", 1345));
         skillGuideCategory7.addEntry(new SkillGuideEntry(30, "Dragon halberd (with 60 Attack)", 3204));
         skillGuideCategory7.addEntry(new SkillGuideEntry(40, "Rune warhammer", 1347));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(40, "Barrelchest Anchor (with 60 Attack)", 10887));
         skillGuideCategory7.addEntry(new SkillGuideEntry(50, "Granite maul (with 50 Attack)", 4153));
         skillGuideCategory7.addEntry(new SkillGuideEntry(60, "Tzhaar-Ket-Om", 6528));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Dharok's greataxe (with 70 Attack)", 4718));
@@ -798,7 +794,7 @@ public final class SkillGuideManager {
         skillGuideCategory7.addEntry(new SkillGuideEntry(15, "Monkey bars under Edgeville", 6518), true);
         skillGuideCategory7.addEntry(new SkillGuideEntry(22, "Pipe contortion in Karamja Dungeon", 6520), true);
         skillGuideCategory7.addEntry(new SkillGuideEntry(30, "Stepping stones in south-eastern Karamja", 6518), true);
-        skillGuideCategory7.addEntry(new SkillGuideEntry(34, "Pipe contortion in Karamja Dungeonn", 6520), true);
+        skillGuideCategory7.addEntry(new SkillGuideEntry(34, "Pipe contortion in Karamja Dungeon", 6520), true);
         skillGuideCategory7.addEntry(new SkillGuideEntry(45, "Elf area log balance", 6519), true);
         skillGuideCategory7.addEntry(new SkillGuideEntry(49, "contortion in Yanille Dungeon small room", 6520), true);
         skillGuideCategory7.addEntry(new SkillGuideEntry(67, "Yanille Dungeon's rubble climb", 6521), true);
@@ -848,7 +844,7 @@ public final class SkillGuideManager {
         SkillGuideManager.addCategoryIfNotEmpty(agilityCategories, (SkillGuideCategory)value);
         SkillGuideManager.addCategoryIfNotEmpty(agilityCategories, skillGuideCategory5);
         skillGuideCategory7 = skillGuideCategory6 = new SkillGuideCategory("Smelting");
-        skillGuideCategory6.addEntry(new SkillGuideEntry(1, "Bronze (1 tin ore & 1 copper ore", 2349));
+        skillGuideCategory6.addEntry(new SkillGuideEntry(1, "Bronze (1 tin ore & 1 copper ore)", 2349));
         skillGuideCategory7.addEntry(new SkillGuideEntry(15, "Iron (50% chance of success)", 2351));
         skillGuideCategory7.addEntry(new SkillGuideEntry(20, "Silver", 2355));
         skillGuideCategory7.addEntry(new SkillGuideEntry(30, "Steel (2 coal & 1 iron ore)", 2353));
@@ -1009,8 +1005,6 @@ public final class SkillGuideManager {
         skillGuideCategory7.addEntry(new SkillGuideEntry(99, "platebodies - 5 bars", 1127));
         skillGuideCategory7 = skillGuideCategory = new SkillGuideCategory("Other");
         skillGuideCategory.addEntry(new SkillGuideEntry(60, "Dragon Square Shield", 1187));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(80, "Godsword blade", 11690));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(90, "Dragonfire shield", 11283));
         SkillGuideManager.addCategoryIfNotEmpty(smithingCategories, skillGuideCategory6);
         SkillGuideManager.addCategoryIfNotEmpty(smithingCategories, skillGuideCategory8);
         SkillGuideManager.addCategoryIfNotEmpty(smithingCategories, (SkillGuideCategory)value);
@@ -1033,12 +1027,9 @@ public final class SkillGuideManager {
         skillGuideCategory7.addEntry(new SkillGuideEntry(40, "Rock-shell armour", 6128));
         skillGuideCategory7.addEntry(new SkillGuideEntry(45, "Fremennik helmets", 3751));
         skillGuideCategory7.addEntry(new SkillGuideEntry(50, "Granite (with 50 Strength)", 3122));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(55, "Helm of neitiznot", 10828));
         skillGuideCategory7.addEntry(new SkillGuideEntry(60, "Dragon", 1149));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(65, "Bandos armour", 11724));
         skillGuideCategory7.addEntry(new SkillGuideEntry(65, "3rd age fighter armour", 10350));
         skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Barrows armour", 4745));
-        skillGuideCategory7.addEntry(new SkillGuideEntry(70, "Armadyl armour (with 70 Ranged)", 11718));
         SkillGuideManager.addCategoryIfNotEmpty(defenceCategories, skillGuideCategory6);
         SkillGuideManager.initializeHerbloreCategories();
         skillGuideCategory7 = skillGuideCategory6 = new SkillGuideCategory("Catches");
@@ -1136,19 +1127,6 @@ public final class SkillGuideManager {
         category.addEntry(new SkillGuideEntry(43, "Spotted kebbit", 10125));
         category.addEntry(new SkillGuideEntry(57, "Dark kebbit", 10115));
         category.addEntry(new SkillGuideEntry(69, "Dashing kebbit", 10127));
-        hunterCategories.add(category);
-
-        category = new SkillGuideCategory("Impetuous Imps");
-        category.addEntry(new SkillGuideEntry(17, "Baby impling", 9952));
-        category.addEntry(new SkillGuideEntry(22, "Young impling", 9952));
-        category.addEntry(new SkillGuideEntry(28, "Gourmet impling", 9952));
-        category.addEntry(new SkillGuideEntry(36, "Earth impling", 9952));
-        category.addEntry(new SkillGuideEntry(42, "Essence impling", 9952));
-        category.addEntry(new SkillGuideEntry(50, "Eclectic impling", 9952));
-        category.addEntry(new SkillGuideEntry(58, "Nature impling", 9952));
-        category.addEntry(new SkillGuideEntry(65, "Magpie impling", 9952));
-        category.addEntry(new SkillGuideEntry(74, "Ninja impling", 9952));
-        category.addEntry(new SkillGuideEntry(83, "Dragon impling", 9952));
         hunterCategories.add(category);
     }
 
@@ -1616,13 +1594,7 @@ public final class SkillGuideManager {
         skillGuideEntry = new SkillGuideEntry(60, "Aberrant Spectres", 4144);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(63, "Spiritual rangers", 11742);
-        skillGuideCategory5 = skillGuideCategory4;
-        skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(65, "Dust devils", 4145);
-        skillGuideCategory5 = skillGuideCategory4;
-        skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(68, "Spiritual warriors", 11744);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(70, "Kurask", 4146);
@@ -1635,9 +1607,6 @@ public final class SkillGuideManager {
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(80, "Nechryael", 4148);
-        skillGuideCategory5 = skillGuideCategory4;
-        skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(83, "Spiritual mages", 11740);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(85, "Abyssal demons", 4149);
@@ -1935,7 +1904,7 @@ public final class SkillGuideManager {
         skillGuideEntry = new SkillGuideEntry(6, "Steel axe", 1353);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(11, "Black axe", 1361);
+        skillGuideEntry = new SkillGuideEntry(6, "Black axe", 1361);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(21, "Mithril axe", 1355);
@@ -2071,9 +2040,6 @@ public final class SkillGuideManager {
         skillGuideEntry = new SkillGuideEntry(81, "Rune darts", 811);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(95, "Dragon darts", 11230);
-        skillGuideCategory5 = skillGuideCategory4;
-        skillGuideCategory5.addEntry(skillGuideEntry, false);
         SkillGuideManager.addCategoryIfNotEmpty(fletchingCategories, skillGuideCategory3);
         SkillGuideManager.addCategoryIfNotEmpty(fletchingCategories, skillGuideCategory2);
         SkillGuideManager.addCategoryIfNotEmpty(fletchingCategories, skillGuideCategory);
@@ -2132,7 +2098,7 @@ public final class SkillGuideManager {
         skillGuideEntry = new SkillGuideEntry(45, "Beginner wand", 6908);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(50, "Apprentince wand", 6910);
+        skillGuideEntry = new SkillGuideEntry(50, "Apprentice wand", 6910);
         skillGuideCategory5 = skillGuideCategory4;
         skillGuideCategory5.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(50, "Ancient staff (with 50 Attack)", 4675);
@@ -3344,9 +3310,6 @@ public final class SkillGuideManager {
         skillGuideEntry = new SkillGuideEntry(50, "Seerculls", 6724);
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(60, "Dark bows", 11235);
-        skillGuideCategory6 = skillGuideCategory5;
-        skillGuideCategory6.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(70, "Crystal bows (with 50 Agility)", 4212);
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
@@ -3370,9 +3333,6 @@ public final class SkillGuideManager {
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(40, "Rune items", 868);
-        skillGuideCategory6 = skillGuideCategory5;
-        skillGuideCategory6.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(60, "Dragon items", 11230);
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
         skillGuideCategory5 = skillGuideCategory2 = new SkillGuideCategory("Crossbows");
@@ -3483,9 +3443,6 @@ public final class SkillGuideManager {
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(70, "God dragonhide armour (with 40 Defence)", 10370);
-        skillGuideCategory6 = skillGuideCategory5;
-        skillGuideCategory6.addEntry(skillGuideEntry, false);
-        skillGuideEntry = new SkillGuideEntry(70, "Armadyl armour (with 70 Defence)", 11718);
         skillGuideCategory6 = skillGuideCategory5;
         skillGuideCategory6.addEntry(skillGuideEntry, false);
         skillGuideEntry = new SkillGuideEntry(70, "Karil's leather armour (with 70 Defence)", 4736);

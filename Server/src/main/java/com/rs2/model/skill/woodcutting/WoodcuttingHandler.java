@@ -15,6 +15,7 @@ import com.rs2.model.objects.ObjectManager;
 import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.objects.WorldObject;
 import com.rs2.model.player.Player;
+import com.rs2.model.randomevent.SkillRandomEventNpc;
 import com.rs2.model.skill.GatheringToolDefinition;
 import com.rs2.model.skill.ItemCombinationHandler;
 import com.rs2.model.skill.SkillActionHelper;
@@ -87,7 +88,9 @@ public class WoodcuttingHandler {
             }
             return;
         }
-        if (player.getSkillManager().getCurrentLevels()[8] < ((TreeDefinition)((Object)value6)).getRequiredLevel()) {
+        // Historical Ents could be struck even when the player lacked the level for the
+        // underlying tree, and they never required inventory space because they yield no logs.
+        if (!enabled2 && player.getSkillManager().getCurrentLevels()[8] < ((TreeDefinition)((Object)value6)).getRequiredLevel()) {
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("woodcutting blocked level player=" + GameplayTrace.describe(player) + " current=" + player.getSkillManager().getCurrentLevels()[8] + " required=" + ((TreeDefinition)((Object)value6)).getRequiredLevel() + " tree=" + value6);
             }
@@ -95,7 +98,8 @@ public class WoodcuttingHandler {
             player4.packetSender.sendGameMessage("You need a Woodcutting level of " + ((TreeDefinition)((Object)value6)).getRequiredLevel() + " to cut this tree.");
             return;
         }
-        if (((TreeDefinition)((Object)value6)).getLogItemId() != -1) {
+        if (!enabled2 && value6 != TreeDefinition.HOLLOW_TREE
+                && ((TreeDefinition)((Object)value6)).getLogItemId() != -1) {
             value5 = new ItemStack(((TreeDefinition)((Object)value6)).getLogItemId(), 1);
             if (player.getInventoryManager().getContainer().getFirstFreeSlot() == -1) {
                 if (GameplayTrace.enabled()) {
@@ -123,6 +127,20 @@ public class WoodcuttingHandler {
             player.botRouteActionPending = true;
         }
         int value7 = player.nextActionSequence();
+        // Roll on the validated initial attempt, before scheduling any chopping cycles.
+        // Clicking an existing Ent keeps its own axe-breaking behavior.
+        if (!enabled2) {
+            if (AxeHeadRandomEvent.tryTriggerInitialHit(player, gatheringToolDefinition)) {
+                return;
+            }
+            if (!player.botEnabled && !player.isInTutorialIsland()
+                    && ServerSettings.randomEventsMode == 0 && player.ownedNpc == null
+                    && GameUtil.randomInt(2001) == 0) {
+                GameplayHelper.spawnSkillRandomEventNpc(player, SkillRandomEventNpc.TREE_SPIRIT);
+                player.getUpdateState().setAnimation(-1);
+                return;
+            }
+        }
         faceTree(player, value8, value22, value32);
         player.packetSender.sendSoundEffect(472, 1, 0);
         World.scheduleTickTask(new WoodcuttingSwingSoundTask(player, value7));

@@ -53,12 +53,18 @@ extends QuestHook {
         }
     }
 
+    public static boolean usesLegacyCompletionInterface() {
+        // JS5 does not populate the legacy flat interface count. Revision 443
+        // uses the modern completion IDs, translated to its native quest scroll.
+        return ServerSettings.clientBuild != 443 && InterfaceDefinition.interfaceCount <= 12140;
+    }
+
     public final void showQuestCompleteInterface(Player player) {
-        player.packetSender.sendInterfacePosition(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 0, InterfaceDefinition.interfaceCount <= 12140 ? -40 : 0);
-        player.packetSender.sendInterfaceText("You have completed " + QuestDefinition.forId(this.getQuestId()).getName() + "!", InterfaceDefinition.interfaceCount <= 12140 ? 6160 : 12144);
+        player.packetSender.sendInterfacePosition(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 0, QuestScript.usesLegacyCompletionInterface() ? -40 : 0);
+        player.packetSender.sendInterfaceText("You have completed " + QuestDefinition.forId(this.getQuestId()).getName() + "!", QuestScript.usesLegacyCompletionInterface() ? 6160 : 12144);
         player.packetSender.sendMusicJingle(238, 320);
-        player.packetSender.sendInterfaceText("" + player.getQuestPoints(), InterfaceDefinition.interfaceCount <= 12140 ? 1696 : 12147);
-        if (InterfaceDefinition.interfaceCount <= 12140) {
+        player.packetSender.sendInterfaceText("" + player.getQuestPoints(), QuestScript.usesLegacyCompletionInterface() ? 1696 : 12147);
+        if (QuestScript.usesLegacyCompletionInterface()) {
             player.packetSender.sendInterfaceText("" + this.questPointReward, 6164);
         }
     }

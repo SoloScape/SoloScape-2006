@@ -13,6 +13,9 @@ import com.rs2.util.path.WalkingCollisionMap;
 
 /** The pre-July-2007 axe head loss event. */
 public final class AxeHeadRandomEvent {
+    // Period guides describe an initial-hit bias, but do not give exact odds.
+    private static final int INITIAL_HIT_CHANCE = 2001;
+    private static final int CONTINUED_CHOP_CHANCE = 20001;
     private static final int[][] DIRECTIONS = {
         {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}
     };
@@ -21,7 +24,15 @@ public final class AxeHeadRandomEvent {
     }
 
     public static boolean tryTrigger(Player player, GatheringToolDefinition axe) {
-        return isEligible(player, axe) && GameUtil.randomInt(2001) == 0
+        return tryTrigger(player, axe, CONTINUED_CHOP_CHANCE);
+    }
+
+    public static boolean tryTriggerInitialHit(Player player, GatheringToolDefinition axe) {
+        return tryTrigger(player, axe, INITIAL_HIT_CHANCE);
+    }
+
+    private static boolean tryTrigger(Player player, GatheringToolDefinition axe, int chance) {
+        return isEligible(player, axe) && GameUtil.randomInt(chance) == 0
                 && detachHead(player, axe) != null;
     }
 
@@ -58,9 +69,11 @@ public final class AxeHeadRandomEvent {
 
     private static Position findLandingPosition(Position origin) {
         int firstDirection = GameUtil.randomInt(DIRECTIONS.length);
-        for (int distance = 3; distance >= 1; distance--) {
-            for (int offset = 0; offset < DIRECTIONS.length; offset++) {
-                int[] direction = DIRECTIONS[(firstDirection + offset) % DIRECTIONS.length];
+        int firstDistance = 3 + GameUtil.randomInt(8); // period descriptions: roughly 3-10 squares
+        for (int distanceOffset = 0; distanceOffset < 8; distanceOffset++) {
+            int distance = 3 + ((firstDistance - 3 + distanceOffset) % 8);
+            for (int directionOffset = 0; directionOffset < DIRECTIONS.length; directionOffset++) {
+                int[] direction = DIRECTIONS[(firstDirection + directionOffset) % DIRECTIONS.length];
                 int x = origin.getX() + direction[0] * distance;
                 int y = origin.getY() + direction[1] * distance;
                 if (WalkingCollisionMap.canTravelBetween(origin.getX(), origin.getY(), x, y,
@@ -69,6 +82,8 @@ public final class AxeHeadRandomEvent {
                 }
             }
         }
+        // Extremely enclosed areas may have no reachable square at the documented distance.
+        // Keep the event recoverable instead of deleting the axe head.
         return origin.copy();
     }
 }

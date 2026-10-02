@@ -50,9 +50,9 @@ extends QuestScript {
         player.getSkillManager().addQuestExperience(12, 150.0);
         player.getInventoryManager().addOrDropItem(new ItemStack(995, 60));
         player2 = player;
-        player2.packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 1735);
+        player2.packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 1735);
         player2 = player;
-        player2.packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        player2.packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         player2 = player;
         player.deferLevelUpInterfaces = false;
     }

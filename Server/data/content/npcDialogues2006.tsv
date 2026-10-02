@@ -1,0 +1,613 @@
+# LostCityRS/Content 377-wip (May 2, 2006), commit 4949e619a53f40c0fe83395df89bd35ff1f044f4
+# Preservation reconstruction, not a recovered Jagex server transcript. See npcDialogues2006.SOURCES.md.
+# NPC ID	Node ID	Kind	Next nodes	Text (pipe is a line break)
+# 37 source=scripts/areas/area_yanille/scripts/sigbert_the_adventurer.rs2
+37	-1	START	1	
+37	0	END		
+37	1	JUMP	8	
+37	2	NPC	0	I hear he's susceptible to attacks from the	mind.	However I have no idea what that means,	so it's not much help to me.
+37	3	NPC	2	Salarin the twisted.	One of Kandarin's most dangerous chaos druids.	I tried to take him on, then suddenly felt	immensely weak.
+37	4	PLAYER	3	Why what's down there ?
+37	5	NPC	0	You might find you are not so strong shortly...
+37	6	PLAYER	5	Fear not, I am very strong
+37	7	OPTIONS	4,6	Why what's down there?	Fear not I am very strong
+37	8	NPC	7	I'd be very careful going down there friend.
+# 66 source=scripts/areas/area_gnome/scripts/gnomes.rs2
+66	-1	START	1	
+66	0	END		
+66	1	JUMP	2	
+66	2	JUMP	29	
+66	3	STATEMENT	0	The gnome is too busy to talk.
+66	4	NPC	3	Can't stop sorry! Busy, busy, busy!
+66	5	PLAYER	4	Hello.
+66	6	NPC	0	Yes, we try to keep it that way.
+66	7	PLAYER	6	It's a nice place.
+66	8	NPC	7	Hello traveller. Are you enjoying your stay?
+66	9	PLAYER	8	Hello.
+66	10	STATEMENT	0	I think he's had enough!
+66	11	NPC	10	Blurssh berry.
+66	12	PLAYER	11	A what?
+66	13	NPC	12	Gessh ush a cosshtail.
+66	14	PLAYER	13	Pardon?
+66	15	NPC	14	Youssh go gesshh em.
+66	16	STATEMENT	15	The gnome seems a little drunk.
+66	17	PLAYER	16	Are you OK?
+66	18	PLAYER	17	Hello.
+66	19	NPC	0	She'll always find something.
+66	20	PLAYER	19	Maybe you should give her less to moan about.
+66	21	NPC	20	It's just the wife, she won't stop moaning!
+66	22	PLAYER	21	What's wrong?
+66	23	NPC	22	I don't think I can take much more!
+66	24	PLAYER	23	Hello.
+66	25	NPC	0	It's good to see a human with a positive	attitude.
+66	26	PLAYER	25	Not bad, not bad at all.
+66	27	NPC	26	How's life treating you?
+66	28	PLAYER	27	Hello.
+66	29	RANDOM	5,9,18,24,28	
+# 67 source=scripts/areas/area_gnome/scripts/gnomes.rs2
+67	-1	START	30	
+67	0	END		
+67	2	JUMP	29	
+67	3	STATEMENT	0	The gnome is too busy to talk.
+67	4	NPC	3	Can't stop sorry! Busy, busy, busy!
+67	5	PLAYER	4	Hello.
+67	6	NPC	0	Yes, we try to keep it that way.
+67	7	PLAYER	6	It's a nice place.
+67	8	NPC	7	Hello traveller. Are you enjoying your stay?
+67	9	PLAYER	8	Hello.
+67	10	STATEMENT	0	I think he's had enough!
+67	11	NPC	10	Blurssh berry.
+67	12	PLAYER	11	A what?
+67	13	NPC	12	Gessh ush a cosshtail.
+67	14	PLAYER	13	Pardon?
+67	15	NPC	14	Youssh go gesshh em.
+67	16	STATEMENT	15	The gnome seems a little drunk.
+67	17	PLAYER	16	Are you OK?
+67	18	PLAYER	17	Hello.
+67	19	NPC	0	She'll always find something.
+67	20	PLAYER	19	Maybe you should give her less to moan about.
+67	21	NPC	20	It's just the wife, she won't stop moaning!
+67	22	PLAYER	21	What's wrong?
+67	23	NPC	22	I don't think I can take much more!
+67	24	PLAYER	23	Hello.
+67	25	NPC	0	It's good to see a human with a positive	attitude.
+67	26	PLAYER	25	Not bad, not bad at all.
+67	27	NPC	26	How's life treating you?
+67	28	PLAYER	27	Hello.
+67	29	RANDOM	5,9,18,24,28	
+67	30	JUMP	2	
+# 68 source=scripts/areas/area_gnome/scripts/gnomes.rs2
+68	-1	START	31	
+68	0	END		
+68	2	JUMP	29	
+68	3	STATEMENT	0	The gnome is too busy to talk.
+68	4	NPC	3	Can't stop sorry! Busy, busy, busy!
+68	5	PLAYER	4	Hello.
+68	6	NPC	0	Yes, we try to keep it that way.
+68	7	PLAYER	6	It's a nice place.
+68	8	NPC	7	Hello traveller. Are you enjoying your stay?
+68	9	PLAYER	8	Hello.
+68	10	STATEMENT	0	I think he's had enough!
+68	11	NPC	10	Blurssh berry.
+68	12	PLAYER	11	A what?
+68	13	NPC	12	Gessh ush a cosshtail.
+68	14	PLAYER	13	Pardon?
+68	15	NPC	14	Youssh go gesshh em.
+68	16	STATEMENT	15	The gnome seems a little drunk.
+68	17	PLAYER	16	Are you OK?
+68	18	PLAYER	17	Hello.
+68	19	NPC	0	She'll always find something.
+68	20	PLAYER	19	Maybe you should give her less to moan about.
+68	21	NPC	20	It's just the wife, she won't stop moaning!
+68	22	PLAYER	21	What's wrong?
+68	23	NPC	22	I don't think I can take much more!
+68	24	PLAYER	23	Hello.
+68	25	NPC	0	It's good to see a human with a positive	attitude.
+68	26	PLAYER	25	Not bad, not bad at all.
+68	27	NPC	26	How's life treating you?
+68	28	PLAYER	27	Hello.
+68	29	RANDOM	5,9,18,24,28	
+68	31	JUMP	2	
+# 162 source=scripts/areas/area_gnome/scripts/gnome_trainer.rs2
+162	-1	START	1	
+162	0	END		
+162	1	JUMP	12	
+162	2	NPC	0	I'm amazed by how much humans chat. The sign	over there says training area, not pointless	conversation area.
+162	3	PLAYER	2	Hello how are you?
+162	4	NPC	0	If you complete the course in order from the	slippery log to the end, your agility will	increase much faster than by repeating just one	obstacle.
+162	5	PLAYER	4	It looks easy enough.
+162	6	NPC	5	This, my friend, is where we train. Here we	improve our agility. It's an essential skill.
+162	7	PLAYER	6	Hello, what is this place?
+162	8	NPC	0	This is training soldier. If you want fun go	make some cocktails.
+162	9	PLAYER	8	This is fun!
+162	10	NPC	0	This isn't a grannies' tea party, let's see some	sweat human. Go! Go! Go!
+162	11	PLAYER	10	Hello there.
+162	12	RANDOM	3,7,9,11	
+# 210 source=scripts/quests/quest_grail/scripts/grail_maiden.rs2
+210	-1	START	1	
+210	0	END		
+210	1	JUMP	2	
+210	2	NPC	0	Welcome to the Grail castle.
+# 212 source=scripts/quests/quest_grail/scripts/king_percival.rs2
+212	-1	START	1	
+212	0	END		
+212	1	JUMP	4	
+212	2	NPC	0	Thank you very much for showing me the way home.
+212	3	NPC	2	I got here and agreed to take over duties as	king here, then before my eyes the most	miraculous changes occured here... grass and	trees were growing outside before our very eyes!
+212	4	NPC	3	You missed all the excitement!
+# 214 source=scripts/quests/quest_grail/scripts/peasent.rs2
+214	-1	START	1	
+214	0	END		
+214	1	JUMP	2	
+214	2	NPC	0	Woe is me!	Our crops are all failing...	how shall I feed myself this winter?
+# 215 source=scripts/quests/quest_grail/scripts/peasent.rs2
+215	-1	START	3	
+215	0	END		
+215	3	JUMP	4	
+215	4	NPC	0	Oh happy day!	Suddenly our crops are growing again!	It'll be a bumper harvest this year!
+# 226 source=scripts/areas/area_seers/scripts/hemenster/sinister_stranger.rs2
+226	-1	START	1	
+226	0	END		
+226	1	JUMP	26	
+226	2	NPC	0	...
+226	3	PLAYER	2	...?
+226	4	JUMP	6	
+226	5	NPC	0	Just because I can't stand the smell of garlic	and I don't like bright sunlight	doesn't necessarily mean I'm a vampire!
+226	6	PLAYER	5	You're a vampire aren't you?
+226	7	JUMP	21	
+226	8	JUMP	18	
+226	9	JUMP	11	
+226	10	NPC	0	I think I may do that soon...
+226	11	PLAYER	10	If you get thirsty you should drink something.
+226	12	JUMP	14	
+226	13	NPC	0	Luck has nothing to do vith it	it is all in the technique.
+226	14	PLAYER	13	Well, good luck with the fishing.
+226	15	OPTIONS	4,9,12	You're a vampire aren't you?	If you get thirsty you should drink something.	Well, good luck with the fishing.
+226	16	NPC	15	..thirsty.
+226	17	NPC	16	My doctor told me to take up a velaxing hobby.	Vhen I am stressed I tend to get a little..
+226	18	PLAYER	17	So... you like fishing?
+226	19	OPTIONS	4,8,12	You're a vampire aren't you?	So you like fishing?	Well, good luck with the fishing.
+226	20	NPC	19	It is vonderful!	The vomen are beautiful	and the nights are long!
+226	21	PLAYER	20	Is it nice there?
+226	22	OPTIONS	4,7	You're a vampire aren't you?	Is it nice there?
+226	23	NPC	22	My name iz Vlad. I come from far avay, vere the	sun iz not so bright.
+226	24	PLAYER	23	Who are you?
+226	25	OPTIONS	3,24,8	...?	Who are you?	So... you like fishing?
+226	26	NPC	25	...
+# 228 source=scripts/areas/area_seers/scripts/hemenster/bigdave.rs2
+228	-1	START	1	
+228	0	END		
+228	1	JUMP	2	
+228	2	JUMP	3	
+228	3	NPC	0	Oi whaddya think ya doin'?	I'm fishin' here.	Now beat it!
+# 229 source=scripts/areas/area_seers/scripts/hemenster/joshua.rs2
+229	-1	START	1	
+229	0	END		
+229	1	JUMP	2	
+229	2	JUMP	3	
+229	3	NPC	0	This is my fishing spot.	Ya don't wanna be fishing 'ere mate.	Cos I'll break your knuckles!
+# 278 source=scripts/areas/area_lumbridge/scripts/cook.rs2
+278	-1	START	1	
+278	0	END		
+278	1	JUMP	11	
+278	2	NPC	0	Glad to hear it.
+278	3	PLAYER	2	I am getting strong and mighty.
+278	4	NPC	0	Ah well, at least you keep coming back to life!
+278	5	PLAYER	4	I keep on dying.
+278	6	NPC	0	Err thank you. It's a pretty ordinary cooks hat	really.
+278	7	PLAYER	6	Nice hat!
+278	8	NPC	0	Go ahead - it's a very good range.	It's easier to use than most other ranges.
+278	9	PLAYER	8	Can I use your range?
+278	10	OPTIONS	3,5,7,9	I am getting strong and mighty.	I keep on dying.	Nice hat!	Can I use your range?
+278	11	NPC	10	How is the adventuring going, my friend?
+# 298 source=scripts/areas/area_falador/scripts/goblin_village/goblin_armed_green.rs2
+298	-1	START	1	
+298	0	END		
+298	1	JUMP	6	
+298	2	PLAYER	0	Err ok.
+298	3	NPC	0	I forgot now,	but General Wartface says it is.	So it must be.
+298	4	PLAYER	3	Why is green best?
+298	5	OPTIONS	2,4	Err ok.	Why is green best?
+298	6	NPC	5	Green armour best.
+# 299 source=scripts/areas/area_falador/scripts/goblin_village/goblin_armed_red.rs2
+299	-1	START	1	
+299	0	END		
+299	1	JUMP	6	
+299	2	PLAYER	0	Err ok.
+299	3	NPC	0	Cos General Bentnoze says so,	and he bigger than me.
+299	4	PLAYER	3	Why is red best?
+299	5	OPTIONS	2,4	Err ok.	Why is red best?
+299	6	NPC	5	Red armour best!
+# 300 source=scripts/areas/area_wizard_tower/scripts/sedridor.rs2
+300	-1	START	1	
+300	0	END		
+300	1	JUMP	24	
+300	2	JUMP	4	
+300	3	NPC	0	Well, take care adventurer. You stand on the	ruins of the destroyed Wizards' Tower. Strange	and powerful magicks lurk here.
+300	4	PLAYER	3	Nothing thanks, I'm just looking around.
+300	5	JUMP	22	
+300	6	PLAYER	0	Ok, well I'll leave you to it.
+300	7	PLAYER	0	Ok, well I'll leave you to it.
+300	8	NPC	7	the runes that we use daily, which dwindle in	supply with each use. Someday I hope we may once	more create our own runes, and the Wizards'	Tower will once more be a place of glory!
+300	9	NPC	8	This is why I spend my time searching through	these few remains we have left from the glorious	old Tower. I hope someday to find something that	will tell us once more of the mysteries of
+300	10	NPC	9	To this day we do not fully know why they did	this terrible act, but all our research, all of	our greatest magical minds were destroyed in one	fell swoop.
+300	11	NPC	10	No, unfortunately not. Many years past, the	Wizards who follow Zamorak, the god of chaos,	burned this Tower to the ground, and all who	were inside.
+300	12	PLAYER	11	But they cannot anymore?
+300	13	NPC	12	but were once known to our ancestors. Legends	tell us that in the past the mages who lived	here could fashion Rune Stones almost at will,	and as many as they desired.
+300	14	NPC	13	to us,
+300	15	NPC	14	the Rune Stones that allow us to use Magic. Who	makes them? Where do they come from? How many	types are there? What spells can they produce?	All these questions and more are still unknown
+300	16	NPC	15	Well, it is a long story from the past... Many	years ago, this Wizards' Tower was a focus of	great learning, as we mages studied together to	try and learn the secrets behind
+300	17	OPTIONS	6,16	Ok, well I'll leave you to it.	What do you mean treachery?
+300	18	NPC	17	Aaaah... that would be telling adventurer.	Anything I have found I cannot speak freely of,	for fear the treachery of the past might be	repeated.
+300	19	PLAYER	18	And have you found anything useful?
+300	20	NPC	19	we sought to show the world of our dedication to	learning the mysteries of Magic. I am here	searching through these fragments for knowledge	from the artefacts from our past
+300	21	NPC	20	many years past by the treachery of the	Zamorakians. Many mysteries were lost, which we	try to find once more. By building this Tower on	the remains of the old,
+300	22	NPC	21	That is indeed a good question. Here in the	cellar of the Wizards' Tower you find the	remains of the old Wizards' Tower, destroyed by	fire
+300	23	OPTIONS	2,5	Nothing thanks, I'm just looking around.	What are you doing down here?
+300	24	NPC	23	Welcome adventurer, to the world renowned	Wizards' Tower. How may I help you?
+# 344 source=scripts/areas/area_combat_training/scripts/combat_training_camp.rs2
+344	-1	START	1	
+344	0	END		
+344	1	JUMP	3	
+344	2	NPC	0	What do you want - leave us be!
+344	3	PLAYER	2	Hello there.
+# 345 source=scripts/areas/area_combat_training/scripts/combat_training_camp.rs2
+345	-1	START	4	
+345	0	END		
+345	4	JUMP	9	
+345	5	PLAYER	0	Indeed.
+345	6	NPC	5	So we decided to use them for target practice.	A fair punishment.
+345	7	PLAYER	6	Brutes!
+345	8	NPC	7	Well hello brave warrior.	These ogres have been terrorising the area,	they've eaten four of our children this week	alone.
+345	9	PLAYER	8	Hello.
+# 346 source=scripts/areas/area_combat_training/scripts/combat_training_camp.rs2
+346	-1	START	10	
+346	0	END		
+346	10	JUMP	14	
+346	11	NPC	0	In this day and age we're all soldiers.	No time to waste gassing, Fight! Fight! Fight!
+346	12	PLAYER	11	I'm more of an adventurer really.
+346	13	NPC	12	Hello soldier.
+346	14	PLAYER	13	Hello.
+# 347 source=scripts/areas/area_ardougne_west/scripts/mourner.rs2
+347	-1	START	1	
+347	0	END		
+347	1	JUMP	2	
+347	2	JUMP	3	
+347	3	NPC	0	Stand back citizen, do not approach me.
+# 348 source=scripts/areas/area_ardougne_west/scripts/mourner.rs2
+348	-1	START	4	
+348	0	END		
+348	2	JUMP	3	
+348	3	NPC	0	Stand back citizen, do not approach me.
+348	4	JUMP	2	
+# 352 source=scripts/areas/area_ardougne_west/scripts/woman.rs2
+352	-1	START	1	
+352	0	END		
+352	1	JUMP	2	
+352	2	JUMP	5	
+352	3	PLAYER	0	Sorry, that's not what I'm here to do.
+352	4	NPC	3	An outsider! Can you get me out of this hell	hole?
+352	5	PLAYER	4	Good day.
+# 354 source=scripts/areas/area_ardougne_west/scripts/woman.rs2
+354	-1	START	6	
+354	0	END		
+354	6	JUMP	7	
+354	7	JUMP	9	
+354	8	NPC	0	Go away. People from the outside shut us in like	animals. I have nothing to say to you.
+354	9	PLAYER	8	Hello there.
+# 355 source=scripts/areas/area_ardougne_west/scripts/child.rs2
+355	-1	START	1	
+355	0	END		
+355	1	JUMP	2	
+355	2	JUMP	4	
+355	3	NPC	0	I'm not allowed to speak with strangers.
+355	4	PLAYER	3	Hello there.
+# 356 source=scripts/areas/area_ardougne_west/scripts/child.rs2
+356	-1	START	5	
+356	0	END		
+356	2	JUMP	4	
+356	3	NPC	0	I'm not allowed to speak with strangers.
+356	4	PLAYER	3	Hello there.
+356	5	JUMP	2	
+# 358 source=scripts/areas/area_ardougne_west/scripts/priest.rs2
+358	-1	START	1	
+358	0	END		
+358	1	JUMP	3	
+358	2	NPC	0	I wish there was more I could do for these	people.
+358	3	PLAYER	2	Hello there.
+# 362 source=scripts/areas/area_ardougne_west/scripts/woman.rs2
+362	-1	START	10	
+362	0	END		
+362	7	JUMP	9	
+362	8	NPC	0	Go away. People from the outside shut us in like	animals. I have nothing to say to you.
+362	9	PLAYER	8	Hello there.
+362	10	JUMP	7	
+# 368 source=scripts/areas/area_varrock/scripts/east_gate.rs2
+368	-1	START	1	
+368	0	END		
+368	1	JUMP	2	
+368	2	NPC	0	Please don't disturb me, I've got to keep any	eye out for suspicious individuals.
+# 460 source=scripts/areas/area_yanille/scripts/wizard_frumscone.rs2
+460	-1	START	1	
+460	0	END		
+460	1	JUMP	2	
+460	2	NPC	0	Do you like my magic Zombies?	Feel free to kill them,	there's plenty more where these came from!
+# 605 source=scripts/areas/area_falador/scripts/sir_vyvin.rs2
+605	-1	START	1	
+605	0	END		
+605	1	JUMP	19	
+605	2	JUMP	4	
+605	3	NPC	0	No, I'm sorry.
+605	4	PLAYER	3	Do you have anything to trade?
+605	5	JUMP	7	
+605	6	NPC	0	We are the White Knights of Falador. We are the	most powerful order of knights in the land. We	are helping the king Vallance rule the kingdom	as he is getting old and tired.
+605	7	PLAYER	6	Why are there so many knights in this city?
+605	8	JUMP	16	
+605	9	PLAYER	0	Ok. My work here is done. 'Bye!
+605	10	NPC	9	... ...I don't think I want to talk to you	anymore.
+605	11	PLAYER	10	So can I distract you some more?
+605	12	NPC	11	... ...you are very odd.
+605	13	PLAYER	12	Nope. I'm just trying to distract you.
+605	14	NPC	13	I'm... not sure what you're asking me... you	want to join the White Knights?
+605	15	NPC	14	... ...what?
+605	16	PLAYER	15	Can I just talk to you very slowly for a few	minutes, while I distract you, so that my friend	over there can do something while you're busy	being distracted by me?
+605	17	OPTIONS	2,5,8	Do you have anything to trade?	Why are there so many knights in this city?	Can I distract you for a minute?
+605	18	NPC	17	Greetings traveller.
+605	19	PLAYER	18	Hello.
+# 607 source=scripts/areas/area_barbarian_outpost/scripts/gunnjorn.rs2
+607	-1	START	1	
+607	0	END		
+607	1	JUMP	3	
+607	2	NPC	0	The best way to train,	is to go round the course in a clockwise	direction.
+607	3	NPC	2	Haha welcome to my obstacle course.	Have fun, but remember this isn't a child's	playground.	People have died here.
+# 653 source=scripts/areas/area_lostcity/scripts/fairy_queen.rs2
+653	-1	START	1	
+653	0	END		
+653	1	JUMP	6	
+653	2	NPC	0	Clearly you come from a plane dependent on	sunlight.	Down here, the plants grow in the aura of	faerie.
+653	3	PLAYER	2	How do crops and such survive down here?	Surely they need a bit of sunlight?
+653	4	NPC	0	Zanaris is a meeting point of cultures.	Those from many worlds converge here to exchange	knowledge and goods.
+653	5	PLAYER	4	What's so good about this place?
+653	6	OPTIONS	3,5	How do crops and such survive down here?	What's so good about this place?
+# 660 source=scripts/minigames/game_partyroom/scripts/partyroom.rs2
+660	-1	START	1	
+660	0	END		
+660	1	JUMP	2	
+660	2	STATEMENT	0	He is too busy dancing to talk!
+# 678 source=scripts/minigames/game_ranging/scripts/guard.rs2
+678	-1	START	1	
+678	0	END		
+678	1	JUMP	3	
+678	2	NPC	0	Greetings, traveller. Enjoy your time at the	Ranging Guild.
+678	3	PLAYER	2	Hello there.
+# 679 source=scripts/minigames/game_ranging/scripts/ranging_guild_door.rs2
+679	-1	START	1	
+679	0	END		
+679	1	JUMP	3	
+679	2	NPC	0	Greetings. If you are an experienced archer, you	may want to visit the guild here...
+679	3	PLAYER	2	Hello there.
+# 712 source=scripts/areas/area_ardougne_west/scripts/carla.rs2
+712	-1	START	1	
+712	0	END		
+712	1	JUMP	23	
+712	2	JUMP	4	
+712	3	NPC	0	It's down to King Tyras. He and his men brought	the plague here from the west, and then left us	to suffer. One day he'll pay for what he's done!
+712	4	PLAYER	3	Where did the plague come from?
+712	5	JUMP	9	
+712	6	NPC	0	People are very depressed and scared. I've never	met anyone fully infected though. I suppose we	should be grateful to the mourners for that.
+712	7	PLAYER	6	It sounds an awful way to live.
+712	8	NPC	7	You could say that... I've heard reports that	half of West Ardougne is infected! Many have	lost friends and family...
+712	9	PLAYER	8	Have there been many victims of the plague?
+712	10	JUMP	12	
+712	11	NPC	0	Me too...
+712	12	PLAYER	11	I hope things get easier for you.
+712	13	OPTIONS	2,5,10	Where did the plague come from?	Have there been many victims of the plague?	I hope things get easier for you.
+712	14	PLAYER	13	Again, I'm sorry. Life can be harsh.
+712	15	NPC	14	Two days later the mourners returned and told me	he had died.
+712	16	NPC	15	Those mourners came and whisked him away. He	didn't even seem that ill, I thought it was a	common cold... But the mourners said that he was	infected and had to be taken away.
+712	17	PLAYER	16	Why didn't you?
+712	18	NPC	17	It would be easier to cope with if I could have	spent his last few days with him.
+712	19	PLAYER	18	That's awful, I'm sorry.
+712	20	NPC	19	My son fell ill with the plague...
+712	21	PLAYER	20	You seem upset... What's wrong?
+712	22	NPC	21	Oh, hello.
+712	23	PLAYER	22	Hello.
+# 789 source=scripts/quests/quest_hero/scripts/npcs/grubor.rs2
+789	-1	START	1	
+789	0	END		
+789	1	JUMP	3	
+789	2	NPC	0	Hi. I'm a little busy right now.
+789	3	PLAYER	2	Hi.
+# 799 source=scripts/areas/area_brimhaven/scripts/pirate_guard.rs2
+799	-1	START	1	
+799	0	END		
+799	1	JUMP	26	
+799	2	NPC	0	Batton down the hatches there's a storm brewin!
+799	3	NPC	0	Ahoy there!
+799	4	NPC	0	Arrh! I be in search of buried treasure!
+799	5	PLAYER	0	I'm not that fat!
+799	6	NPC	5	Avast behind!
+799	7	NPC	0	All hands on deck!
+799	8	NPC	0	Oh wait that's the parrot's line.
+799	9	NPC	8	Pieces of eight! pieces of eight!
+799	10	NPC	0	Great blackbeard's beard!
+799	11	NPC	0	Arrh be off with ye!
+799	12	NPC	0	No wait. That's a farmer.
+799	13	NPC	12	Oooh arrh!
+799	14	NPC	0	Arrh!
+799	15	NPC	0	Arrh I'll keel haul ye!
+799	16	NPC	0	Avast me hearties!
+799	17	NPC	0	Yo ho ho and a bottle of alcopop!
+799	18	NPC	0	I'm the scourge of the seven seas!
+799	19	PLAYER	18	Don't you mean the seven seas?
+799	20	NPC	19	I'm the scourge ofr the six seas!
+799	21	NPC	0	Shiver me timbers!
+799	22	NPC	0	Arrh arrh!
+799	23	NPC	0	Good day to you my dear sir!
+799	24	NPC	0	Yo ho ho me hearties!
+799	25	RANDOM	2,3,4,6,7,9,10,11,13,14,15,16,17,20,21,22,23,24	
+799	26	PLAYER	25	Hello!
+# 805 source=scripts/skill_crafting/scripts/crafting_guild/crafting_guild.rs2
+805	-1	START	1	
+805	0	END		
+805	1	JUMP	8	
+805	2	NPC	0	Right on!
+805	3	PLAYER	2	I suppose not.
+805	4	NPC	3	Dude, do I look like I wanna talk to you?
+805	5	PLAYER	4	So... are you here to give crafting tips?
+805	6	NPC	5	Whassup?
+805	7	PLAYER	6	Hello.
+805	8	NPC	7	Yeah?
+# 837 source=scripts/areas/area_alkharid/scripts/shantay_pass.rs2
+837	-1	START	1	
+837	0	END		
+837	1	JUMP	3	
+837	2	STATEMENT	0	The guard seems quite bad tempered, probably	from having to wear heavy armour in this intense	heat.
+837	3	NPC	2	Go talk to Shantay. I'm on duty and I don't have	time to talk to the likes of you!
+# 847 source=scripts/skill_cooking/scripts/cooking_guild.rs2
+847	-1	START	1	
+847	0	END		
+847	1	JUMP	2	
+847	2	NPC	0	Hello, welcome to the Cooking Guild.	Only accomplished chefs and cooks are allowed in	here.	Feel free to use any of our facilities.
+# 852 source=scripts/areas/area_yanille/scripts/ogre_chieftan.rs2
+852	-1	START	1	
+852	0	END		
+852	1	JUMP	2	
+852	2	NPC	0	Grrr! Go away from me, vermin!
+# 861 source=scripts/quests/quest_itwatchtower/scripts/ogre_guard.rs2
+861	-1	START	1	
+861	0	END		
+861	1	JUMP	2	
+861	2	NPC	0	What do you want, small thing?	Leave us alone!
+# 877 source=scripts/areas/area_yanille/scripts/tower_guard.rs2
+877	-1	START	1	
+877	0	END		
+877	1	JUMP	3	
+877	2	NPC	0	We are the tower guards - our business is our	own!
+877	3	PLAYER	2	Hello. What are you doing here?
+# 957 source=scripts/minigames/game_duelarena/scripts/mubariz.rs2
+957	-1	START	1	
+957	0	END		
+957	1	JUMP	30	
+957	2	NPC	0	See you in the arenas!
+957	3	PLAYER	2	Sounds great. Thanks!
+957	4	NPC	3	Inbetween the arenas are walkways where you can	watch the fights and challenge other players.
+957	5	NPC	4	lose.
+957	6	NPC	5	The Duel Arena has six duel arenas where you can	fight other players in a controlled environment.	We have our own dedicated hospital where we	guarantee to put you back together, even if you
+957	7	PLAYER	6	What is this place?
+957	8	NPC	0	You'll know you're in the right place as you'll	have a 'Challenge' option when you right-click a	player.
+957	9	NPC	8	challenge other players.
+957	10	NPC	9	When you go to the arena you'll go up an access	ramp to the walkways that overlook the duel	arenas.	From the walkway you can watch the duels and
+957	11	PLAYER	10	How do I challenge someone to a duel?
+957	12	PLAYER	0	Cool! Thanks!
+957	13	NPC	12	The rules are fairly self-evident with lots of	different combinations for you to try out!
+957	14	NPC	13	melee only.
+957	15	NPC	14	be restricted to ranging and
+957	16	NPC	15	You can choose to use rules to spice things up a	bit. For instance if you both agree to use the	'No Magic' rule then neither player can use	magic to attack the other player. The fight will
+957	17	NPC	16	You and your opponent can offer items as a	stake. If you win, you recieve what your	opponent staked, but, if you lose, your oppenent	will get whatever items you staked.
+957	18	PLAYER	17	What kind of options are there?
+957	19	NPC	0	Ho! Ho! Ho!
+957	20	PLAYER	19	I challenge you!
+957	21	NPC	20	here to fight!
+957	22	NPC	21	Now that the archaeologists have moved out, a	group of warriors, headed by myself, have bought	the land and converted it to a set of duel	arenas. The best fighters around the world come
+957	23	NPC	22	back to the second age!
+957	24	NPC	23	The archaeologists that are excavating the area	east of Varrock have been working on this site	as well. From these cliffs they uncovered this	huge building. The experts think it may date
+957	25	PLAYER	24	This place looks really old, where did it come	from?
+957	26	OPTIONS	7,11,18,25	What is this place?	How do I challenge someone to a duel?	What kind of options are there?	This place looks really old, where did it come from?
+957	27	NPC	26	What would you like to know?
+957	28	PLAYER	27	Thanks! I need some information.
+957	29	NPC	28	Welcome to the Duel Arena!
+957	30	PLAYER	29	Hi!
+# 963 source=scripts/minigames/game_duelarena/scripts/zahwa.rs2
+963	-1	START	1	
+963	0	END		
+963	1	JUMP	27	
+963	2	NPC	0	Hi!
+963	3	PLAYER	2	Hi!
+963	4	NPC	0	Ughhhh....
+963	5	PLAYER	4	Hi!
+963	6	NPC	0	Leave me alone!
+963	7	PLAYER	6	Uh huh.
+963	8	NPC	7	It was rigged I tell you!
+963	9	PLAYER	8	Right.
+963	10	NPC	9	I was robbed!
+963	11	PLAYER	10	Er...
+963	12	NPC	11	I could've 'ad 'im!
+963	13	PLAYER	12	Hi!
+963	14	NPC	0	NURSE!
+963	15	PLAYER	14	Are you alright?
+963	16	NPC	0	Do I look alright?!
+963	17	PLAYER	16	Are you alright?
+963	18	NPC	0	Yeh. The nurses here are...wonderful!
+963	19	PLAYER	18	Are you alright?
+963	20	NPC	0	It's just a flesh wound!
+963	21	PLAYER	20	Are you alright?
+963	22	NPC	0	Oh. OK.
+963	23	PLAYER	22	I'll leave you here, OK?
+963	24	NPC	23	Leave me behind!
+963	25	NPC	24	Can't....go....on!
+963	26	PLAYER	25	Are you alright?
+963	27	RANDOM	3,5,13,15,17,19,21,26	
+# 986 source=scripts/quests/quest_upass/scripts/quest_upass.rs2
+986	-1	START	1	
+986	0	END		
+986	1	JUMP	2	
+986	2	PLAYER	0	It's too heavy to move with just my hands.
+# 1008 source=scripts/minigames/game_duelarena/scripts/hamid.rs2
+1008	-1	START	1	
+1008	0	END		
+1008	1	JUMP	15	
+1008	2	NPC	0	They are so... nice... afterall!
+1008	3	NPC	2	You'd be better off speaking to one of the	nurses.
+1008	4	PLAYER	3	Can you heal me?
+1008	5	NPC	0	It beats being stuck in the monastery!
+1008	6	PLAYER	5	Really?
+1008	7	NPC	6	Well don't tell anyone but I came here because	of the nurses!
+1008	8	PLAYER	7	What's a Monk doing in a place such as this?
+1008	9	NPC	0	Yeh. I miss the guys.
+1008	10	PLAYER	9	You're a long way from home?
+1008	11	NPC	10	I belong to a monastery north of Falador.
+1008	12	PLAYER	11	Which monastery do you come from?
+1008	13	OPTIONS	4,8,12	Can you heal me?	What's a Monk doing in a place such as this?	Which monastery do you come from?
+1008	14	NPC	13	Hello traveller. How can I be of assistance?
+1008	15	PLAYER	14	Hi!
+# 1037 source=scripts/areas/area_canafis/scripts/werewolfroadblocker.rs2
+1037	-1	START	1	
+1037	0	END		
+1037	1	JUMP	5	
+1037	2	NPC	0	Who can tell? It's one of the drawbacks to	living in a swamp. You get used to it after a	while.
+1037	3	PLAYER	2	So how long will the road be blocked for?
+1037	4	NPC	3	Not just yet. The swamp has flooded the roads	again, it's unsafe to pass.
+1037	5	PLAYER	4	Can I get past please?
+# 1075 source=scripts/quests/quest_death/scripts/death_archer.rs2
+1075	-1	START	1	
+1075	0	END		
+1075	1	JUMP	4	
+1075	2	PLAYER	0	No problem!
+1075	3	NPC	2	Thank goodness you opened that door!	I've been trapped here since last night!
+1075	4	PLAYER	3	Hi!
+# 1081 source=scripts/areas/area_burthorpe/scripts/death_servant.rs2
+1081	-1	START	1	
+1081	0	END		
+1081	1	JUMP	5	
+1081	2	NPC	0	If you want someone to show you round the castle	ask Eohric, the Head Servant.
+1081	3	NPC	2	Look, I'd better not talk. I'll get in trouble.
+1081	4	NPC	3	Hi!
+1081	5	PLAYER	4	Hi!
+# 1092 source=scripts/areas/area_burthorpe/scripts/death_white_knight.rs2
+1092	-1	START	1	
+1092	0	END		
+1092	1	JUMP	5	
+1092	2	NPC	0	Oh...er...nothing!
+1092	3	PLAYER	2	So, what you up to out here?
+1092	4	NPC	3	Hi!
+1092	5	PLAYER	4	Hi!
+# 1151 source=scripts/quests/quest_troll/scripts/eadgar_troll_chief_cook.rs2
+1151	-1	START	1	
+1151	0	END		
+1151	1	JUMP	6	
+1151	2	PLAYER	0	Nothing. I was just leaving.
+1151	3	NPC	2	Hmm. Burntmeat think you probably right. What	human doing here?
+1151	4	PLAYER	3	Oh, you don't want to eat me! I'm a tough,	hardened adventurer, not tender or tasty at all!
+1151	5	NPC	4	Hmm? What human do in troll kitchen? Burntmeat	tired of cooking goats. Human look tasty.
+1151	6	PLAYER	5	Er, hi.

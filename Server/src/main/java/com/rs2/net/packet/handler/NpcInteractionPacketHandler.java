@@ -6,8 +6,10 @@ import com.rs2.model.World;
 import com.rs2.model.combat.CombatManager;
 import com.rs2.model.interaction.InteractionDispatcher;
 import com.rs2.model.interaction.InteractionType;
+import com.rs2.model.interaction.NpcActionRouter;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.npc.Npc;
+import com.rs2.model.npc.NpcDefinition;
 import com.rs2.model.player.Player;
 import com.rs2.model.skill.magic.SpellDefinition;
 import com.rs2.model.skill.magic.Spellbook;
@@ -22,7 +24,8 @@ import com.rs2.util.GameplayTrace;
 public final class NpcInteractionPacketHandler implements PacketHandler {
     @Override
     public final void handle(Player player, IncomingPacket packet) {
-        if (player.isActionLocked()) {
+        if (player.isActionLocked() && !(ServerSettings.clientBuild == 443
+                && packet.getOpcode() == ClientPackets.NPC_EXAMINE)) {
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("npc packet ignored action-locked player=" + GameplayTrace.describe(player) + " opcode=" + packet.getOpcode());
             }
@@ -294,6 +297,7 @@ public final class NpcInteractionPacketHandler implements PacketHandler {
                 player.packetSender.sendGameMessage("You cannot attack that npc!");
                 return;
             }
+            if (NpcActionRouter.dispatch(player, npc, option - 1)) return;
             InteractionType type = option == 1 ? InteractionType.FIRST_NPC
                     : option == 2 ? InteractionType.SECOND_NPC
                     : option == 3 ? InteractionType.THIRD_NPC
@@ -310,6 +314,8 @@ public final class NpcInteractionPacketHandler implements PacketHandler {
 
         if (opcode == ClientPackets.NPC_EXAMINE) {
             int npcDefinitionId = packet.getReader().readSignedShort() & 0xFFFF;
+            if (npcDefinitionId >= World.getNpcDefinitions().length) return;
+            player.packetSender.sendGameMessage(NpcDefinition.forId(npcDefinitionId).getDescription());
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("443 npc examine player=" + GameplayTrace.describe(player)
                         + " npcDefinitionId=" + npcDefinitionId);

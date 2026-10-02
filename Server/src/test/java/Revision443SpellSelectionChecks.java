@@ -8,6 +8,10 @@ public final class Revision443SpellSelectionChecks {
                 "Wind Strike packed-widget selection did not map to legacy 1152");
         require(SpellWidgets.toLegacySpellButton(windStrike, 0) == 1152,
                 "Wind Strike explicit child did not map to legacy 1152");
+        require(SpellWidgets.toLegacySpellButton((192 << 16) | 591, 0xFFFF) == 30000,
+                "Home teleport selection mapped to the paid spell");
+        require(InterfaceBridge.toLegacyComponent((192 << 16) | 591) == 30000,
+                "Home teleport button mapped to the paid spell");
         require(SpellWidgets.toLegacySpellButton((192 << 16) | 531, 0xFFFF) == 12445,
                 "Tele Block did not map from its native child");
         require(SpellWidgets.toLegacySpellButton((193 << 16) | 5, 0xFFFF) == 12861,

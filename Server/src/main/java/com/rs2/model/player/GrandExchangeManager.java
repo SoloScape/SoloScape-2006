@@ -101,8 +101,6 @@ public final class GrandExchangeManager {
         double value7 = 100.0 * (value5 / value6);
         value32 = (int)value7;
         ItemStack itemStack2 = new ItemStack(value8);
-        boolean definition = itemStack2.getDefinition().hasNote();
-        int definition2 = itemStack2.getDefinition().getNotedId();
         value32 = value32 == 100 ? 1 : 0;
         boolean enabled = player.grandExchangeCancelledFlags[player.selectedGrandExchangeSlot];
         if (itemId == 0) {
@@ -120,15 +118,31 @@ public final class GrandExchangeManager {
             player2.packetSender.sendGameMessage("This item is not supported yet.");
             return;
         }
-        value8 = definition ? definition2 : value8;
+        if (value2 <= 0) {
+            return;
+        }
+        ItemDefinition collectDefinition = itemStack2.getDefinition();
+        if (!collectDefinition.isStackable()
+                && value2 > player.getInventoryManager().getContainer().getFreeSlots()) {
+            if (collectDefinition.hasNote()) {
+                // Original GE behavior: use notes only when the full quantity cannot fit.
+                value8 = collectDefinition.getNotedId();
+            } else {
+                value2 = player.getInventoryManager().getContainer().getFreeSlots();
+                if (value2 == 0) {
+                    player.getInventoryManager().canAddItem(itemStack2);
+                    return;
+                }
+            }
+        }
         ItemStack itemStack3 = new ItemStack(value8, value2);
         if (!player.getInventoryManager().canAddItem(itemStack3)) {
             return;
         }
         if (itemId == 0) {
-            player.grandExchangePrimaryCollectAmounts[player.selectedGrandExchangeSlot] = 0;
+            player.grandExchangePrimaryCollectAmounts[player.selectedGrandExchangeSlot] -= value2;
         } else {
-            player.grandExchangeSecondaryCollectAmounts[player.selectedGrandExchangeSlot] = 0;
+            player.grandExchangeSecondaryCollectAmounts[player.selectedGrandExchangeSlot] -= value2;
         }
         if (player.grandExchangeSellOfferFlags[player.selectedGrandExchangeSlot]) {
             itemStack2 = new ItemStack(995, player.grandExchangePrimaryCollectAmounts[player.selectedGrandExchangeSlot]);
@@ -662,34 +676,31 @@ public final class GrandExchangeManager {
         player2.packetSender.sendInterfaceText(String.valueOf(GameUtil.formatNumber(player.selectedGrandExchangeUnitPrice * player.selectedGrandExchangeQuantity)) + " coins", value + 2);
     }
 
-    public static void selectSellOfferItem(Player player, int itemId, int value2, int value32) {
-        Object inventoryManager = player.getInventoryManager().getContainer().getItemAt(itemId);
-        if (inventoryManager == null || ((ItemStack)inventoryManager).getId() != value2 || !((ItemStack)inventoryManager).isValid()) {
+    public static void selectSellOfferItem(Player player, int slot, int itemId, int value32) {
+        ItemStack item = player.getInventoryManager().getContainer().getItemAt(slot);
+        if (item == null || item.getId() != itemId || !item.isValid()) {
             return;
         }
-        player.getInventoryManager().getContainer().getItemAmount(value2);
-        value2 = ((ItemStack)inventoryManager).getDefinition().isNote() ? 1 : 0;
-        if (((ItemStack)inventoryManager).getDefinition().getId() > 11883) {
-            inventoryManager = player;
-            ((Player)inventoryManager).packetSender.sendGameMessage("This item is not supported yet.");
+        ItemDefinition definition = item.getDefinition();
+        if (definition.getId() > 11883) {
+            player.packetSender.sendGameMessage("This item is not supported yet.");
             return;
         }
-        if ((value2 = value2 != 0 ? ((ItemStack)inventoryManager).getDefinition().getUnnotedId() : ((ItemStack)inventoryManager).getDefinition().getId()) == 995) {
+        int exchangeItemId = definition.isNote() ? definition.getUnnotedId() : definition.getId();
+        if (exchangeItemId == 995) {
             return;
         }
-        if (!GrandExchangeCatalog.isExchangeable(value2)) {
-            ((Player)inventoryManager).packetSender.sendGameMessage("That item cannot be traded on this Grand Exchange.");
+        if (!GrandExchangeCatalog.isExchangeable(exchangeItemId)) {
+            player.packetSender.sendGameMessage("That item cannot be traded on this Grand Exchange.");
             return;
         }
-        player.selectedGrandExchangeItemId = value2;
-        player.selectedGrandExchangeQuantity = ((ItemStack)inventoryManager).getAmount();
-        player.selectedGrandExchangeUnitPrice = GrandExchangeManager.getGuidePrice(value2);
-        inventoryManager = player;
-        ((Player)inventoryManager).packetSender.sendInterfaceText(GameUtil.formatNumber(player.selectedGrandExchangeUnitPrice), 18968);
-        inventoryManager = player;
-        ((Player)inventoryManager).packetSender.sendInterfaceItemModel(18983, value2);
-        String examine = ItemDefinition.forId(value2).getDescription();
-        ((Player)inventoryManager).packetSender.sendInterfaceText(examine == null ? "" : examine, 18967);
+        player.selectedGrandExchangeItemId = exchangeItemId;
+        player.selectedGrandExchangeQuantity = item.getAmount();
+        player.selectedGrandExchangeUnitPrice = GrandExchangeManager.getGuidePrice(exchangeItemId);
+        player.packetSender.sendInterfaceText(GameUtil.formatNumber(player.selectedGrandExchangeUnitPrice), 18968);
+        player.packetSender.sendInterfaceItemModel(18983, exchangeItemId);
+        String examine = ItemDefinition.forId(exchangeItemId).getDescription();
+        player.packetSender.sendInterfaceText(examine == null ? "" : examine, 18967);
         GrandExchangeManager.refreshSelectedOfferTotals(player);
     }
 }

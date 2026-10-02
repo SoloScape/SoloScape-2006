@@ -7,6 +7,7 @@ import com.rs2.model.c.ProjectileDefinition;
 import com.rs2.model.item.action.BarrowsRepairHandler;
 import com.rs2.model.npc.Npc;
 import com.rs2.model.player.Player;
+import com.rs2.model.skill.woodcutting.UndeadTreeCutting;
 import com.rs2.model.task.TickTask;
 import com.rs2.util.GameUtil;
 
@@ -41,6 +42,13 @@ extends TickTask {
         }
         this.player.getSlayerManager().useFinishingItemOnMonster(this.npc, this.itemId);
         EntityTargetMovement.clearMovementTarget(this.player);
+        if (UndeadTreeCutting.isUndeadTree(this.npc.getNpcId())
+                && this.itemId == UndeadTreeCutting.BLESSED_AXE
+                && this.player.getInventoryManager().containsItem(this.itemId)) {
+            UndeadTreeCutting.start(this.player, this.npc);
+            this.stop();
+            return;
+        }
         if (this.player.getQuestManager().handleItemOnNpc(this.player.getInteractionTargetId(), this.itemId)) {
             this.stop();
             return;

@@ -104,9 +104,9 @@ extends QuestScript {
         player.getSkillManager().addQuestExperience(14, 2575.0);
         player.getSkillManager().addQuestExperience(15, 1325.0);
         player2 = player;
-        player2.packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 1377);
+        player2.packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 1377);
         player2 = player;
-        player2.packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        player2.packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         player2 = player;
         player.deferLevelUpInterfaces = false;
     }

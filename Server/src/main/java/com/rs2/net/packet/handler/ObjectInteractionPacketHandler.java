@@ -8,6 +8,7 @@ import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.gameplay.castlewars.CastleWarsManager;
 import com.rs2.model.interaction.InteractionDispatcher;
 import com.rs2.model.interaction.InteractionType;
+import com.rs2.model.interaction.ObjectActionRouter;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.objects.ObjectManager;
@@ -30,7 +31,8 @@ public final class ObjectInteractionPacketHandler
 implements PacketHandler {
     @Override
     public final void handle(Player player, IncomingPacket incomingPacket) {
-        if (player.isActionLocked()) {
+        if (player.isActionLocked() && !(ServerSettings.clientBuild == 443
+                && incomingPacket.getOpcode() == ClientPackets.OBJECT_EXAMINE)) {
             return;
         }
         if (ServerSettings.clientBuild == 443
@@ -230,10 +232,10 @@ implements PacketHandler {
             ObjectManager.prepareObjectInteractionMovement(player, player.getInteractionTargetId(),
                     player.getInteractionTargetX(), player.getInteractionTargetY());
             queueObjectInteractionMovement(player);
-            InteractionType type = option == 1 ? InteractionType.FIRST_OBJECT
-                    : option == 2 ? InteractionType.SECOND_OBJECT
-                    : option == 3 ? InteractionType.THIRD_OBJECT
-                    : option == 4 ? InteractionType.FOURTH_OBJECT : null;
+            InteractionType type = ObjectActionRouter.semanticRoute(ObjectDefinition.forId(objectId & 0xFFFF), option - 1);
+            GameplayTrace.logInteraction(player, "object-action route id=" + (objectId & 0xFFFF)
+                    + " option=" + option + " semantic=" + type);
+            if (type == null) type = ObjectActionRouter.legacyRoute(option);
             if (type != null) {
                 InteractionDispatcher.setCurrentInteractionType(type);
                 InteractionDispatcher.dispatchCurrentInteraction(player);
@@ -246,6 +248,9 @@ implements PacketHandler {
 
         if (opcode == ClientPackets.OBJECT_EXAMINE) {
             int objectId = packet.getReader().readSignedShort(ByteOrder.LITTLE) & 0xFFFF;
+            ObjectDefinition definition = ObjectDefinition.forId(objectId);
+            if (definition == null) return;
+            player.packetSender.sendGameMessage(definition.getDescription());
             if (GameplayTrace.enabled()) {
                 GameplayTrace.log("443 object examine player=" + GameplayTrace.describe(player)
                         + " objectId=" + objectId);

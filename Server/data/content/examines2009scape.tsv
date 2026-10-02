@@ -1,0 +1,881 @@
+# 2009scape c6322d0976986b176691eee9775b596bda071a9f; name-matched supplement; kind	id	name	examine
+npc	52	Baby dragon	Young but still dangerous.
+npc	105	Grizzly bear	Eek! A bear!
+npc	106	Black bear	Eek! A bear!
+npc	208	Captain Lawgof	The head honcho around here.
+npc	610	Black Knight Captain	One of the Black Knights.
+npc	614	Doug Deeping	This person is working on the site.
+npc	681	Held Vampyre Juvinate	Mysterious swamp lights...
+npc	850	Aluft Gianne snr.	The famous tree gnome chef.
+npc	882	Gypsy Aris	An old gypsy lady.
+npc	897	Witch's experiment	Looks unnatural.
+npc	898	Witch's experiment (second form)	Looks unnatural.
+npc	899	Witch's experiment (third form)	Looks unnatural.
+npc	900	Witch's experiment (fourth form)	Looks unnatural.
+npc	961	Surgeon General Tafani	This doctor really knows her stuff.
+npc	991	Half-soulless	A creature empty of emotion.
+npc	1002	Disciple of Iban	A dark magic user.
+npc	1023	Vampire	It looks very hungry!
+npc	1037	Prissy Scilla	Perhaps this gardener might look after your crops for you.
+npc	1537	Iron pickaxe	Useful for hitting rocks.
+npc	1589	Baby dragon	Young but still dangerous.
+npc	2001	Scarab swarm	I think they're some kind of beetle.
+npc	2573	Pillory Guard	A law enforcer.
+npc	3090		A mighty warrior
+npc	3307	Gatekeeper	Guardian of the market gate.
+npc	3321	Gatekeeper	Guardian of the market gate.
+npc	3534	Held Vampyre Juvenile	He looks really hungry!
+npc	3915	Man	One of Gielinor's many citizens.
+npc	3916	Carpenter Kjallak	His bark's worse than his blight.
+npc	3917	Farmer Fromund	He looks a bit seedy.
+npc	3918	Prince Brand	The Prince of Miscellania.
+npc	3919	Princess Astrid	The Princess of Miscellania.
+npc	3921	Halla	A subject of Miscellania.
+npc	3922	Finn	Runs the general store.
+npc	3925	Tjorvi	A subject of Miscellania.
+npc	3927	Thora	A subject of Miscellania.
+npc	3933	Alviss	A dwarf who's currently living in Miscellania.
+npc	3934	Fullangr	A dwarf who's currently living in Miscellania.
+npc	3935	Jari	A dwarf who's currently living in Miscellania.
+npc	3937	Ferd	A dwarf miner. He's shoring up the walls.
+npc	3938	Donal	A rather scared-looking dwarf. He doesn't seem all that drunk.
+npc	3939	Sea Snake Young	Snake
+npc	3940	Sea Snake Hatchling	A baby sea snake. Snaaaaaaake!
+npc	3942	Guard	He's guarding the entrance to the dungeons.
+npc	3943	Giant Sea Snake	A big snake that lives in the sea. How did it get in here?
+npc	4227	Cockatrice	The winged reptile.
+npc	4228	Basilisk	The eyes of evil.
+npc	4229	Kurask	Large, heavy, with sharp things attached to its head.
+npc	4230	Abyssal demon	A denizen of the Abyss!
+npc	4234	Kalphite Queen	I don't think insect repellent will work...
+npc	4239	Cook	I hope she can find all the ingredients!
+npc	4245	Chief servant	Head of the servants' guild.
+npc	4246	Taxidermist	She smells unpleasantly of chemicals.
+npc	4247	Estate agent	A fancy businessman with a mighty fine hat.
+npc	4248	Stonemason	Someone has to get rid of all the stone they dug Keldagrim out of.
+npc	4249	Sir Renitee	Chief Herald of Falador.
+npc	4250	Sawmill operator	He changes the shape of wood.
+npc	4251	Garden supplier	She has green fingers. (Not literally.)
+npc	4252	Macaroni Penguin	Beak areful with this one
+npc	4258	Guard	A dwarven guard.
+npc	4261	Goblin	An ugly green creature.
+npc	4262	Goblin	An ugly green creature.
+npc	4263	Goblin	An ugly green creature.
+npc	4264	Goblin	An ugly green creature.
+npc	4265	Goblin	An ugly green creature.
+npc	4266	Goblin	An ugly green creature.
+npc	4267	Goblin	An ugly green creature.
+npc	4268	Goblin	An ugly green creature.
+npc	4269	Goblin	An ugly green creature.
+npc	4270	Goblin	An ugly green creature.
+npc	4271	Goblin	An ugly green creature.
+npc	4272	Goblin	An ugly green creature.
+npc	4273	Goblin	An ugly green creature.
+npc	4274	Goblin	An ugly green creature.
+npc	4275	Goblin	An ugly green creature.
+npc	4276	Goblin	An ugly green creature.
+npc	4278	Animated Bronze Armour	Animated bronze armour.
+npc	4279	Animated Iron Armour	Animated iron armour.
+npc	4280	Animated Steel Armour	Animated steel armour.
+npc	4281	Animated Black Armour	Animated black armour.
+npc	4282	Animated Mithril Armour	Animated mithril armour.
+npc	4283	Animated Adamant Armour	Animated adamant armour.
+npc	4284	Animated Rune Armour	Animated rune armour.
+npc	4285	Ghommal	The big door man.
+npc	4286	Harrallak Menarous	Guild Master.
+npc	4287	Gamfred	The guild engineer.
+npc	4288	Ajjat	Used to be a black knight.
+npc	4289	Kamfreena	Blademistress, skillful female warrior.
+npc	4290	Shanomi	A warrior mage from the east.
+npc	4291	Cyclops	A one-eyed man eater.
+npc	4292	Cyclops	A one-eyed woman eater.
+npc	4293	Lidio	Food shopkeeper.
+npc	4294	Lilly	Potion shopkeeper.
+npc	4295	Anton	Armour shopkeeper.
+npc	4296	Jade	Bank staff.
+npc	4297	Sloane	He looks like a strong warrior.
+npc	4298	Jimmy	He looks a bit drunk.
+npc	4299	Ref	He looks fair and reliable.
+npc	4300	Ref	He looks fair and reliable.
+npc	4307	Guard	A guard for the humans against monster group.
+npc	4318	H.A.M. Member	A member of the 'Humans Against Monsters' group.
+npc	4320	H.A.M. Member	A member of the 'Humans Against Monsters' group.
+npc	4322	Zanik	No match for Thok. Silly demon.
+npc	4323	Zanik	No match for Thok. Silly demon.
+npc	4324	Zanik	No match for Thok. Silly demon.
+npc	4326	Zanik	No match for Thok. Silly demon.
+npc	4329	H.A.M. Deacon	A deacon in the Humans Against Monsters group. A rather enthusiastic chap.
+npc	4330	Johanhus Ulsbrecht	The leader of the 'Humans Against Monsters' group.
+npc	4337	Zanik	No match for Thok. Silly demon.
+npc	4339	Zanik	No match for Thok. Silly demon.
+npc	4340	Zanik	No match for Thok. Silly demon.
+npc	4341	Zanik	No match for Thok. Silly demon.
+npc	4342	Zanik	No match for Thok. Silly demon.
+npc	4343	Snake	Snake! Snaaaaake!
+npc	4345	Albino bat	It's all white by me.
+npc	4347	Giant mosquito	A flying blood sucker.
+npc	4348	Jungle horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4349	Jungle horror	A horrible, emaciated ape like creature with beady yellow eyes.
+npc	4350	Jungle horror	A horrible, emaciated ape like creature with beady green eyes.
+npc	4351	Jungle horror	A horrible, emaciated ape like creature with beady blue eyes.
+npc	4352	Jungle horror	A horrible, emaciated ape like creature with beady pink eyes.
+npc	4353	Cave horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4354	Cave horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4355	Cave horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4356	Cave horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4357	Cave horror	A horrible, emaciated ape like creature with beady red eyes.
+npc	4359	Patchy	Patchy the pirate.
+npc	4361	Fancy Dan	A very flamboyant pirate.
+npc	4362	Honest Jimmy	I can't wait to buy from a guy with Honest in his name...
+npc	4373	Parrot	A colourful bird.
+npc	4374	Parrot	A colourful bird.
+npc	4375	Security Guard	A retired Gielinor security guard.
+npc	4376	Litara	Litara, a barbarian explorer.
+npc	4381	Ankou	A boney ghost.
+npc	4382	Ankou	A boney ghost.
+npc	4383	Ankou	A boney ghost.
+npc	4385	Skeleton	Could do with gaining a few pounds.
+npc	4388	Ghost	Eeek! A ghost!
+npc	4389	Flesh Crawler	I don't think insect repellent will work.
+npc	4390	Flesh Crawler	I don't think insect repellent will work.
+npc	4391	Flesh Crawler	I don't think insect repellent will work.
+npc	4392	Zombie	Dead man walking.
+npc	4393	Zombie	Dead man walking.
+npc	4394	Zombie	Dead man walking.
+npc	4395	Giant rat	Overgrown vermin.
+npc	4396	Rat	A popular dwarven delicacy.
+npc	4397	Catablepon	Big Cow-like... But cows don't have serpent tails!
+npc	4398	Catablepon	Big Cow-like... But cows don't have serpent tails!
+npc	4399	Catablepon	Big Cow-like... But cows don't have serpent tails!
+npc	4400	Giant spider	I think this spider has been genetically modified.
+npc	4402	Scorpion	An extremely vicious scorpion.
+npc	4403	Scorpion	An extremely vicious scorpion.
+npc	4404	Minotaur	He doesn't look very pleased to see you.
+npc	4405	Minotaur	He doesn't look very pleased to see you.
+npc	4406	Minotaur	He doesn't look very pleased to see you.
+npc	4407	Goblin	An ugly green creature.
+npc	4408	Goblin	An ugly green creature.
+npc	4409	Goblin	An ugly green creature.
+npc	4410	Goblin	An ugly green creature.
+npc	4411	Goblin	An ugly green creature.
+npc	4412	Goblin	An ugly green creature.
+npc	4413	Wolf	They say inside you there are two wolves...
+npc	4414	Wolf	They say inside you there are two wolves...
+npc	4415	Rat	A popular dwarven delicacy.
+npc	4418	Gorak	Those horns look pretty sharp...
+npc	4419	Cosmic Being	A highly enlightened being.
+npc	4433	Fairy Godfather	I'm gonna make him an offer he can't refuse.
+npc	4434	Fairy Nuff	A healing fairy.
+npc	4437	Fairy Queen	Looks otherworldy...
+npc	4438	Centaur	Horseplay.
+npc	4439	Centaur	Horseplay.
+npc	4440	Stag	A noble creature!
+npc	4441	Wood Dryad	Twiggy.
+npc	4443	Fairy	A delicate creature from this strange realm.
+npc	4455	Fairy Fixit	Fairy ring maintenance division.
+npc	4457	Ork	He works in the bank.
+npc	4458	Ork	She works in the bank.
+npc	4459	Ork	She works in the bank.
+npc	4466	Benjamin	A human returned from vampyric form.
+npc	4467	Liam	A human returned from vampyric form.
+npc	4468	Miala	A human returned from vampyric form.
+npc	4469	Verak	A human returned from vampyric form.
+npc	4470	Tree spirit	A very angry nymph.
+npc	4476	Guardian Mummy	Who's your mummy?
+npc	4478	Tarik	The mayor's guard.
+npc	4479	Goblin	An ugly green creature.
+npc	4480	Goblin	An ugly green creature.
+npc	4481	Goblin	An ugly green creature.
+npc	4482	Goblin	An ugly green creature.
+npc	4483	Goblin	An ugly green creature.
+npc	4484	Goblin	An ugly green creature.
+npc	4485	Goblin	An ugly green creature.
+npc	4486	Goblin	An ugly green creature.
+npc	4487	Goblin	An ugly green creature.
+npc	4488	Goblin	An ugly green creature.
+npc	4489	Goblin	An ugly green creature.
+npc	4490	Goblin	An ugly green creature.
+npc	4491	Goblin	An ugly green creature.
+npc	4492	Goblin	An ugly green creature.
+npc	4493	General Bentnoze	An ugly green creature.
+npc	4494	General Wartface	An ugly green creature.
+npc	4499	Goblin	An ugly green creature.
+npc	4500	Scarab swarm	I think they're some kind of beetle.
+npc	4501	Ethereal Man	Is he real or is it just my imagination?
+npc	4502	Ethereal Lady	Does she really exist?
+npc	4503	Ethereal Numerator	He reminds me of my old mathematics teacher.
+npc	4504	Ethereal Expert	The master of accomplishment.
+npc	4505	Ethereal Perceptive	He knows what is possible.
+npc	4506	Ethereal Guide	He knows the past, present and future. But what of my shoe size?
+npc	4507	Ethereal Fluke	Luck is probably on his side.
+npc	4509	Me	It's like looking in the mirror.
+npc	4510	Me	It's like looking in the mirror.
+npc	4511	Oneiromancer	Spiritual leader of the Moonclan.
+npc	4512	House	The craziest house I ever did see!
+npc	4521	Enchanted Broom	How does it see where to sweep?
+npc	4522	Enchanted Broom	How does it see where to sweep?
+npc	4523	Enchanted Broom	How does it see where to sweep?
+npc	4524	Enchanted Bucket	I'm not sure if it's actually doing anything of use.
+npc	4525	Enchanted Bucket	I'm not sure if it's actually doing anything of use.
+npc	4534	Moss giant	His beard seems to have a life of its own.
+npc	4535	Parrot	A colourful bird.
+npc	4536	Lokar Searunner	Either a very fremennikey pirate, or a very piratey fremnnik.
+npc	4537	Lokar Searunner	Either a very fremennikey pirate, or a very piratey fremnnik.
+npc	4539	Cabin boy	I always wondered what that job description actually meant...
+npc	4540	Captain Bentley	The High Priest has been transformed into an avatar of Bandos.
+npc	4541	'Beefy' Burns	A stickler for hygiene in the kitchen.
+npc	4542	'Eagle-eye' Shultz	A keen-eyed lookout with a telescope.
+npc	4545	'Picarron' Pete	A pirate through and through.
+npc	4547	Bedread the bold	He got his name from his favourite hobby. Reading about beds.
+npc	4549	Tommy 2-times	Nobody really knows why he's called Tommy 2-times...
+npc	4550	Murky Pat	Don't look him straight in the eyes. He'll eat you alive!
+npc	4551	Jack Sails	Nice beard.
+npc	4554	'Beedy-eye' Jones	Is he looking at me?
+npc	4555	Jenny Blade	Yes
+npc	4556	'Lecherous' Lee	A low-down
+npc	4557	'Sticky' Sanders	Apparently his nickname comes from his fondness for jam.
+npc	4558	Hirko	A seller of crossbow parts.
+npc	4560	Frizzy Skernip	Perhaps this gardener might look after your crops for you.
+npc	4561	Yulf Squecks	Perhaps this gardener might look after your crops for you.
+npc	4562	Praistan Ebola	Perhaps this gardener might look after your crops for you.
+npc	4564	Digsite workman	This person is working on the site.
+npc	4565	Digsite workman	This person is working on the site.
+npc	4566	Examiner	Upon examining the examiner you examine it is indeed an examiner!
+npc	4567	Examiner	Upon examining the examiner you examine it is indeed an examiner!
+npc	4568	Researcher	Must be hard at work.
+npc	4571	Terrorchick gnome	Aaw
+npc	4578	Penwie	He looks like he's a long way from home.
+npc	4579	Generic Diplomat	He makes pots.
+npc	4580	Ambassador Gimblewap	He's very diplomatic.
+npc	4581	Ambassador Spanfipple	Peaceful man!
+npc	4582	Ambassador Ferrnook	Peaceful man!
+npc	4585	Professor Onglewip	A gnome mage on sabbatical.
+npc	4589	Sorrn	Your common man.
+npc	4590	Mimm	Your common woman.
+npc	4593	Portobello	Your common man.
+npc	4594	Captain Ninto	A gnome pilot off duty
+npc	4595	Captain Daerkin	A gnome pilot off duty
+npc	4600	Guard Vemmeldo	He looks alert and ready for action.
+npc	4603	Fortress Guard	A generic evil henchman.
+npc	4604	Fortress Guard	A generic evil henchman.
+npc	4605	Fortress Guard	A generic evil henchman.
+npc	4606	Fortress Guard	A generic evil henchman.
+npc	4607	Black Cat	A witch's black cat.
+npc	4610	Brimstail	Small but powerful.
+npc	4611	Saboteur	Swine.
+npc	4612	Gnome shop keeper	Sells gnomish things.
+npc	4615	Evil creature	What is that thing!
+npc	4618	Evil creature	What is that thing!
+npc	4621	Evil creature	What is that thing!
+npc	4624	Evil creature	What is that thing!
+npc	4627	Evil creature	What is that thing!
+npc	4630	Evil creature	What is that thing!
+npc	4638	Gnome soldier	A little warrior.
+npc	4639	Gnome soldier	A little warrior.
+npc	4640	Gnome soldier	A little warrior.
+npc	4641	Gnome soldier	A little warrior.
+npc	4642	Gnome soldier	A little warrior.
+npc	4643	Healthorg and tortoise	King Healthorg riding his War Tortoise.
+npc	4645	Glouphrie the Untrusted	A weasly, shifty-looking Gnome Mage.
+npc	4647	Hazelmere	An ancient looking gnome.
+npc	4649	Tyras guard	One of King Tyras's men.
+npc	4650	Trader Stan	With the prices he charges, no wonder he can afford to look so sharp.
+npc	4651	Trader Crewmember	Looks very stylish.
+npc	4652	Trader Crewmember	That suit looks a little briny around the edges.
+npc	4653	Trader Crewmember	First storm he is in that hat will blow away.
+npc	4654	Trader Crewmember	She'll never be able to climb rigging in that.
+npc	4655	Trader Crewmember	High heels on a ship? What is she thinking?
+npc	4656	Trader Crewmember	The effect is sort of spoiled by all those tattoos.
+npc	4657	Sir Prysin	One of the king's knights.
+npc	4659	Dark wizard	He works evil magic.
+npc	4660	Dark wizard	He works evil magic.
+npc	4661	Dark wizard	He works evil magic.
+npc	4662	Denath	A practicer of dark arts.
+npc	4663	Denath	A practicer of dark arts.
+npc	4665	Baby dragon	Young but still dangerous.
+npc	4666	Baby dragon	Young but still dangerous.
+npc	4667	Baby dragon	Young but still dangerous.
+npc	4668	Baby dragon	Young but still dangerous.
+npc	4669	Red dragon	A big powerful dragon.
+npc	4670	Red dragon	A big powerful dragon.
+npc	4671	Red dragon	A big powerful dragon.
+npc	4672	Red dragon	A big powerful dragon.
+npc	4673	Black dragon	A fierce dragon with black scales!
+npc	4674	Black dragon	A fierce dragon with black scales!
+npc	4675	Black dragon	A fierce dragon with black scales!
+npc	4676	Black dragon	A fierce dragon with black scales!
+npc	4677	Green dragon	Must be related to Elvarg.
+npc	4678	Green dragon	Must be related to Elvarg.
+npc	4679	Green dragon	Must be related to Elvarg.
+npc	4680	Green dragon	Must be related to Elvarg.
+npc	4681	Blue dragon	A mother dragon.
+npc	4682	Blue dragon	A mother dragon.
+npc	4683	Blue dragon	A mother dragon.
+npc	4684	Blue dragon	A mother dragon.
+npc	4685	Ice giant	He's got icicles in his beard.
+npc	4686	Ice giant	He's got icicles in his beard.
+npc	4687	Ice giant	He's got icicles in his beard.
+npc	4688	Moss giant	His beard seems to have a life of its own.
+npc	4689	Hill Giant	A very large foe.
+npc	4690	Hill Giant	A very large foe.
+npc	4691	Hill Giant	A very large foe.
+npc	4692	Hill Giant	A very large foe.
+npc	4693	Hill Giant	A very large foe.
+npc	4694	Lesser demon	Lesser, but still pretty big.
+npc	4695	Lesser demon	Lesser, but still pretty big.
+npc	4696	Lesser demon	Lesser, but still pretty big.
+npc	4697	Lesser demon	Lesser, but still pretty big.
+npc	4698	Greater demon	Big, red, and incredibly evil.
+npc	4699	Greater demon	Big, red, and incredibly evil.
+npc	4700	Greater demon	Big, red, and incredibly evil.
+npc	4701	Greater demon	Big, red, and incredibly evil.
+npc	4702	Black Demon	A big, scary, jet-black demon.
+npc	4703	Black Demon	A big, scary, jet-black demon.
+npc	4704	Black Demon	A big, scary, jet-black demon.
+npc	4705	Black Demon	A big, scary, jet-black demon.
+npc	4706	Moss giant	His beard seems to have a life of its own.
+npc	4708	Old Man Ral	A flea-infested
+npc	4716	Trader Sven	A flea-infested black market trader.
+npc	4717	Meiyerditch citizen	A flea-infested
+npc	4718	Meiyerditch citizen	A flea-infested
+npc	4719	Meiyerditch citizen	This citizen looks pale
+npc	4720	Meiyerditch citizen	This citizen looks pale
+npc	4721	Meiyerditch citizen	This citizen looks pale
+npc	4722	Meiyerditch citizen	This citizen looks pale
+npc	4723	Meiyerditch citizen	This citizen looks pale
+npc	4724	Meiyerditch citizen	This citizen looks pale
+npc	4725	Meiyerditch citizen	This citizen looks pale
+npc	4726	Meiyerditch citizen	This citizen looks pale
+npc	4733	Meiyerditch citizen	Cowardly mage.
+npc	4734	Meiyerditch citizen	This citizen looks pale
+npc	4735	Meiyerditch citizen	This citizen looks pale
+npc	4736	Meiyerditch citizen	This citizen looks pale
+npc	4737	Meiyerditch citizen	This citizen looks pale
+npc	4738	Meiyerditch citizen	This citizen looks pale
+npc	4739	Meiyerditch citizen	This citizen looks pale
+npc	4740	Meiyerditch citizen	This citizen looks pale
+npc	4741	Meiyerditch citizen	This citizen looks pale
+npc	4746	A Meiyerditch child	A poor street urchin!
+npc	4747	A Meiyerditch child	A poor street urchin!
+npc	4748	A Meiyerditch child	A poor street urchin!
+npc	4749	A Meiyerditch child	A poor street urchin!
+npc	4750	A Meiyerditch child	A poor street urchin!
+npc	4751	A Meiyerditch child	A poor street urchin!
+npc	4752	A Meiyerditch child	A poor street urchin!
+npc	4753	A Meiyerditch child	A poor street urchin!
+npc	4754	A Meiyerditch child	A poor street urchin!
+npc	4755	A Meiyerditch child	A poor street urchin!
+npc	4756	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4757	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4758	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4759	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4760	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4761	Meiyerditch miner	This citizen looks dirty and tired!
+npc	4766	Stray dog	Looks like it's got fleas!
+npc	4768	Cat	A smelly cat.
+npc	4772	Juvinate guard	An initiate juvenile vampyre; a guard for the mining area.
+npc	4773	Juvinate guard	An initiate juvenile vampyre; a guard for the mining area.
+npc	4774	Vampyre juvenile	A juvenile vampyre.
+npc	4775	Vampyre juvenile	A juvenile vampyre.
+npc	4776	Vampyre juvinate	An initiate juvenile vampyre; seems to be a servant.
+npc	4777	Vampyre juvinate	An initiate juvenile vampyre.
+npc	4778	Held vampyre juvenile	A juvenile vampyre.
+npc	4779	Held vampyre juvenile	A juvenile vampyre.
+npc	4780	Held vampyre juvinate	An initiate juvenile vampyre; seems to be a servant.
+npc	4789	Angry vampyre	An enraged vampyre!
+npc	4790	Angry vampyre	An enraged vampyre!
+npc	4796	Vanstrom Klause	Not as strong as Thok.
+npc	4805	Vyrewatch	An evil
+npc	4806	Vyrewatch	An evil
+npc	4807	Vyrewatch	An evil
+npc	4808	Vyrewatch	An evil
+npc	4809	Flying female vampire	A very high-ranking vampyre.
+npc	4810	Flying female vampire	A very high-ranking vampyre.
+npc	4811	Flying female vampire	A very high-ranking vampyre.
+npc	4812	Flying female vampire	A very high-ranking vampyre.
+npc	4813	Vyrewatch	A thirsty-looking
+npc	4814	Vyrewatch	A thirsty-looking
+npc	4815	Vyrewatch	A thirsty-looking
+npc	4816	Vyrewatch	A thirsty-looking
+npc	4817	Vyrewatch	An evil
+npc	4818	Vyrewatch	An evil
+npc	4819	Vyrewatch	An evil
+npc	4820	Vyrewatch	An evil
+npc	4821	Vyrewatch	A very high-ranking vampyre.
+npc	4822	Vyrewatch	A very high-ranking vampyre.
+npc	4823	Vyrewatch	A very high-ranking vampyre.
+npc	4824	Vyrewatch	A very high-ranking vampyre.
+npc	4825	Vyrewatch	A thirsty-looking
+npc	4826	Vyrewatch	A thirsty-looking
+npc	4827	Vyrewatch	A thirsty-looking
+npc	4828	Vyrewatch	A thirsty-looking
+npc	4845	Flying female vampire	A very high-ranking vampyre.
+npc	4846	Flying female vampire	A very high-ranking vampyre.
+npc	4847	Flying female vampire	A very high-ranking vampyre.
+npc	4848	Flying female vampire	A very high-ranking vampyre.
+npc	4856	Ezekial Lovecraft	Smells a bit fishy.
+npc	4863	Kennith	He looks very scared.
+npc	4864	Kennith	He looks very scared.
+npc	4868	Holgart	Her knives tickle Thok.
+npc	4870	Fisherman	Not Thok's pretty lass.
+npc	4872	Col. O'Niall	A (semi) retired member of the Temple Knights.
+npc	4873	Col. O'Niall	A (semi) retired member of the Temple Knights.
+npc	4874	Mayor Hobb	There's something fishy about him.
+npc	4875	Mayor Hobb	There's something fishy about him.
+npc	4878	Brother Maledict	A fresh-faced and innocent priest.
+npc	4879	Brother Maledict	A fresh-faced and innocent priest.
+npc	4883	Witchaven villager	A down on his luck fisherman.
+npc	4885	Witchaven villager	A down on her luck fisherman.
+npc	4887	Witchaven villager	A down on his luck fisherman.
+npc	4890	Slug Prince	A child of aquatic evil.
+npc	4892	Giant lobster	An extremely vicious lobster.
+npc	4893	Giant Lobster	An extremely vicious lobster.
+npc	4894	Sea slug	A rather nasty looking crustacean.
+npc	4895	Jeb	A villager named Jeb.
+npc	4896	Jeb	A villager named Jeb.
+npc	4897	Sir Tinley	An observer for the Temple Knights.
+npc	4899	Cooking tutor	Cordero looks ready to teach you how to cook.
+npc	4900	Crafting tutor	Cadmus, looking a little bit crafty.
+npc	4901	Fishing tutor	Finlay, mending a crayfish cage.
+npc	4902	Mining tutor	Monlum, surveying the rocks.
+npc	4903	Prayer tutor	Yauchomi, follower of Saradomin.
+npc	4909	Fritz the Glassblower	His motives are see-through.
+npc	4910	Earth elemental	An earth elemental.
+npc	4911	Elemental rock	An elemental rock.
+npc	4919	Abidor Crank	The good samaritan.
+npc	4920	Giant crypt rat	A nasty overgrown rodent.
+npc	4921	Giant crypt rat	A nasty overgrown rodent.
+npc	4922	Giant rat	Overgrown vermin.
+npc	4923	Giant rat	Overgrown vermin.
+npc	4924	Giant rat	Overgrown vermin.
+npc	4925	Giant rat	Overgrown vermin.
+npc	4926	Giant rat	Overgrown vermin.
+npc	4927	Giant rat	Overgrown vermin.
+npc	4928	Dungeon rat	Overgrown vermin.
+npc	4929	Dungeon rat	Overgrown vermin.
+npc	4930	Goat	They'll eat anything!
+npc	4931	Goat	They'll eat anything!
+npc	4932	Billy Goat	They'll eat anything!
+npc	4933	Goat	They'll eat anything!
+npc	4934	Goat	They'll eat anything!
+npc	4935	Billy Goat	They'll eat anything!
+npc	4936	Dungeon rat	A dirty rat.
+npc	4937	Dungeon rat	A dirty rat.
+npc	4938	Angry giant rat	He looks a little on the cross side!
+npc	4939	Angry giant rat	He looks a little on the cross side!
+npc	4940	Angry giant rat	He looks a little on the cross side!
+npc	4941	Blessed giant rat	It's one of Iban's pet vermin.
+npc	4942	Giant rat	Overgrown vermin.
+npc	4943	Giant rat	Overgrown vermin.
+npc	4944	Giant rat	Overgrown vermin.
+npc	4945	Giant rat	Overgrown vermin.
+npc	4947	My Arm	Trollish.
+npc	4948	My Arm	Trollish.
+npc	4949	My Arm	Trollish.
+npc	4957	My Arm	Trollish.
+npc	4958	My Arm	Trollish.
+npc	4959	My Arm	Trollish.
+npc	4962	Captain Barnaby	An old sailor.
+npc	4963	Murcaily	A native of Tai Bwo Wannai.
+npc	4964	Jagbakoba	A native of Tai Bwo Wannai.
+npc	4965	Tool Leprechaun	It's a leprechaun sunbathing on a mountain.
+npc	4971	Baby Roc	A mountain-dwelling bird. Cute
+npc	4972	Giant Roc	A very
+npc	4973	Shadow	A shadow.
+npc	4974	Captain Barnaby	An old sailor.
+npc	4975	Male slave	It looks like he's been here a long time.
+npc	4976	Male slave	It looks like he's been here a long time.
+npc	4977	Female slave	She looks like she's been down here a long time.
+npc	4978	Female slave	She looks like she's been down here a long time.
+npc	4983	Mercenary	He looks a bit aggressive.
+npc	4989	Mercenary	He looks a bit aggressive.
+npc	4990	Mercenary	He looks a bit aggressive.
+npc	4991	Mercenary	He looks a bit aggressive.
+npc	4992	Mercenary	He looks a bit aggressive.
+npc	4993	Guard	He looks a bit aggressive.
+npc	4994	Guard	He looks a bit aggressive.
+npc	4995	Guard	He looks a bit aggressive.
+npc	4996	Guard	He looks a bit aggressive.
+npc	4997	Guard	He looks a bit aggressive.
+npc	4998	Guard	He looks a bit aggressive.
+npc	5048	Jeff	Not as strong as Thok.
+npc	5061	Larry	A very brave merchant.
+npc	5067	Shark	Time to run away...
+npc	5072	Tropical wagtail	It blends in very well with its surroundings.
+npc	5073	Crimson swift	This bird obviously doesn't believe in subtlety.
+npc	5074	Cerulean twitch	Best served ice cold.
+npc	5075	Golden warbler	Actually
+npc	5076	Copper longtail	Nothing much to get in a flap about.
+npc	5079	Chinchompa	Handle with care.
+npc	5080	Carnivorous chinchompa	It looks fluffy and cute; it's probably deadly.
+npc	5081	Ferret	Wild.
+npc	5082	Black warlock	A black warlock. The air seems to distort wherever it passes.
+npc	5083	Snowy knight	It's a snowy knight butterfly.
+npc	5084	Sapphire glacialis	A sapphire glacialis. It doesn't look as pretentious as its name sounds.
+npc	5085	Ruby harvest	It's a ruby harvest butterfly.
+npc	5086	Prickly kebbit	Curls up into a ball to protect itself from attack.
+npc	5087	Sabre-toothed kebbit	Now that's a big overbite.
+npc	5088	Barb-tailed kebbit	It uses its tail to hunt and skewer fish.
+npc	5089	Wild kebbit	That's a mean looking set of claws.
+npc	5094	Gyr Falcon	Ha! Thok much stronger.
+npc	5095	Gyr Falcon	Ha! Thok much stronger.
+npc	5096	Gyr Falcon	Ha! Thok much stronger.
+npc	5097	Gyr Falcon	Ha! Thok much stronger.
+npc	5098	Spotted kebbit	It seems to be on a permanent sugar rush.
+npc	5099	Dark kebbit	Quieter than a ninja mouse with slippers on.
+npc	5100	Dashing kebbit	Now you see it; now you don't.
+npc	5103	Sabre-toothed kyatt	It's just like a big, white, furry, deadly can opener.
+npc	5104	Spined larupia	If you tried to ride that, you'd just impale yourself!
+npc	5105	Horned graahk	Get in a graahk's way and you're going to know about it... however briefly.
+npc	5111	Leon	He seems to be making odd sucking noises with his teeth.
+npc	5112	Hunting expert	He must be good at hunting; even his hair blends in with the surroundings.
+npc	5113	Hunting expert	With all the furs
+npc	5114	Orange salamander	Slightly slimy but kind of cute.
+npc	5115	Red salamander	Slightly slimy but certainly striking.
+npc	5116	Black salamander	Slightly slimy and somewhat menacing.
+npc	5117	Swamp lizard	Very slimy and generally disgusting.
+npc	5120	Eagle	A very large
+npc	5130	Desert eagle	A very large
+npc	5131	Jungle eagle	A very large
+npc	5132	Polar eagle	A very large
+npc	5133	Eagle	It seems to be protecting the nest.
+npc	5138	Charlie	Poor guy, he looks frightened.
+npc	5140	Boulder	Now
+npc	5144	Double agent	He's playing both sides!
+npc	5145	Double agent	He's playing both sides!
+npc	5146	Li'l lamb	How cute!
+npc	5147	Lamb	The black sheep of the family.
+npc	5162	Sheep	White and fluffy.
+npc	5163	Sheep	White and fluffy.
+npc	5164	Sheep	White and fluffy
+npc	5166	Mountain Goat	This goat belongs to the mountain camp people.
+npc	5167	Mountain Goat	This goat belongs to the mountain camp people.
+npc	5168	Ram	White and fluffy.
+npc	5169	Ram	White and fluffy.
+npc	5170	Ram	White and fluffy.
+npc	5171	Mountain goat	This beast doesn't need climbing boots.
+npc	5172	Golden sheep	Freshly shorn.
+npc	5173	Golden sheep	Lovely thick wool.
+npc	5176	Ogre shaman	Seems intelligent... for an ogre.
+npc	5178	Blue dragon	A mother dragon.
+npc	5181	Ogre shaman	Seems intelligent... for an ogre.
+npc	5184	Ogre shaman	Seems intelligent... for an ogre.
+npc	5187	Ogre shaman	Seems intelligent... for an ogre.
+npc	5190	Ogre shaman	Seems intelligent. For an ogre.
+npc	5193	Ogre shaman	Seems intelligent. For an ogre.
+npc	5195	Wizard	A wizard.
+npc	5196	Wizard	A wizard.
+npc	5197	Wizard	A wizard.
+npc	5198	Ava	She's watching you.
+npc	5200	Witch	The hat's a dead giveaway.
+npc	5202	Alice's husband	She needs to work out before facing Thok.
+npc	5203	Alice's husband	She needs to work out before facing Thok.
+npc	5204	Alice's husband	She needs to work out before facing Thok.
+npc	5205	Alice's husband	She needs to work out before facing Thok.
+npc	5211	Undead cow	It's an undead cow.
+npc	5212	Alice	She sells farming equipment.
+object	9	Cannon barrels	The barrels of the multicannon.
+object	2830	Gap	You can probably jump over from here.
+object	2831	Gap	You can probably jump over from here.
+object	3422	Machinery	This lever can be operated.
+object	3662	Cooking pot	Smells more like "innocent villager" stew to me...
+object	3825	Stalagmite	A limestone ceiling growth.
+object	3826	Stalagmites	A tooth shaped rock formation protruding from the floor.
+object	10606		Bronze Chest*A strangely decorated chest, the open lock is painted brown.
+object	11324	Ancient Pillar	This seems to stand out.
+object	12066	A fairy workbench	It says Nuff is a healer.
+object	12067	A fairy workbench	It says Nuff is a healer.
+object	12128	Fairy ring	Better not eat them!
+object	12332	General Bentnoze	He's been frozen in time.
+object	12334	General Wartface	He's been frozen in time.
+object	13104	Hazelmere statue	A way in to the house.
+object	13105	Glouphrie statue	A way in to the house.
+object	13106	Glouphrie statue	A way in to the house.
+object	13114	Ornament	I'm sure the animal is glad its fur was put to good use.
+object	13115	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	13121	Door	A posh door.
+object	13411	Dead tree	One of the most common trees in 2009Scape.
+object	13418	Dead Tree	A lovely addition to the garden.
+object	13423	Maple tree	A lovely addition to the garden.
+object	13429	Large-leaf Plant	A plant.
+object	13430	Huge plant	A plant.
+object	13432	Small fern	A plant.
+object	13437	Rosemary	A little orange flower.
+object	13440	Rosemary	A little orange flower.
+object	13539	Steel range	You can cook here.
+object	13540	Steel range	You can cook here.
+object	13541	Steel range	You can cook here.
+object	13543	Fancy range	You can cook here.
+object	13728	Window space	A private jester.
+object	13729	Window space	A private jester.
+object	13730	Window space	A private jester.
+object	13731	Window space	A private jester.
+object	13732	Window space	A private jester.
+object	13733	Window space	A private jester.
+object	14058	Fairy ring	Better not eat them!
+object	14061	Fairy ring	Better not eat them!
+object	14064	Fairy ring	Better not eat them!
+object	14067	Fairy ring	Better not eat them!
+object	14070	Fairy ring	Better not eat them!
+object	14073	Fairy ring	Better not eat them!
+object	14076	Fairy ring	Better not eat them!
+object	14079	Fairy ring	Better not eat them!
+object	14082	Fairy ring	Better not eat them!
+object	14085	Fairy ring	Better not eat them!
+object	14088	Fairy ring	Better not eat them!
+object	14091	Fairy ring	Better not eat them!
+object	14094	Fairy ring	Better not eat them!
+object	14097	Fairy ring	Better not eat them!
+object	14100	Fairy ring	Better not eat them!
+object	14103	Fairy ring	Better not eat them!
+object	14106	Fairy ring	Better not eat them!
+object	14109	Fairy ring	Better not eat them!
+object	14112	Fairy ring	Better not eat them!
+object	14115	Fairy ring	Better not eat them!
+object	14118	Fairy ring	Better not eat them!
+object	14121	Fairy ring	Better not eat them!
+object	14124	Fairy ring	Better not eat them!
+object	14127	Fairy ring	Better not eat them!
+object	14130	Fairy ring	Better not eat them!
+object	14133	Fairy ring	Better not eat them!
+object	14136	Fairy ring	Better not eat them!
+object	14139	Fairy ring	Better not eat them!
+object	14142	Fairy ring	Better not eat them!
+object	14145	Fairy ring	Better not eat them!
+object	14148	Fairy ring	Better not eat them!
+object	14151	Fairy ring	Better not eat them!
+object	14154	Fairy ring	Better not eat them!
+object	14157	Fairy ring	Better not eat them!
+object	14160	Fairy ring	Better not eat them!
+object	14989	Junk	Rusty machinery.
+object	14990	Rack of barrels	Someone certainly believes in having lots of barrels!
+object	15030	Crate	A wooden crate.
+object	15031	Crate	A wooden crate.
+object	15032	Crates	Some wooden crates.
+object	15041	Picnic table	So clean you could eat your dinner off it.
+object	15062	Teak	A beautiful old teak tree.
+object	15075	Flax	A plant cultivated for fibres.
+object	15076	Flax	A plant cultivated for fibres.
+object	15077	Flax	A plant cultivated for fibres.
+object	15078	Flax	A plant cultivated for fibres.
+object	15134	Dyed fabric	These dyed fabrics are drying off.
+object	15135	Dyed fabric	These dyed fabrics are drying off.
+object	15136	Dyed fabric	These dyed fabrics are drying off.
+object	15138	Dye Pots	Pots full of dye.
+object	15144	Clothes equipment	Essentials for a seamstress.
+object	15182	Eggs	A home for baby creatures.
+object	15183	Eggs	A home for baby creatures.
+object	15184	Eggs	A home for baby creatures.
+object	15185	Eggs	A home for baby creatures.
+object	15206	Fire remains	A recently extinguished fire.
+object	15207	Fire remains	A recently extinguished fire.
+object	15208	Fire remains	A recently extinguished fire.
+object	15209	Fire remains	A recently extinguished fire.
+object	15210	Fire remains	A recently extinguished fire.
+object	15473	Mahogany table	An expensive mahogany table.
+object	15477	Portal	Home sweet home?
+object	15480	Portal	Home sweet home?
+object	15501	Greenman's ale	An oak barrel of Greenman's ale.
+object	15503	Moonlight mead	A barrel of Moonlight Mead.
+object	15509	Crawling hand	A trophy of a mighty slayer!
+object	15510	Mounted shark	A trophy of a master fisher.
+object	15511	Rune armour	Only the finest smiths can work runite.
+object	15520	Old Bookshelf	Filled to the brim with knowledge.
+object	15522	Old Bookshelf	Filled to the brim with knowledge.
+object	15524	Old Bookshelf	Filled to the brim with knowledge.
+object	15564	Dragon's head	Probably looked better mounted on the dragon's neck.
+object	15596	Dwarf remains	The body of a Dwarf savaged by Goblins.
+object	15601	Railing	Intended to keep the goblins away from the mines.
+object	15602	Railing	Intended to keep the goblins away from the mines.
+object	15603	Railing	Intended to keep the goblins away from the mines.
+object	15608	Statue of a warrior	This person was of great importance.
+object	15609	Statue of a warrior	This person was of great importance.
+object	15611	Statue of a queen	A monarch chiselled in stone.
+object	15662	Keg	It's kind of like a barrel.
+object	15663	Keg	It's kind of like a barrel.
+object	15668	Keg	It's kind of like a barrel.
+object	15685	Cooking shelves	Storage for cookery items.
+object	15686	Cooking shelves	Storage for cookery items.
+object	15748	Tunnel	Home sweet home?
+object	15767	Cave entrance	Looks like part of the entrance is blocked by rubble.
+object	15773	Ruins	Looks like there was once a building here.
+object	15788	Leaves	A pile of leaves.
+object	15789	Leaves	A pile of leaves.
+object	15812	Cave	Cave exit.
+object	15815	Mushrooms	Poisonous no doubt.
+object	15816	Mushrooms	Poisonous no doubt.
+object	15818	Small rock	A small rock.
+object	15890	Bamboo Ladder	It's a bamboo ladder.
+object	15891	Bamboo Ladder	It's a bamboo ladder.
+object	15892	Bamboo Ladder	It's a bamboo ladder.
+object	15893	Bamboo Ladder	It's a bamboo ladder.
+object	15894	Bamboo Ladder	It's a bamboo ladder.
+object	15895	Bamboo Ladder	It's a bamboo ladder.
+object	15903	Boiler	Powers the boat.
+object	15904	Boiler	Powers the boat.
+object	15905	Boiler	Powers the boat.
+object	15906	Boiler	Powers the boat.
+object	15907	Boiler	Powers the boat.
+object	15908	Boiler	Powers the boat.
+object	15909	Boiler	Powers the boat.
+object	15910	Boiler	Powers the boat.
+object	15911	Boiler	Powers the boat.
+object	15912	Boiler	Powers the boat.
+object	15913	Boiler	Powers the boat.
+object	15914	Boiler	Powers the boat.
+object	15924	Conveyor Belt	Ore rides this into the blast furnace.
+object	15925	Conveyor Belt	Ore rides this into the blast furnace.
+object	15926	Conveyor Belt	Ore rides this into the blast furnace.
+object	15927	Conveyor Belt	Ore rides this into the blast furnace.
+object	16041	Sulphur vent	Hot enough to cook your breakfast on.
+object	16083	Danger Sign	Danger - Possibly deadly creatures below!
+object	16117	Danger Sign	Danger - Possibly deadly creatures below!
+object	16151	Danger Sign	Danger - Possibly deadly creatures below!
+object	16165	Beehive	Where bees live.
+object	16181	Fairy ring	Better not eat them!
+object	16184	Fairy ring	Better not eat them!
+object	16213	Fairy workbench	An assortment of colourful bubbling and smoking potions!
+object	16215	Fairy workbench	An assortment of colourful bubbling and smoking potions!
+object	16217	Potion shelves	Shelves of colourful potion gourds!
+object	16219	Potion shelves	Shelves of colourful potion gourds!
+object	16221	Potion shelf	A shelf of colourful potion gourds!
+object	16223	Potion shelf	A shelf of colourful potion gourds!
+object	16224	Healing certificate	Fairy Nuff passed healing 101!
+object	16302	Waterfall	A crudely constructed raft.
+object	16303	Small rock	A small rock.
+object	16305	Fairy Queen	She doesn't look like she's breathing!
+object	16306	Fairy Queen	She doesn't look like she's breathing!
+object	16374	Potion shelves	Shelves of colourful potion gourds!
+object	16375	Potion shelves	Shelves of colourful potion gourds!
+object	16376	Potion shelf	A shelf of colourful potion gourds!
+object	16377	Potion shelf	A shelf of colourful potion gourds!
+object	16378	Healing certificate	Fairy Nuff passed healing 101!
+object	16379	Healing certificate	Fairy Nuff passed healing 101!
+object	16501	Urn	Large urn.
+object	16502	Urn	Large urn.
+object	16503	Urn	Large urn.
+object	16504	Urn	Large urn.
+object	16505	Urn	Large urn.
+object	16506	Urn	Large urn.
+object	16507	Urn	Large urn.
+object	16508	Urn	Large urn.
+object	16509	Urn	Large urn.
+object	16510	Urn	Large urn.
+object	16511	Urn	Large urn.
+object	16512	Urn	Large urn.
+object	16513	Urn	Large urn.
+object	16514	Urn	Large urn.
+object	16515	Urn	Large urn.
+object	16516	Urn	Large urn.
+object	16573	Timber defence	These obviously mean keep out!
+object	16585	Log pile	Dead tree parts piled together neatly.
+object	16586	Log pile	Dead tree parts piled together neatly.
+object	16587	Log pile	Dead tree parts piled together neatly.
+object	16588	Log pile	Dead tree parts piled together neatly.
+object	16589	Log pile	Dead tree parts piled together neatly.
+object	16590	Log pile	Dead tree parts piled together neatly.
+object	16591	Log pile	Dead tree parts piled together neatly.
+object	16592	Log pile	Dead tree parts piled together neatly.
+object	16593	Log pile	Dead tree parts piled together neatly.
+object	16594	Log pile	Dead tree parts piled together neatly.
+object	16600	Hurdle	A hurdle.
+object	16687	Rune essence	The source of all Rune Stones.
+object	16861	Hammock	Perfect for snoozing in the sun.
+object	16957	Crane	It's used for loading and unloading fishing boats.
+object	16981	Scrolls	Old songs, old stories...
+object	17116	Pool of Slime	A subterranean pool of ectoplasm.
+object	17117	Pool of Slime	A subterranean pool of ectoplasm.
+object	17118	Pool of Slime	A subterranean pool of ectoplasm.
+object	17119	Pool of Slime	A subterranean pool of ectoplasm.
+object	17153	Sinister barrel	Who knows what the dark wizards store in here?
+object	17196	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	17199	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	17200	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	17203	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	17204	Goblin crowd	I'm sure the animal is glad its fur was put to good use.
+object	17236	Hammock	Perfect for snoozing in the sun.
+object	17286	Hoisted sail	A conveniently rolled sail.
+object	17287	Hoisted sail	A conveniently rolled sail.
+object	17288	Hoisted sail	A conveniently rolled sail.
+object	17289	Hoisted sail	A conveniently rolled sail.
+object	17290	Hoisted sail	A conveniently rolled sail.
+object	17291	Hoisted sail	A conveniently rolled sail.
+object	17292	Hoisted sail	A conveniently rolled sail.
+object	17293	Hoisted sail	A conveniently rolled sail.
+object	17294	Hoisted sail	A conveniently rolled sail.
+object	17295	Hoisted sail	A conveniently rolled sail.
+object	17296	Barrel	A sealed barrel with a warning sign on it.
+object	17297	Barrel	A barrel with a warning sign on it.
+object	17308	Barrel	A wooden barrel for storage.
+object	17322	Log pile	Dead tree parts piled together neatly.
+object	17362	Urn	Large urn.
+object	17365	Small rock	A small rock.
+object	17367	Stone Tablet	It's covered in strange writing.
+object	17425	Sword case	A display case, full of swords.
+object	17426	Sword case	A display case, full of swords.
+object	17427	Sword case	A display case, full of swords.
+object	17432	Sewer pipe	An outlet to the sewer.
+object	17435	Stone table	It's not rolling, but it seems to have gathered some moss.
+object	17436	Stone table	It's not rolling, but it seems to have gathered some moss.
+object	17437	Stone table	It's not rolling, but it seems to have gathered some moss.
+object	17438	Stone table	It's not rolling, but it seems to have gathered some moss.
+object	17462	Chair	Where people may put themselves.
+object	18012	Broken barrel	Shattered.
+object	18040	Tapestry	This old tapestry depicts a bright light shining at a woman's arms.
+object	18068	Broken ladder	Looks a little too broken to climb.
+object	18170	Clay oven	A clay oven for cooking with.
+object	18171	Washbasin	Rough but adequate.
+object	18172	Hammock	Perfect for snoozing in the sun.
+object	18326	Crane	It's used for loading and unloading fishing boats.
+object	18327	Crane	It's used for loading and unloading fishing boats.
+object	18411	Broken fence	The fence is broken at this point.
+object	18482	Big fish	A large fish.
+object	18488	Bench	Sit back and relax...
+object	18501	Crane	It's used for loading and unloading fishing boats.
+object	18506	Crate	A wooden crate for storage.
+object	18508	Crates	A pile of crates for storage.
+object	18515	Bellows	Big bellows.
+object	18516	Bellows	Big bellows.
+object	18519	Lava trough	A small trough full of lava.
+object	18520	Lava trough	A small trough full of lava.
+object	18521	Lava trough	A small trough full of lava.
+object	18522	Lava trough	A small trough full of lava.
+object	18523	Lava trough	A small trough full of lava.
+object	18646	Water valve	A valve to start and stop the flow of water.
+object	18647	Water valve	A valve to start and stop the flow of water.
+object	18818	Herb patch	You can grow herbs in this Farming patch.
+object	18819	Herb patch	You can grow herbs in this Farming patch.
+object	18820	Herb patch	You can grow herbs in this Farming patch.
+object	18821	Herb patch	You can grow herbs in this Farming patch.
+object	18822	Herb patch	You can grow herbs in this Farming patch.
+object	18823	Herb patch	You can grow herbs in this Farming patch.
+object	18827	Diseased herbs	These herbs have become diseased.
+object	18828	Diseased herbs	These herbs have become diseased.
+object	18829	Diseased herbs	These herbs have become diseased.
+object	18830	Dead herbs	These herbs have become diseased and died.
+object	18831	Dead herbs	These herbs have become diseased and died.
+object	18832	Dead herbs	These herbs have become diseased and died.
+object	18856	Parasol	Popular on sandy beaches where fruity cocktails may be found.
+object	18876	Sign post	A sign on a cactus.
+object	18946	Buffers	Keeps mine carts from rolling away.
+object	18951	Winch bucket	Slaves are placing barrels on this to haul them to the surface.
+object	19065	Large box	A large box full of wood chippings..
+object	19085	Decorations box	A box containing unpainted decorations.
+object	19086	Decorations box	A box containing unpainted decorations.
+object	19094	Decorations box	A box containing unpainted decorations.
+object	19095	Decorations box	A box containing unpainted decorations.
+object	19096	Decorations box	A box containing unpainted decorations.
+object	19097	Decorations box	A box containing unpainted decorations.
+object	19098	Decorations box	A box containing unpainted decorations.
+object	19128	Basket	A woven storage basket.
+object	19129	Basket	A woven storage basket.
+object	19132	Basket	A woven storage basket.
+object	19156	Basket	A woven storage basket.
+object	19161	Basket	A woven storage basket.
+object	19164	Basket	A woven storage basket.
+object	19171	Loose Railing	Hmmm... I wonder if it's loose enough to get through.
+object	19996	Buried skeleton	Dead and half-buried.
+object	19997	Animal skull	Dead animal head. Lovely.
+object	19998	Curved bone	Spooky!
+object	19999	Large bone	A dog's idea of heaven.
+object	20084	Castle wall	A well constructed castle wall.

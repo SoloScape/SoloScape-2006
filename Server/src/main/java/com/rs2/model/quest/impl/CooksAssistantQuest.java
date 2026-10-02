@@ -49,9 +49,9 @@ extends QuestScript {
         player2.packetSender.sendInterfaceText("", 12155);
         player.getSkillManager().addQuestExperience(7, 300.0);
         player2 = player;
-        player2.packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 1891);
+        player2.packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 1891);
         player2 = player;
-        player2.packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        player2.packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         player2 = player;
         player.deferLevelUpInterfaces = false;
     }
@@ -126,7 +126,7 @@ extends QuestScript {
                     return true;
                 }
                 if (value5 == 2) {
-                    player.getDialogueManager().showFourOptions("What's wrong?", "Can you make me a cake?", "You don't look very happy.", "Nice hat!");
+                    player.getDialogueManager().showFourOptions("What's wrong?", "Well you could give me all your money!", "You don't look very happy.", "Nice hat!");
                     return true;
                 }
                 if (value5 == 3) {
@@ -135,8 +135,61 @@ extends QuestScript {
                         player.getDialogueManager().setNextDialogueStep(4);
                         return true;
                     }
-                    player.getDialogueManager().showOneLineStatement("This option is currently missing...");
-                    player.getDialogueManager().setNextDialogueStep(2);
+                    if (value32 == 2) {
+                        player.getDialogueManager().showPlayerOneLineDialogue("Well you could give me all your money!", 591);
+                        player.getDialogueManager().setNextDialogueStep(101);
+                    } else if (value32 == 3) {
+                        player.getDialogueManager().showPlayerOneLineDialogue("You don't look very happy.", 591);
+                        player.getDialogueManager().setNextDialogueStep(110);
+                    } else if (value32 == 4) {
+                        player.getDialogueManager().showPlayerOneLineDialogue("Nice hat!", 588);
+                        player.getDialogueManager().setNextDialogueStep(120);
+                    } else {
+                        player.getDialogueManager().setNextDialogueStep(2);
+                    }
+                    return true;
+                }
+                // May 2006 side branches, previously replaced by a missing-option statement.
+                if (value5 == 101) {
+                    player.getDialogueManager().showNpcOneLineDialogue("Haha, very funny!", 598);
+                    player.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value5 == 110) {
+                    player.getDialogueManager().showNpcOneLineDialogue("No, I'm not.", 598);
+                    return true;
+                }
+                if (value5 == 111) {
+                    player.getDialogueManager().showTwoOptions("What's wrong?", "I'd take the rest of the day off if I were you.");
+                    return true;
+                }
+                if (value5 == 112) {
+                    if (value32 == 1) {
+                        player.getDialogueManager().showPlayerOneLineDialogue("What's wrong?", 591);
+                        player.getDialogueManager().setNextDialogueStep(4);
+                    } else if (value32 == 2) {
+                        player.getDialogueManager().showPlayerOneLineDialogue("I'd take the rest of the day off if I were you.", 591);
+                    } else {
+                        player.getDialogueManager().setNextDialogueStep(111);
+                    }
+                    return true;
+                }
+                if (value5 == 113) {
+                    player.getDialogueManager().showNpcTwoLineDialogue(
+                            "No, that's the worst thing I could do - I'd get in",
+                            "terrible trouble.", 598);
+                    return true;
+                }
+                if (value5 == 114) {
+                    player.getDialogueManager().showPlayerOneLineDialogue("What's wrong?", 591);
+                    player.getDialogueManager().setNextDialogueStep(4);
+                    return true;
+                }
+                if (value5 == 120) {
+                    player.getDialogueManager().showNpcTwoLineDialogue(
+                            "Err thank you. It's a pretty ordinary cooks hat",
+                            "really.", 598);
+                    player.getDialogueManager().finishDialogue();
                     return true;
                 }
                 if (value5 == 4) {

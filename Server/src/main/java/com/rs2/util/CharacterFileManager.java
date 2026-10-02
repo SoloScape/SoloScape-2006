@@ -1379,6 +1379,7 @@ public final class CharacterFileManager {
                 ((DataOutputStream)value6).writeUTF("");
                 ((DataOutputStream)value6).writeUTF("");
             }
+            ((DataOutputStream)value6).writeLong(((Player)value).homeTeleportAvailableAtMillis);
             ((DataOutputStream)value6).flush();
             ((FilterOutputStream)value6).close();
             return;
@@ -2161,6 +2162,7 @@ public final class CharacterFileManager {
                 ((DataOutputStream)value3).writeUTF("");
                 ((DataOutputStream)value3).writeUTF("");
             }
+            ((DataOutputStream)value3).writeLong(((CharacterFileRecord)value).homeTeleportAvailableAtMillis);
             ((DataOutputStream)value3).flush();
             ((FilterOutputStream)value3).close();
             return;
@@ -4133,6 +4135,10 @@ public final class CharacterFileManager {
                     return null;
                 }
             }
+            // Older character files end here and have no home teleport cooldown.
+            if (dataInputStream.available() >= 8) {
+                ((CharacterFileRecord)value2).homeTeleportAvailableAtMillis = dataInputStream.readLong();
+            }
             dataInputStream.close();
             ((FileInputStream)value).close();
             ((CharacterFileRecord)value2).getStoredItemValue();
@@ -4201,6 +4207,7 @@ public final class CharacterFileManager {
         player.setProfileString1(record.profileString1);
         player.setProfileString2(record.profileString2);
         player.lastSavedMillis = record.lastSavedMillis;
+        player.homeTeleportAvailableAtMillis = record.homeTeleportAvailableAtMillis;
         player.totalPlaytimeMillis = record.totalPlayTimeMillis;
         player.createdAtMillis = record.createdAtMillis;
         player.loginRestrictionExempt = record.loginRestrictionExempt;

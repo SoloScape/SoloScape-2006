@@ -95,7 +95,10 @@ public final class InterfaceBridge {
         mappings.put(5063, 15);   // bank inventory overlay
         mappings.put(3824, 300);  // shop
         mappings.put(3822, 301);  // shop inventory overlay
+        mappings.put(679, 324);  // tanning (legacy fallback)
+        mappings.put(14670, 324); // tanning
         mappings.put(8134, 275);  // quest detail page
+        mappings.put(12140, 277); // quest completion scroll
         mappings.put(4161, 446);  // jewellery crafting
         mappings.put(3323, 335);  // trade offer
         mappings.put(3443, 334);  // trade confirmation
@@ -177,7 +180,7 @@ public final class InterfaceBridge {
         }
         put(mappings, 153, 261, 0);    // toggle run
         put(mappings, 3214, 149, 0);   // inventory container
-        put(mappings, 1167, 192, 591); // standard spellbook: Lumbridge Teleport
+        put(mappings, 30000, 192, 591); // standard spellbook: Lumbridge Home Teleport
         put(mappings, 1688, 387, 25);  // worn equipment container
         put(mappings, 15107, 465, 103); // items on the equipment statistics screen
         // Native smithing columns and labels, verified against cache group 312.
@@ -293,6 +296,11 @@ public final class InterfaceBridge {
 
         put(mappings, 3984, 320, 141); // total level
         put(mappings, 3985, 274, 24);  // quest points
+        // Native quest completion scroll, verified against cache group 277.
+        put(mappings, 12144, 277, 2); // completion title
+        put(mappings, 12145, 277, 3); // reward item model
+        put(mappings, 12147, 277, 5); // total quest points
+        putRange(mappings, 12150, 277, 8, 6); // reward lines
         put(mappings, 4439, 239, 177); // music tab: value beside "Playing:"
 
         // Bank: stock 443 group 12 plus its inventory overlay group 15.
@@ -307,6 +315,22 @@ public final class InterfaceBridge {
         // Shops: stock 443 groups 300/301.
         put(mappings, 3900, 300, 75); // shop stock
         put(mappings, 3901, 300, 76); // shop title
+        // Native 443 tanning: models 100..107, names 108..115, costs 116..123,
+        // then eight buttons each for All, X, 5 and 1.
+        for (int hide = 0; hide < 8; hide++) {
+            put(mappings, 14769 + hide, 324, 100 + hide);
+            put(mappings, 14777 + hide, 324, 108 + hide);
+            put(mappings, 14785 + hide, 324, 116 + hide);
+            for (int quantity = 0; quantity < 4; quantity++) {
+                put(mappings, 14793 + quantity * 8 + hide, 324, 124 + quantity * 8 + hide);
+            }
+        }
+        put(mappings, 7445, 324, 100); // soft leather model fallback
+        put(mappings, 7436, 324, 101); // hard leather model fallback
+        put(mappings, 8694, 324, 104); // green dragonhide model fallback
+        put(mappings, 8699, 324, 105); // blue dragonhide model fallback
+        put(mappings, 8704, 324, 106); // red dragonhide model fallback
+        put(mappings, 8709, 324, 107); // black dragonhide model fallback
         put(mappings, 3823, 301, 0);  // inventory while shopping
         put(mappings, 3322, 336, 0);  // inventory while trading or duelling
         put(mappings, 3417, 335, 93); // trading partner text
@@ -686,7 +710,7 @@ public final class InterfaceBridge {
         if (packedId == (465 << 16 | 103)) return 1688;
         // Keep newly-added spell mappings visible to a live HotSwap server; the
         // static reverse table is built only once when this class is first loaded.
-        if (packedId == (192 << 16 | 591)) return 1167;
+        if (packedId == (192 << 16 | 591)) return 30000;
         Integer legacyId = LEGACY_COMPONENTS.get(packedId);
         if (legacyId == null && packedId >>> 16 == 312) {
             // Smithing may have been added after the dev server loaded its maps.

@@ -2,16 +2,18 @@ package com.rs2.model.skill.woodcutting;
 
 import com.rs2.ServerSettings;
 import com.rs2.model.GameplayHelper;
+import com.rs2.model.World;
+import com.rs2.util.GameUtil;
 import java.util.ArrayList;
 
 public enum TreeDefinition {
     ACHEY_TREE(new int[]{2023}, new int[]{1746}, 1, 25.0, 2862, 3371, 59, 98, 1.0, 64, 200),
-    TREE(new int[]{1276, 1277, 1278, 1279, 1280, 1282, 1283, 1284, 1285, 1286, 1289, 1290, 1291, 1315, 1316, 1318, 1319, 1330, 1331, 1332, 1333, 1365, 1383, 1384, 2409, 3033, 3034, 3035, 3036, 3881, 3882, 3883, 5902, 5903, 5904}, new int[]{1719, 1720, 1721, 1721, 1721, 1722, 1722, 1722, 1723, 1727, 1727, 1728, 1729, 1741, 1742, 1743, 1743, 1744, 1744, 1744, 1732, 1725, 1727, 1745, 1721, 1719, 1721, 1722, 1726, 1747, 1747, 1747, 1722, 1727, 1727}, 1, 25.0, 1511, 1342, 60, 100, 1.0, 64, 200),
+    TREE(new int[]{1276, 1277, 1278, 1279, 1280, 1282, 1283, 1284, 1285, 1286, 1289, 1290, 1291, 1315, 1316, 1318, 1319, 1330, 1331, 1332, 1333, 1365, 1383, 1384, 2409, 3033, 3034, 3035, 3036, 3881, 3882, 3883, 5902, 5903, 5904, 4818}, new int[]{1719, 1720, 1721, 1721, 1721, 1722, 1722, 1722, 1723, 1727, 1727, 1728, 1729, 1741, 1742, 1743, 1743, 1744, 1744, 1744, 1732, 1725, 1727, 1745, 1721, 1719, 1721, 1722, 1726, 1747, 1747, 1747, 1722, 1727, 1727}, 1, 25.0, 1511, 1342, 50, 100, 1.0, 64, 200),
     OAK(new int[]{1281, 2037}, new int[]{1739}, 15, 37.5, 1521, 1356, 13, 13, 0.125, 32, 100),
     WILLOW(new int[]{1308, 5551, 5552, 5553}, new int[]{1736, 1737, 1737, 1738}, 30, 67.5, 1519, ServerSettings.cacheVersion < 327 ? 1344 : 7399, 13, 13, 0.125, 16, 50),
     TEAK(new int[]{9036}, new int[]{2535}, 35, 85.0, 6333, 9037, 15, 15, 0.125, 15, 46),
     MAPLE(new int[]{1307, 4677}, new int[]{1735}, 45, 100.0, 1517, 1343, 59, 59, 0.125, 8, 25),
-    HOLLOW_TREE(new int[]{2289, 4060}, new int[]{1749, 1750}, 45, 83.0, 3239, 2310, 43, 43, 0.125, 18, 26),
+    HOLLOW_TREE(new int[]{2289, 4060}, new int[]{1749, 1750}, 45, 82.5, 3239, 2310, 43, 43, 0.125, 18, 26),
     MAHOGANY(new int[]{9034}, new int[]{2534}, 50, 125.0, 6332, 9035, 14, 14, 0.125, 8, 25),
     YEW(new int[]{1309}, new int[]{1740}, 60, 175.0, 1515, ServerSettings.cacheVersion < 327 ? 1357 : 7402, 99, 99, 0.125, 4, 12),
     MAGIC(new int[]{1306}, new int[]{1734}, 75, 250.0, 1513, ServerSettings.cacheVersion < 327 ? 1342 : 7401, 199, 199, 0.125, 2, 6),
@@ -165,6 +167,49 @@ public enum TreeDefinition {
 
     public final int getRespawnTicksHigh() {
         return this.respawnTicksHigh;
+    }
+
+    public final int getRespawnTicks() {
+        int population = ServerSettings.effectiveWorldPopulation;
+        return getRespawnTicks(population == -1 ? World.getPlayerCount() : population);
+    }
+
+    /**
+     * Reconstructed linear curves from the historical 750..2000-player table:
+     * https://www.runehq.com/skill/woodcutting (Tree Respawn Times).
+     * Jagex confirmed population scaling, but did not publish the revision 443 formula.
+     * Below 750 players we extrapolate the same slope; population is capped at 0..2000.
+     * Other tree types retain their existing random/fixed delays pending timing evidence.
+     */
+    public final int getRespawnTicks(int population) {
+        int fullWorldMillis;
+        int millisPerMissingPlayer;
+        switch (this) {
+            case OAK:
+            case WILLOW:
+                fullWorldMillis = 8200;
+                millisPerMissingPlayer = 4;
+                break;
+            case MAPLE:
+                fullWorldMillis = 35000;
+                millisPerMissingPlayer = 20;
+                break;
+            case YEW:
+                fullWorldMillis = 60000;
+                millisPerMissingPlayer = 30;
+                break;
+            case MAGIC:
+                fullWorldMillis = 120000;
+                millisPerMissingPlayer = 56;
+                break;
+            default:
+                return GameUtil.randomBetweenInclusive(this.respawnTicksLow, this.respawnTicksHigh);
+        }
+        int clampedPopulation = Math.max(0, Math.min(2000, population));
+        int delayMillis = fullWorldMillis + (2000 - clampedPopulation) * millisPerMissingPlayer;
+        // ObjectManager restores on the tick AFTER its countdown reaches zero.
+        // Round elapsed time up to whole 600ms ticks, then account for that restore tick.
+        return (delayMillis + 599) / 600 - 1;
     }
 
     public final double getDepletionChance() {

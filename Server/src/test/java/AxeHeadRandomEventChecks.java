@@ -58,10 +58,12 @@ public final class AxeHeadRandomEventChecks {
                 require(equipped ? player.getEquipmentManager().getItemIdAtSlot(3) == axe.getToolHandleItemId()
                         : player.getInventoryManager().containsItem(axe.getToolHandleItemId()), "Handle missing");
                 require(head.getPosition().getPlane() == player.getPosition().getPlane(), "Head changed plane");
-                require(!head.getPosition().equals(player.getPosition())
+                int headDistance = Math.max(Math.abs(head.getPosition().getX() - player.getPosition().getX()),
+                        Math.abs(head.getPosition().getY() - player.getPosition().getY()));
+                require(headDistance >= 3 && headDistance <= 10
                         && WalkingCollisionMap.canTravelBetween(player.getPosition().getX(), player.getPosition().getY(),
                                 head.getPosition().getX(), head.getPosition().getY(), head.getPosition().getPlane(), 1, 1),
-                        "Head must land nearby and be reachable");
+                        "Head must land 3-10 squares away and be reachable");
                 require(AxeHeadRandomEvent.detachHead(player, axe) == null, "Same axe lost twice");
                 player.getInventoryManager().removeItem(new ItemStack(1511, equipped ? 2 : 1));
                 if (equipped) {

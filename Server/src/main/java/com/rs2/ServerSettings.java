@@ -47,6 +47,8 @@ public final class ServerSettings {
     public static double shopItemMultiplier = 1.0;
     public static double itemRespawnDelayMultiplier = 1.0;
     public static double npcRespawnDelayMultiplier = 1.0;
+    // Tree respawns: -1 uses the live world count (including bots), 0..2000 emulates a population.
+    public static int effectiveWorldPopulation = 1250;
     public static boolean showSkillUnlocks = false;
     public static boolean dynamicShopPricesEnabled = true;
     public static boolean skipRequirementsForMissingQuests = false;

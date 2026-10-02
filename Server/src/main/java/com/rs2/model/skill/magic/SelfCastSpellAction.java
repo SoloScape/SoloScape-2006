@@ -113,7 +113,7 @@ extends MagicSpellAction {
                 return this.caster.getTeleportManager().castSpellbookTeleport(new Position(3222 + GameUtil.randomInclusive(1), 3218 + GameUtil.randomInclusive(1), 0));
             }
             case HOME_TELEPORT: {
-                return this.caster.getTeleportManager().castSpellbookTeleport(new Position(3222 + GameUtil.randomInclusive(1), 3218 + GameUtil.randomInclusive(1), 0));
+                return this.caster.getTeleportManager().castHomeTeleport();
             }
             case FALADOR_TELEPORT: {
                 return this.caster.getTeleportManager().castSpellbookTeleport(new Position(2964 + GameUtil.randomInclusive(1), 3378 + GameUtil.randomInclusive(1), 0));

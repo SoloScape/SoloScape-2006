@@ -527,6 +527,8 @@ extends Entity {
     public int displayedWildernessLevel;
     public int displayedBarrowsKillCount;
     public int gatheringHazardCounter;
+    // Tai Bwo Wannai jungle event build-up is session-only and resets on logout.
+    public int jungleEventChanceCounter;
     public long lastCharacterSaveMillis;
     public long lastPacketReceivedMillis;
     public long lastPlayerInputMillis;
@@ -631,6 +633,7 @@ extends Entity {
     public boolean loginRestrictionExempt;
     public long createdAtMillis;
     public long lastSavedMillis;
+    public long homeTeleportAvailableAtMillis;
     public long sessionStartMillis;
     public long totalPlaytimeMillis;
     public String lastLoginHostAddress;

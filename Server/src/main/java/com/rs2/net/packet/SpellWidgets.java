@@ -43,6 +43,7 @@ public final class SpellWidgets {
             case 440: return 1592; case 500: return 12037; case 511: return 12425;
             case 521: return 12435; case 531: return 12445; case 541: return 12455;
             case 549: return 6003;
+            case 591: return 30000;
             default: return InterfaceBridge.UNMAPPED;
         }
     }

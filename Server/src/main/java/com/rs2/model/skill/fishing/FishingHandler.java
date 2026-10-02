@@ -2,6 +2,7 @@ package com.rs2.model.skill.fishing;
 
 import com.rs2.ServerSettings;
 import com.rs2.model.Position;
+import com.rs2.model.World;
 import com.rs2.model.npc.Npc;
 import com.rs2.model.player.Player;
 import com.rs2.model.skill.fishing.FishingSpotDefinition;
@@ -24,16 +25,31 @@ public final class FishingHandler {
     }
 
     public final boolean handleFishingSpot(Npc npc, int value3) {
-        boolean enabled;
         Object definition = FishingWhirlpool.forWhirlpoolNpcId(npc.getDefinition().getId());
         int npcId = npc.getNpcId();
         if (definition != null) {
             npcId = ((FishingWhirlpool)definition).getSourceNpcIds()[0];
         }
         FishingSpotDefinition fishingSpotDefinition = FishingSpotDefinition.forNpcIdAndOption(npcId, value3);
+        return handleFishingSpot(npc, fishingSpotDefinition);
+    }
+
+    public final boolean handleFishingSpot(Npc npc, FishingSpotDefinition fishingSpotDefinition) {
+        if (fishingSpotDefinition == null) return false;
+        boolean enabled;
+        Object definition = FishingWhirlpool.forWhirlpoolNpcId(npc.getDefinition().getId());
         Object position = npc.getPosition();
         if (!FishingSpotManager.isSpotAtPosition((Position)position, fishingSpotDefinition) && definition == null) {
-            return false;
+            // Regional cache variants may come from the ordinary NPC spawn list,
+            // rather than the legacy manager's canonical six NPC IDs.
+            if (npc.getIndex() < 0 || npc.getIndex() >= World.getNpcs().length
+                    || World.getNpcs()[npc.getIndex()] != npc || !npc.isInteractable()) return false;
+            boolean matches = false;
+            for (int slot = 0; slot < 5; slot++) {
+                if (FishingSpotDefinition.forNpcIdAndAction(npc.getNpcId(), npc.getDefinition().getAction(slot))
+                        == fishingSpotDefinition) matches = true;
+            }
+            if (!matches) return false;
         }
         position = fishingSpotDefinition;
         definition = this;

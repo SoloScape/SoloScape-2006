@@ -1,6 +1,7 @@
 package com.rs2.model.skill.fishing;
 
 import com.rs2.model.item.ItemStack;
+import com.rs2.model.npc.NpcDefinition;
 
 public enum FishingSpotDefinition {
     SMALL_NET(new int[]{316}, 303, -1, 621, new int[]{1, 15}, new int[]{317, 321}, new double[]{10.0, 40.0}, new int[]{48, 24}, new int[]{256, 128}),
@@ -117,6 +118,50 @@ public enum FishingSpotDefinition {
             }
         }
         return null;
+    }
+
+    public static FishingSpotDefinition forNpcIdAndAction(int npcId, String action) {
+        if (action == null) return null;
+        FishingWhirlpool whirlpool = FishingWhirlpool.forWhirlpoolNpcId(npcId);
+        if (whirlpool != null) npcId = whirlpool.getSourceNpcIds()[0];
+        for (int option = 1; option <= 2; option++) {
+            FishingSpotDefinition definition = forNpcIdAndOption(npcId, option);
+            if (definition == null) continue;
+            String label;
+            switch (definition) {
+                case SMALL_NET: case BIG_NET: case MONKFISH: label = "Net"; break;
+                case BAIT: case RIVER_BAIT: case LAVA_EEL: label = "Bait"; break;
+                case FLY_FISHING: label = "Lure"; break;
+                case LOBSTER_POT: label = "Cage"; break;
+                default: label = "Harpoon";
+            }
+            if (label.equalsIgnoreCase(action)) return definition;
+        }
+        // 443 has regional variants of the same spots. Their paired action names
+        // identify the method; a lone Net/Harpoon is ambiguous and stays unmapped.
+        NpcDefinition npc = NpcDefinition.forId(npcId);
+        if (!"Fishing spot".equalsIgnoreCase(npc.getName())) return null;
+        if (hasAction(npc, "Net") && hasAction(npc, "Bait")) {
+            if ("Net".equalsIgnoreCase(action)) return SMALL_NET;
+            if ("Bait".equalsIgnoreCase(action)) return BAIT;
+        } else if (hasAction(npc, "Lure") && hasAction(npc, "Bait")) {
+            if ("Lure".equalsIgnoreCase(action)) return FLY_FISHING;
+            if ("Bait".equalsIgnoreCase(action)) return RIVER_BAIT;
+        } else if (hasAction(npc, "Cage") && hasAction(npc, "Harpoon")) {
+            if ("Cage".equalsIgnoreCase(action)) return LOBSTER_POT;
+            if ("Harpoon".equalsIgnoreCase(action)) return HARPOON;
+        } else if (hasAction(npc, "Net") && hasAction(npc, "Harpoon")) {
+            if ("Net".equalsIgnoreCase(action)) return BIG_NET;
+            if ("Harpoon".equalsIgnoreCase(action)) return SHARK_HARPOON;
+        }
+        return null;
+    }
+
+    private static boolean hasAction(NpcDefinition npc, String action) {
+        for (int slot = 0; slot < 5; slot++) {
+            if (action.equalsIgnoreCase(npc.getAction(slot))) return true;
+        }
+        return false;
     }
 }
 

@@ -2,6 +2,8 @@ package com.rs2.model.quest;
 
 import com.rs2.ServerSettings;
 import com.rs2.cache.InterfaceDefinition;
+import com.rs2.cache.js5.Interfaces;
+import com.rs2.net.packet.InterfaceBridge;
 import com.rs2.model.Entity;
 import com.rs2.model.Position;
 import com.rs2.model.player.Player;
@@ -20,6 +22,14 @@ public final class QuestManager {
     private static boolean isQuestJournalButtonAvailable(int buttonId) {
         QuestDefinition questDefinition = QuestDefinition.forId(buttonId);
         int journalButtonId = questDefinition.getJournalButtonId();
+        // JS5 uses group:child identities; the legacy flat interface table is
+        // deliberately not loaded for 443. Testing its count disables every quest.
+        if (ServerSettings.cacheVersion == 443) {
+            if (buttonId == 0) return true; // Tutorial has no quest-list entry.
+            int component = InterfaceBridge.translate(journalButtonId);
+            return component != InterfaceBridge.UNMAPPED
+                    && Interfaces.forPackedId(component) != null;
+        }
         return journalButtonId < InterfaceDefinition.interfaceCount;
     }
 

@@ -345,7 +345,8 @@ extends CycleEvent {
     }
 
     public static void castSelfSpell(Player player, SpellDefinition spellDefinition) {
-        if (spellDefinition == SpellDefinition.LUMBRIDGE_TELEPORT
+        if ((spellDefinition == SpellDefinition.LUMBRIDGE_TELEPORT
+                || spellDefinition == SpellDefinition.HOME_TELEPORT)
                 && player.isInTutorialIsland() && player.getQuestState(0) != 1) {
             player.getDialogueManager().showOneLineStatement(
                     "You can't cast this spell until you have completed the Tutorial.");

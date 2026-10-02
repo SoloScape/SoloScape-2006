@@ -56,9 +56,9 @@ extends QuestScript {
         player2 = player;
         player2.packetSender.sendInterfaceText("", 12155);
         player2 = player;
-        player2.packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 1438);
+        player2.packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 1438);
         player2 = player;
-        player2.packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        player2.packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         player2 = player;
         player.deferLevelUpInterfaces = false;
     }
@@ -71,17 +71,25 @@ extends QuestScript {
                 return true;
             }
             if (value2 == 2) {
-                player.getDialogueManager().showTwoOptions("Have you any quest for me?", "Where can I find money?");
+                player.getDialogueManager().showTwoOptions("Have you any quests for me?", "Where can I find money?");
                 return true;
             }
             if (value2 == 3) {
                 if (value32 == 1) {
-                    player.getDialogueManager().showPlayerOneLineDialogue("Have you any quest for me?", 591);
+                    player.getDialogueManager().showPlayerOneLineDialogue("Have you any quests for me?", 591);
                     player.getDialogueManager().setNextDialogueStep(4);
                     return true;
                 }
-                player.getDialogueManager().showOneLineStatement("This option is currently missing...");
-                player.getDialogueManager().setNextDialogueStep(2);
+                player.getDialogueManager().showPlayerOneLineDialogue("Where can I find money?", 591);
+                player.getDialogueManager().setNextDialogueStep(101);
+                return true;
+            }
+            if (value2 == 101) {
+                player.getDialogueManager().showNpcThreeLineDialogue(
+                        "I've heard that the blacksmiths are prosperous",
+                        "amongst the peasantry. Maybe you could try your",
+                        "hand at that?", 591);
+                player.getDialogueManager().finishDialogue();
                 return true;
             }
             if (value2 == 4) {

@@ -1,6 +1,7 @@
 package com.rs2.model.objects;
 
 import com.rs2.cache.js5.Definitions;
+import com.rs2.model.HistoricalExamines;
 import com.rs2.util.ByteArrayReader;
 import java.io.IOException;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.logging.Logger;
 public class ObjectDefinition {
     public static ObjectDefinition[] definitionsById;
     private int objectId;
+    private final String[] actions = new String[5];
     public String name;
     public String description;
     public int width;
@@ -33,6 +35,7 @@ public class ObjectDefinition {
             int id = entry.getKey();
             ObjectDefinition definition = forId(id);
             definition.name = "";
+            definition.description = null;
             definition.width = 1;
             definition.length = 1;
             definition.solid = true;
@@ -93,7 +96,10 @@ public class ObjectDefinition {
                 reader.readByte();
             } else if (opcode >= 30 && opcode < 35) {
                 String action = readRevision443String(reader, data);
-                if (!"hidden".equalsIgnoreCase(action)) hasActions = true;
+                if (!"hidden".equalsIgnoreCase(action)) {
+                    definition.actions[opcode - 30] = action;
+                    hasActions = true;
+                }
             } else if (opcode == 40 || opcode == 41) {
                 int count = reader.readUnsignedByte();
                 for (int i = 0; i < count; i++) {
@@ -151,7 +157,7 @@ public class ObjectDefinition {
     }
 
     public static ObjectDefinition forId(int value3) {
-        if (value3 < definitionsById.length) {
+        if (value3 >= 0 && value3 < definitionsById.length) {
             if (definitionsById[value3] == null) {
                 int value2 = value3;
                 ObjectDefinition.definitionsById[value3] = new ObjectDefinition(value2, "Object: #" + value2, "Its an object!", 1, 1, false, false, false, true, 2);
@@ -163,6 +169,7 @@ public class ObjectDefinition {
 
     private ObjectDefinition(int objectId, String name, String text22, int value22, int value32, boolean enabled5, boolean enabled22, boolean enabled32, boolean enabled42, int value42) {
         this.objectId = objectId;
+        this.description = text22;
         this.name = name;
         if (name == null) {
             this.name = "";
@@ -179,8 +186,16 @@ public class ObjectDefinition {
         return this.objectId;
     }
 
+    public final String getAction(int slot) {
+        return slot < 0 || slot >= actions.length ? null : actions[slot];
+    }
+
     public final String getName() {
         return this.name;
+    }
+
+    public final String getDescription() {
+        return HistoricalExamines.resolve("object", objectId, name, description);
     }
 
     public final int getWidthForOrientation(int width) {

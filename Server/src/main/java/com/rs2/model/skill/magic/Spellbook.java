@@ -71,6 +71,7 @@ public final class Spellbook {
         hashMap.put(12455, SpellDefinition.TELEOTHER_CAMELOT);
         hashMap.put(1164, SpellDefinition.VARROCK_TELEPORT);
         hashMap.put(1167, SpellDefinition.LUMBRIDGE_TELEPORT);
+        hashMap.put(30000, SpellDefinition.HOME_TELEPORT);
         hashMap.put(1170, SpellDefinition.FALADOR_TELEPORT);
         hashMap.put(1174, SpellDefinition.CAMELOT_TELEPORT);
         hashMap.put(1540, SpellDefinition.ARDOUGNE_TELEPORT);

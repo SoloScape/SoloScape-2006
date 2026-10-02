@@ -241,6 +241,11 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 player.packetSender.sendGameMessage("443 widget select: widget=" + packedWidgetId
                         + " child=" + child);
             }
+            // Skill-guide categories also use native action-type-6 controls.
+            // Refreshing the guide resets the client's Continue wait state.
+            if (handleSkillGuideCategory(player, packedWidgetId, -1, child)) {
+                return;
+            }
             // Native 443 dialogue controls use WIDGET_SELECT rather than the
             // ordinary interface-action packet. Continue buttons and option
             // choices must both be routed into the legacy dialogue state machine
@@ -457,6 +462,10 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 && legacyButtonId != 3214 && legacyButtonId != 1688
                 && (operation == -1 || parameter == 0)) {
             buttonHandler.handleButton(player, legacyButtonId);
+        } else if (legacyButtonId == InterfaceBridge.UNMAPPED) {
+            GameplayTrace.logInteraction(player, "interface-action unhandled group=" + (packedWidgetId >>> 16)
+                    + " child=" + (packedWidgetId & 0xffff) + " operation=" + operation
+                    + " reason=no-native-handler-or-legacy-mapping");
         }
     }
 

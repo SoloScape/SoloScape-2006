@@ -1,6 +1,7 @@
 package com.rs2.model.item;
 
 import com.rs2.ServerSettings;
+import com.rs2.model.HistoricalExamines;
 import com.rs2.cache.CacheArchive;
 import com.rs2.cache.CacheStore;
 import com.rs2.cache.js5.ConfigReader;
@@ -25,6 +26,8 @@ public class ItemDefinition {
     private static int definitionCount;
     private static int customDefinitionCount;
     private boolean destroyOption;
+    private String[] groundActions = new String[] {null, null, "Take", null, null};
+    private String[] inventoryActions = new String[] {null, null, null, null, "Drop"};
     private int id;
     private String name;
     private String description;
@@ -488,6 +491,8 @@ public class ItemDefinition {
             definition.hasNote = false;
             definition.membersOnly = false;
             definition.destroyOption = false;
+            definition.groundActions = new String[] {null, null, "Take", null, null};
+            definition.inventoryActions = new String[] {null, null, null, null, "Drop"};
             definition.unnotedId = -1;
             definition.notedId = -1;
             decodeRevision443(definition, entry.getValue());
@@ -503,6 +508,8 @@ public class ItemDefinition {
                 }
             }
         }
+        // Server metadata uses the later black axe requirement; revision 443 used level 6.
+        definitionsById[1361].requiredLevels[8] = 6;
         load2009scapeExamines();
     }
 
@@ -516,7 +523,12 @@ public class ItemDefinition {
                 if (parts.length != 2) continue;
                 int id = Integer.parseInt(parts[0]);
                 if (id >= 0 && id < definitionsById.length && definitionsById[id] != null) {
-                    definitionsById[id].description = parts[1];
+                    ItemDefinition definition = definitionsById[id];
+                    if (definition.description == null || definition.description.trim().isEmpty()
+                            || definition.description.equals("It's an item!")) {
+                        String historical = HistoricalExamines.find("item", id, definition.name);
+                        definition.description = historical == null ? parts[1] : historical;
+                    }
                 }
             }
         }
@@ -555,9 +567,12 @@ public class ItemDefinition {
                 reader.readUnsignedShort();
                 reader.readByte();
             } else if (opcode >= 30 && opcode < 35) {
-                reader.readString();
+                String action = reader.readString();
+                definition.groundActions[opcode - 30] = "hidden".equalsIgnoreCase(action) ? null : action;
             } else if (opcode >= 35 && opcode < 40) {
-                if ("destroy".equalsIgnoreCase(reader.readString())) {
+                String action = reader.readString();
+                definition.inventoryActions[opcode - 35] = action;
+                if ("destroy".equalsIgnoreCase(action)) {
                     definition.destroyOption = true;
                 }
             } else if (opcode == 40 || opcode == 41 || opcode == 140) {
@@ -588,6 +603,14 @@ public class ItemDefinition {
             }
         }
         throw new IOException("Unterminated 443 item " + definition.id);
+    }
+
+    public final String getInventoryAction(int slot) {
+        return slot < 0 || slot >= inventoryActions.length ? null : inventoryActions[slot];
+    }
+
+    public final String getGroundAction(int slot) {
+        return slot < 0 || slot >= groundActions.length ? null : groundActions[slot];
     }
 
     private ItemDefinition(int id, String name, String description, String text32, boolean enabled6, boolean enabled22, boolean enabled32, int value22, int value32, boolean enabled42, int value42, int value52, int value62, int value72, int[] bonuses, int value82, int[] requiredLevels, int value92, boolean[] blArray, double value12, int value103, int value112, boolean enabled52) {
@@ -769,9 +792,9 @@ public class ItemDefinition {
 
     public final String getDescription() {
         if (this.note && this.unnotedId != -1 && this.unnotedId != this.id) {
-            this.description = "Swap this note at any bank for the equivalent item.";
+            return "Swap this note at any bank for the equivalent item.";
         }
-        return this.description;
+        return HistoricalExamines.resolve("item", id, name, description);
     }
 
     public final boolean canBeTransferredByDropping() {

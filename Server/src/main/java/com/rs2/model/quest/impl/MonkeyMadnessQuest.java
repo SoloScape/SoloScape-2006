@@ -174,9 +174,9 @@ extends QuestScript {
         player.getInventoryManager().addOrDropItem(new ItemStack(995, 10000));
         player.getInventoryManager().addOrDropItem(new ItemStack(1601, 3));
         player2 = player;
-        player2.packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 4033);
+        player2.packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 4033);
         player2 = player;
-        player2.packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        player2.packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         player2 = player;
         player.deferLevelUpInterfaces = false;
     }

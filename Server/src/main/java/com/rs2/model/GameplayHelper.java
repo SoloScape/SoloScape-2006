@@ -2179,12 +2179,12 @@ public class GameplayHelper {
         player3.packetSender.sendInterfaceModel(14776 >= InterfaceDefinition.interfaceCount ? 8709 : 14776, 250, 1747);
         player3 = player;
         player3.packetSender.sendInterfaceText("Snakeskin", 14779);
-        if (player.getInventoryManager().getItemAmount(995) >= 15) {
+        if (player.getInventoryManager().getItemAmount(995) >= 20) {
             player3 = player;
-            player3.packetSender.sendInterfaceText(String.valueOf(interactionTargetId * 15) + " coins", 14787);
+            player3.packetSender.sendInterfaceText(String.valueOf(interactionTargetId * 20) + " coins", 14787);
         } else {
             player3 = player;
-            player3.packetSender.sendInterfaceText(String.valueOf(interactionTargetId * 15) + " coins", 14787);
+            player3.packetSender.sendInterfaceText(String.valueOf(interactionTargetId * 20) + " coins", 14787);
         }
         player3 = player;
         player3.packetSender.sendInterfaceText("", 14780);
@@ -2240,7 +2240,7 @@ public class GameplayHelper {
             }
             return;
         }
-        if (!((Player)player3).getInventoryManager().getContainer().containsItem(995)) {
+        if (((Player)player3).getInventoryManager().getContainer().getItemAmount(995) < itemStack.getAmount()) {
             ((Player)player3).getDialogueManager().showOneLineStatement("You do not have enough coins.");
             if (((Player)player3).botEnabled) {
                 ((Player)player3).currentBotTask.startWalkToBank((Player)player3);

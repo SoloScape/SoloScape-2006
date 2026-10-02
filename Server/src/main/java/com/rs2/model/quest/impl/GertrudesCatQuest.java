@@ -76,9 +76,9 @@ extends QuestScript {
         value = player;
         ((Player)value).packetSender.sendInterfaceText("" + player.getQuestPoints(), 12147);
         value = player;
-        ((Player)value).packetSender.sendInterfaceModel(InterfaceDefinition.interfaceCount <= 12140 ? 6161 : 12145, 250, 1561);
+        ((Player)value).packetSender.sendInterfaceModel(QuestScript.usesLegacyCompletionInterface() ? 6161 : 12145, 250, 1561);
         value = player;
-        ((Player)value).packetSender.showInterface(InterfaceDefinition.interfaceCount <= 12140 ? 1689 : 12140);
+        ((Player)value).packetSender.showInterface(QuestScript.usesLegacyCompletionInterface() ? 1689 : 12140);
         value = player;
         player.deferLevelUpInterfaces = false;
     }

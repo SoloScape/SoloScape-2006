@@ -10,6 +10,7 @@ import com.rs2.cache.InterfaceDefinition;
 import com.rs2.model.Entity;
 import com.rs2.model.EntityTargetMovement;
 import com.rs2.model.GameplayHelper;
+import com.rs2.model.interaction.ItemActionRouter;
 import com.rs2.model.Position;
 import com.rs2.model.animation.GraphicEffect;
 import com.rs2.model.c.ProjectileDefinition;
@@ -381,6 +382,7 @@ implements PacketHandler {
         }
         if (opcode == ClientPackets.ITEM_EXAMINE) {
             int itemId = packet.getReader().readSignedShort(ByteTransform.ADD) & 0xFFFF;
+            if (!ItemDefinition.isDefined(itemId)) return;
             traceRevision443Item(player, "item-examine", itemId, -1, -1, -1, -1, -1);
             String examine = ItemDefinition.forId(itemId).getDescription();
             player.packetSender.sendGameMessage(examine == null || examine.isEmpty() ? "It's an item!" : examine);
@@ -699,6 +701,7 @@ implements PacketHandler {
 
     private void handleRevision443LegacyInventoryItem(Player player, int widget, int slot,
                                                        int item, int option) {
+        option = ItemActionRouter.semanticOption(ItemDefinition.forId(item), option);
         PacketWriter writer = PacketBuffer.allocateWriter(6);
         int legacyOpcode;
         switch (option) {

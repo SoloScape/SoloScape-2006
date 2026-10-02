@@ -6,6 +6,7 @@ import com.rs2.cache.CacheStore;
 import com.rs2.cache.js5.ConfigReader;
 import com.rs2.cache.js5.Definitions;
 import com.rs2.model.World;
+import com.rs2.model.HistoricalExamines;
 import com.rs2.model.npc.combat.NpcCombatDefinition;
 import com.rs2.model.npc.combat.NpcDefinitionAttackStyleCombatDefinition;
 import com.rs2.model.npc.combat.NpcDefinitionMeleeCombatDefinition;
@@ -38,6 +39,7 @@ public final class NpcDefinition {
     private int id;
     private int dropTableNpcIdOverride = -1;
     private String name;
+    private String description;
     private String[] actions = new String[5];
     public int respawnDelaySeconds = 0;
     private int legacyAttackBonus = 20;
@@ -236,7 +238,7 @@ public final class NpcDefinition {
                     continue;
                 }
                 if (value3 == 3) {
-                    new String(byteArrayReader2.readLineBytes());
+                    npcDefinition.description = new String(byteArrayReader2.readLineBytes());
                     continue;
                 }
                 if (value3 == 12) {
@@ -401,6 +403,7 @@ public final class NpcDefinition {
         npcDefinition.spawnRadius = npcDefinition2.spawnRadius;
         npcDefinition.chaseRadius = npcDefinition2.chaseRadius;
         npcDefinition.name = npcDefinition2.name;
+        npcDefinition.description = npcDefinition2.description;
         npcDefinition.actions = npcDefinition2.actions.clone();
     }
 
@@ -549,6 +552,7 @@ public final class NpcDefinition {
                 World.getNpcDefinitions()[id] = definition;
             }
             definition.actions = new String[5];
+            definition.description = null;
             definition.size = 1;
             definition.combatLevel = 0;
             definition.attackable = false;
@@ -582,7 +586,7 @@ public final class NpcDefinition {
             } else if (opcode == 2) {
                 definition.name = reader.readString();
             } else if (opcode == 3) {
-                reader.readString();
+                definition.description = reader.readString();
             } else if (opcode == 12) {
                 definition.size = reader.readUnsignedByte();
                 if (definition.id == 1431 || definition.id == 1432) definition.size = 1;
@@ -648,6 +652,7 @@ public final class NpcDefinition {
         }
         if (ServerSettings.clientBuild == 443 && value2 == 3863) {
             npcDefinition.name = "Grand Exchange Clerk";
+            npcDefinition.description = "A clerk who can help me trade on the Grand Exchange.";
             npcDefinition.actions = new String[] {"Talk-to", "Exchange", null, null, null};
         }
         return npcDefinition;
@@ -719,6 +724,10 @@ public final class NpcDefinition {
 
     public final String getName() {
         return this.name;
+    }
+
+    public final String getDescription() {
+        return HistoricalExamines.resolve("npc", id, name, description);
     }
 
     public final String getAction(int actionSlot) {

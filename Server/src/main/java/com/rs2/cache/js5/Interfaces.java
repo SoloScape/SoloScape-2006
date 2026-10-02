@@ -55,6 +55,10 @@ public final class Interfaces {
         return groups.size();
     }
 
+    public static java.util.Set<Integer> groupIds() {
+        return groups.keySet();
+    }
+
     private static Component decode(int groupId, int childId, byte[] data) throws IOException {
         ConfigReader reader = new ConfigReader(data);
         int marker = reader.readUnsignedByte();

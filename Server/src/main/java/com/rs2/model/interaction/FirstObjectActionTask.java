@@ -44,6 +44,7 @@ import com.rs2.model.skill.magic.Spellbook;
 import com.rs2.model.skill.mining.MiningManager;
 import com.rs2.model.skill.prayer.PrayerManager;
 import com.rs2.model.skill.runecrafting.RunecraftingObjectHandler;
+import com.rs2.model.skill.woodcutting.JungleCutting;
 import com.rs2.model.skill.woodcutting.TreeDefinition;
 import com.rs2.model.skill.woodcutting.WoodcuttingHandler;
 import com.rs2.model.task.CycleEventHandler;
@@ -782,6 +783,17 @@ extends TickTask {
             return;
         }
         if (GameplayHelper.handleFarmingPatchObjectAction(this.player, this.objectX, this.objectY)) {
+            this.stop();
+            return;
+        }
+        if (JungleCutting.isSpecialResource(this.objectId)) {
+            JungleCutting.handleFirstObjectAction(this.player, this.objectId,
+                    this.objectX, this.objectY, this.objectPlane);
+            this.stop();
+            return;
+        }
+        if (JungleCutting.isJungleObject(this.objectId)) {
+            JungleCutting.start(this.player, this.objectId, this.objectX, this.objectY);
             this.stop();
             return;
         }

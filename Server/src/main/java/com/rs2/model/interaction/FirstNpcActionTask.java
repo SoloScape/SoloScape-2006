@@ -9,8 +9,10 @@ import com.rs2.model.gameplay.castlewars.CastleWarsManager;
 import com.rs2.model.gameplay.magetrainingarena.MageTrainingArenaRewardShop;
 import com.rs2.model.npc.Npc;
 import com.rs2.model.player.Player;
+import com.rs2.model.skill.woodcutting.JungleCutting;
 import com.rs2.model.skill.woodcutting.TreeDefinition;
 import com.rs2.model.skill.woodcutting.WoodcuttingHandler;
+import com.rs2.model.skill.woodcutting.UndeadTreeCutting;
 import com.rs2.model.task.TickTask;
 import com.rs2.util.GameUtil;
 
@@ -123,8 +125,17 @@ extends TickTask {
             this.stop();
             return;
         }
+        if (UndeadTreeCutting.isUndeadTree(this.npc.getNpcId())) {
+            UndeadTreeCutting.start(this.player, this.npc);
+            this.stop();
+            return;
+        }
         if (TreeDefinition.forEntNpcId(this.npc.getNpcId()) != null) {
             WoodcuttingHandler.startWoodcutting(this.player, this.npc.getNpcId(), this.npc.getPosition().getX(), this.npc.getPosition().getY(), true);
+            this.stop();
+            return;
+        }
+        if (JungleCutting.handleMurcaily(this.player, this.npc.getNpcId())) {
             this.stop();
             return;
         }

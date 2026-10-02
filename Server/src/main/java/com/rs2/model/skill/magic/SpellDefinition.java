@@ -123,7 +123,7 @@ public enum SpellDefinition {
     BARROWS_TELEPORT(83, 202, 714, GraphicEffect.createHeight100(110), 90.0, new ItemStack[]{new ItemStack(563, 2), new ItemStack(566, 2), new ItemStack(565)}, true),
     NECROMANCY_APE_ATOLL_TELEPORT(90, 202, 714, GraphicEffect.createHeight100(110), 100.0, new ItemStack[]{new ItemStack(563, 2), new ItemStack(566, 2), new ItemStack(565, 2)}, true),
     RESURRECT_CROPS(78, 170, 716, GraphicEffect.createHeight100(84), 90.0, new ItemStack[]{new ItemStack(566, 8), new ItemStack(561, 12), new ItemStack(565, 8), new ItemStack(557, 25)}, true),
-    HOME_TELEPORT(0, 202, 714, GraphicEffect.createHeight100(301), 0.0, null),
+    HOME_TELEPORT(0, -1, -1, null, 0.0, null),
     VARROCK_TELEPORT(25, 202, 714, GraphicEffect.createHeight100(301), 35.0, new ItemStack[]{new ItemStack(563), new ItemStack(556, 3), new ItemStack(554, 1)}),
     LUMBRIDGE_TELEPORT(31, 202, 714, GraphicEffect.createHeight100(301), 41.0, new ItemStack[]{new ItemStack(563), new ItemStack(556, 3), new ItemStack(557, 1)}),
     FALADOR_TELEPORT(37, 202, 714, GraphicEffect.createHeight100(301), 47.0, new ItemStack[]{new ItemStack(563), new ItemStack(556, 3), new ItemStack(555, 1)}),
