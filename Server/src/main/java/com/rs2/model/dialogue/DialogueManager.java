@@ -4789,7 +4789,8 @@ public class DialogueManager {
                         if (primaryGatheringTool.getRepairCostCoins() != 0) {
                             text2 = String.valueOf(primaryGatheringTool.getRepairCostCoins()) + "gp";
                         }
-                        player.getDialogueManager().showNpcTwoLineDialogue("Quite badly damaged, but easy to repair. Would you", "like me to repair it for " + text2 + "?", 591);
+                        text3 = primaryGatheringTool.getSkillId() == 14 ? "pickaxe" : "axe";
+                        player.getDialogueManager().showNpcTwoLineDialogue("This " + text3 + " is quite badly damaged, but easy to repair.", "Would you like me to fix it for you for " + text2 + "?", 591);
                         return true;
                     }
                     case 2: {

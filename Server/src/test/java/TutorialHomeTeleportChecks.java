@@ -10,6 +10,9 @@ import com.rs2.net.packet.IncomingPacket;
 import com.rs2.net.packet.PacketBuffer;
 import com.rs2.net.packet.handler.InterfaceActionPacketHandler;
 import com.rs2.net.packet.handler.InterfaceInputPacketHandler;
+import com.rs2.net.packet.handler.MovementPacketHandler;
+import com.rs2.model.task.CycleEventContainer;
+import com.rs2.model.skill.magic.TeleportManager;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
@@ -77,21 +80,27 @@ public final class TutorialHomeTeleportChecks {
                     player.setPosition(new Position(3200, 3200, 0));
                     click.clear();
                     click.putInt((192 << 16) | 591).flip();
-                    long before = System.currentTimeMillis();
                     new InterfaceActionPacketHandler().handle(player,
                             new IncomingPacket(ClientPackets.INTERFACE_BUTTON, 4,
                                     PacketBuffer.wrapReader(click)));
                     String cast = drain(client);
                     require(!cast.contains("runes required"), "Home teleport required runes");
-                    require(player.homeTeleportAvailableAtMillis >= before + 1800000L,
-                            "Home teleport did not start a 30 minute cooldown");
+                    require(player.homeTeleportAvailableAtMillis == 0L,
+                            "Home teleport consumed cooldown before completion");
                     require(player.isActionLocked(), "Home teleport was not scheduled");
                     require(player.getUpdateState().getAnimationId() == 4847,
                             "Generic cast animation replaced the circle drawing");
                     require(player.getUpdateState().getGraphicId() == 800,
                             "Generic teleport graphic replaced the circle");
+                    require(!player.getTeleportManager().castHomeTeleport(),
+                            "Home teleport allowed an overlapping cast");
+                    player.getTeleportManager().cancelHomeTeleport();
+                    require(player.getTeleportManager().castHomeTeleport(),
+                            "Cancelled home teleport could not be retried");
+                    player.getTeleportManager().cancelHomeTeleport();
+                    player.setActionLocked(true);
+                    verifyHomeAnimation(player);
                     long availableAt = player.homeTeleportAvailableAtMillis;
-                    player.setActionLocked(false);
                     require(!player.getTeleportManager().castHomeTeleport(),
                             "Home teleport bypassed the cooldown");
                     require(drain(client).contains("30 minutes"), "Cooldown message incorrect");
@@ -100,7 +109,9 @@ public final class TutorialHomeTeleportChecks {
                     player.homeTeleportAvailableAtMillis = System.currentTimeMillis() - 1L;
                     require(player.getTeleportManager().castHomeTeleport(),
                             "Expired cooldown blocked home teleport");
-                    verifyHomeAnimation(player);
+                    player.getTeleportManager().cancelHomeTeleport();
+                    verifyHomeSounds(player, client);
+                    verifyMovementCancellation(player);
 
                     player.setActionLocked(false);
                     player.homeTeleportAvailableAtMillis = 0L;
@@ -116,6 +127,79 @@ public final class TutorialHomeTeleportChecks {
         System.exit(0);
     }
 
+    private static void verifyHomeSounds(Player player, Socket client) throws Exception {
+        drain(client);
+        player.setOutboundCipher(new IsaacCipher(new int[4]));
+        IsaacCipher decoder = new IsaacCipher(new int[4]);
+        com.rs2.model.skill.magic.HomeTeleportTask task =
+                new com.rs2.model.skill.magic.HomeTeleportTask(player);
+        CycleEventContainer container = new CycleEventContainer(player, task, 1);
+        int[] sounds = {193, 196, 194, 195};
+        int[] durations = {12, 9, 6, 7};
+        task.start();
+        for (int stage = 0; stage < sounds.length; stage++) {
+            byte[] packet = drain(client).getBytes("ISO-8859-1");
+            require(packet.length == 6, "Home stage did not send exactly one sound");
+            require(((packet[0] - decoder.nextInt()) & 255) == 81,
+                    "Home stage sent the wrong sound opcode");
+            require(((packet[1] & 255) << 8 | (packet[2] & 255)) == sounds[stage],
+                    "Home stage sent the wrong cache sound");
+            require(packet[3] == 1 && packet[4] == 0 && packet[5] == 0,
+                    "Home sound has wrong repeat count or delay");
+            for (int tick = 0; tick < durations[stage]; tick++) container.execute();
+        }
+        require(drain(client).isEmpty(), "Disappearance duplicated the incantation sound");
+        container.stop();
+    }
+
+    private static void verifyMovementCancellation(Player player) throws Exception {
+        Field scheduled = TeleportManager.class.getDeclaredField("homeTeleport");
+        scheduled.setAccessible(true);
+        for (int opcode : new int[] {99, 80, 81, 164, 248, 98}) {
+            ServerSettings.clientBuild = opcode < 100 ? 443 : 317;
+            // Opcode 98 is the legacy interaction walk packet.
+            if (opcode == 98) ServerSettings.clientBuild = 317;
+            player.setPosition(new Position(3200, 3200, 0));
+            player.setActionLocked(false);
+            player.homeTeleportAvailableAtMillis = 0L;
+            player.movementSystemMode = 0;
+            player.getMovementQueue().addStep(new Position(3201, 3200));
+            require(player.getTeleportManager().castHomeTeleport(), "Home cast failed");
+            require(player.getMovementQueue().getSteps().size() == 1
+                    && ((com.rs2.model.MovementStep) player.getMovementQueue().getSteps().peek()).getDirection() == -1,
+                    "Cast retained a pending walk");
+            long cooldown = player.homeTeleportAvailableAtMillis;
+            CycleEventContainer container = (CycleEventContainer) scheduled.get(player.getTeleportManager());
+            int length = (opcode == 80 || opcode == 248) ? 19 : 5;
+            ByteBuffer payload = ByteBuffer.allocate(length);
+            int x = 3201;
+            payload.put((byte) (x + 128)).put((byte) (x >> 8));
+            if (ServerSettings.clientBuild == 443) payload.put((byte) 0);
+            payload.put((byte) 3200).put((byte) (3200 >> 8));
+            if (ServerSettings.clientBuild != 443) payload.put((byte) 0);
+            payload.position(0);
+            new MovementPacketHandler().handle(player,
+                    new IncomingPacket(opcode, length, PacketBuffer.wrapReader(payload)));
+            require(!container.isActive() && !player.isActionLocked(), "Walk did not cancel immediately");
+            require(player.getUpdateState().getAnimationId() == -1
+                    && player.getUpdateState().getGraphicId() == -1, "Walk retained teleport visuals");
+            require(player.getMovementQueue().getSteps().size() == 1
+                    && ((com.rs2.model.MovementStep) player.getMovementQueue().getSteps().peek()).getX() == 3201,
+                    "Cancelling click lost its walk");
+            player.setActionLocked(true);
+            for (int tick = 0; tick < 43; tick++) container.execute();
+            require(player.isActionLocked(), "Cancelled task released a subsequent action lock");
+            require(player.getPosition().getX() == 3200, "Cancelled task still teleported");
+            require(player.homeTeleportAvailableAtMillis == cooldown && cooldown == 0L,
+                    "Cancelled teleport consumed cooldown");
+            player.getMovementQueue().clear();
+            player.getTeleportManager().cancelHomeTeleport();
+            require(player.isActionLocked(), "Ordinary action lock was cancelled");
+            player.setActionLocked(false);
+        }
+        ServerSettings.clientBuild = 443;
+    }
+
     private static void verifyHomeAnimation(Player player) {
         player.setPosition(new Position(3200, 3200, 0));
         player.getSkillManager().getCurrentLevels()[3] = 10;
@@ -123,9 +207,14 @@ public final class TutorialHomeTeleportChecks {
                 new com.rs2.model.skill.magic.HomeTeleportTask(player);
         com.rs2.model.task.CycleEventContainer container =
                 new com.rs2.model.task.CycleEventContainer(player, task, 1);
+        player.homeTeleportAvailableAtMillis = 0L;
         task.start();
+        long completionBefore = 0L;
         for (int tick = 1; tick <= 43; tick++) {
+            if (tick == 43) completionBefore = System.currentTimeMillis();
             container.execute();
+            if (tick < 43) require(player.homeTeleportAvailableAtMillis == 0L,
+                    "Home teleport consumed cooldown during animation");
             if (tick == 12) require(player.getUpdateState().getAnimationId() == 4850,
                     "Home teleport skipped sitting down");
             if (tick == 21) require(player.getUpdateState().getAnimationId() == 4853,
@@ -141,6 +230,10 @@ public final class TutorialHomeTeleportChecks {
                 "Home teleport did not arrive at Lumbridge");
         require(!container.isActive() && !player.isActionLocked(),
                 "Home teleport did not release the action lock");
+        require(player.homeTeleportAvailableAtMillis >= completionBefore + 1800000L
+                && player.homeTeleportAvailableAtMillis <= System.currentTimeMillis() + 1800000L,
+                "Completed home teleport did not start a 30 minute cooldown");
+        long completedCooldown = player.homeTeleportAvailableAtMillis;
         player.setActionLocked(true);
         task = new com.rs2.model.skill.magic.HomeTeleportTask(player);
         container = new com.rs2.model.task.CycleEventContainer(player, task, 1);
@@ -149,6 +242,8 @@ public final class TutorialHomeTeleportChecks {
         container.execute();
         require(!container.isActive() && !player.isActionLocked(),
                 "Damage did not interrupt the home teleport");
+        require(player.homeTeleportAvailableAtMillis == completedCooldown,
+                "Interrupted teleport changed cooldown");
     }
     private static String drain(Socket socket) throws Exception {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();

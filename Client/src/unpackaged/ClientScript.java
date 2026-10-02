@@ -126,11 +126,8 @@ public class ClientScript extends SubNode
 		}
 	    }
 	}
-	if (JSocket.anInt313 > 0) {
-	    JSocket.anInt313 -= 20;
-	    if (JSocket.anInt313 < 0)
-		JSocket.anInt313 = 0;
-	    if (JSocket.anInt313 == 0 && Class39_Sub5_Sub4_Sub4.anInt2313 != 0
+	if (Class37.updateJingleTimer()) {
+	    if (Class39_Sub5_Sub4_Sub4.anInt2313 != 0
 		&& ArchiveWorker.anInt1205 != -1)
 		Class41.method891(-102, 0, 0, false,
 				  Projectile.fileLoader6,

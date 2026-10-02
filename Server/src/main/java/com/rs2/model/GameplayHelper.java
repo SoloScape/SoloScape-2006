@@ -2886,6 +2886,8 @@ public class GameplayHelper {
                 }
                 ++index2;
             }
+            // Lumbridge Castle bank: standard banker behind the counter.
+            GameplayHelper.spawnNpc(494, 3208, 3222, 2, 3);
             return;
         }
         catch (Exception exception) {

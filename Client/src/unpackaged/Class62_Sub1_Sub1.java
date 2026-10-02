@@ -46,6 +46,12 @@ public class Class62_Sub1_Sub1 extends Class62_Sub1 implements Receiver
 	}
     }
     
+    @Override
+    public boolean isPlaying() {
+        Sequencer activeSequencer = sequencer;
+        return activeSequencer != null && activeSequencer.isRunning();
+    }
+
     public void destroy() {
 	if (sequencer != null) {
 	    sequencer.close();

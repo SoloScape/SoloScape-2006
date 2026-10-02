@@ -34,6 +34,11 @@ public class Class62_Sub1_Sub2 extends Class62_Sub1 implements Runnable
 	method1069(i, (int) l, i_4_, i_5_, (byte) -85);
     }
     
+    @Override
+    public synchronized boolean isPlaying() {
+        return aClass5_2165.method121();
+    }
+
     public void destroy() {
 	synchronized (this) {
 	    aBoolean2164 = true;

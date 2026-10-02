@@ -291,6 +291,7 @@ public abstract class Class39_Sub5_Sub4_Sub4 extends Class39_Sub5_Sub4 {
 
     public static void executeClientScript(int i, Object[] params, Widget class39_sub5_sub17, int i_18_, int i_19_, Widget class39_sub5_sub17_20_, int i_21_) {
         int scriptId = ((Integer) params[0]).intValue();
+        DeveloperToolsClient.script(scriptId, params);
         ClientScript currentClientScript = Class1.getClientScript(scriptId);
         if (currentClientScript != null) {
             int intStackPointer = 0;

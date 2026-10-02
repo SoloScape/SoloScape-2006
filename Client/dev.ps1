@@ -1,5 +1,7 @@
 param(
     [switch]$PrepareOnly,
+    [ValidateRange(1, 65535)]
+    [int]$McpPort = 7780,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ClientArgs
 )
@@ -122,6 +124,7 @@ function Start-DevClient {
     $javaArgs = @(
         "-XX:ErrorFile=$errorLog",
         $cacheArgument,
+        "-Dsoloscape.mcp.port=$McpPort",
         "-Dclient.host=127.0.0.1",
         "-Dclient.port=43594",
         $agentArgument,
@@ -130,6 +133,8 @@ function Start-DevClient {
     ) + $argsToUse
 
     Write-Host "[Dev] Starting client with live HotSwap..." -ForegroundColor Cyan
+    Write-Host "[Dev] Developer tools dashboard: http://127.0.0.1:$McpPort/" -ForegroundColor Cyan
+    Write-Host "[Dev] MCP endpoint: http://127.0.0.1:$McpPort/mcp" -ForegroundColor Cyan
     Write-Host "[Dev] Save a .java file under src\ to apply changes." -ForegroundColor DarkGray
     return Start-Process -FilePath "java" -ArgumentList $javaArgs -WorkingDirectory $Root -PassThru -NoNewWindow
 }

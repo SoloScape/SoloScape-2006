@@ -4,6 +4,7 @@ import java.awt.Canvas;
 import java.awt.EventQueue;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -63,6 +64,7 @@ public final class WebClientBridge {
     private static volatile Path webRoot;
     private static volatile long lastFrameNanos;
     private static volatile int actualPort = -1;
+    private static volatile boolean frameAvailable;
 
     private WebClientBridge() {
     }
@@ -281,7 +283,7 @@ public final class WebClientBridge {
 
     /** Called from JImage.draw for every native client blit. */
     public static void blit(int[] pixels, int width, int height, int x, int y) {
-        if (!enabled || pixels == null || width <= 0 || height <= 0) return;
+        if ((!enabled && !DeveloperToolsServer.isRunning()) || pixels == null || width <= 0 || height <= 0) return;
         int srcX = 0;
         int srcY = 0;
         int copyWidth = width;
@@ -297,6 +299,7 @@ public final class WebClientBridge {
                 int dst = (y + row) * WIDTH + x;
                 System.arraycopy(pixels, src, FRAME, dst, copyWidth);
             }
+            frameAvailable = true;
         }
     }
 
@@ -329,7 +332,16 @@ public final class WebClientBridge {
         });
     }
 
-    private static void mouse(final int id, final int button, final int x, final int y) {
+    static BufferedImage snapshot() {
+        if (!frameAvailable) throw new IllegalStateException("Client has not rendered a frame yet");
+        BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
+        synchronized (FRAME_LOCK) {
+            image.setRGB(0, 0, WIDTH, HEIGHT, FRAME, 0, WIDTH);
+        }
+        return image;
+    }
+
+    static void mouse(final int id, final int button, final int x, final int y) {
         EventQueue.invokeLater(() -> {
             Canvas canvas = Class41.aCanvas778;
             if (canvas == null) return;
@@ -351,14 +363,18 @@ public final class WebClientBridge {
         });
     }
 
-    private static void key(final int id, final int code, final int character) {
+    static void key(final int id, final int code, final int character) {
         EventQueue.invokeLater(() -> {
             Canvas canvas = Class41.aCanvas778;
             if (canvas == null) return;
             char value = character <= 0 ? KeyEvent.CHAR_UNDEFINED : (char) character;
             KeyEvent event = new KeyEvent(canvas, id, System.currentTimeMillis(), 0,
                     code <= 0 ? KeyEvent.VK_UNDEFINED : code, value);
-            canvas.dispatchEvent(event);
+            for (KeyListener listener : canvas.getKeyListeners()) {
+                if (id == KeyEvent.KEY_PRESSED) listener.keyPressed(event);
+                else if (id == KeyEvent.KEY_RELEASED) listener.keyReleased(event);
+                else if (id == KeyEvent.KEY_TYPED) listener.keyTyped(event);
+            }
         });
     }
 

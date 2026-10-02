@@ -23,13 +23,24 @@ extends CycleEvent {
         this.arrivalMessage = arrivalMessage;
     }
 
+    public final void startImmediately() {
+        this.ticksRemaining = 4;
+        this.playDepartureEffects();
+    }
+
+    private void playDepartureEffects() {
+        Player player = TeleportManager.getPlayer(this.teleportManager);
+        player.getUpdateState().setAnimation(714);
+        player.getUpdateState().setGraphicHeight100(301);
+        player.packetSender.sendSoundEffect(202, 1, 0);
+    }
+
     @Override
     public final void execute(CycleEventContainer cycleEventContainer) {
         --this.ticksRemaining;
         if (!TeleportManager.getPlayer(this.teleportManager).isDead()) {
             if (this.ticksRemaining == 4) {
-                TeleportManager.getPlayer(this.teleportManager).getUpdateState().setAnimation(714);
-                TeleportManager.getPlayer(this.teleportManager).getUpdateState().setGraphicHeight100(301);
+                this.playDepartureEffects();
             }
             if (this.ticksRemaining == 2) {
                 TeleportManager.getPlayer(this.teleportManager).getUpdateState().setAnimation(715);

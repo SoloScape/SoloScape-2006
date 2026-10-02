@@ -1,6 +1,7 @@
 package com.rs2.model.objects.functions;
 
 import com.rs2.ServerSettings;
+import com.rs2.model.World;
 import com.rs2.model.objects.DynamicObject;
 import com.rs2.model.objects.LoadedWorldObject;
 import com.rs2.model.objects.ObjectDefinition;
@@ -70,6 +71,28 @@ public final class DoorHandler {
                 && doorHandler.plane == 0;
     }
 
+    private static boolean isClosingOntoPlayer(DoorHandler door, Player player) {
+        // Type 9 doors occupy a whole tile rather than a boundary between tiles.
+        if (door.objectType != 9 || !door.open || door.initiallyOpen) {
+            return false;
+        }
+        if (occupiesDoorTile(door, player)) {
+            return true;
+        }
+        for (Player other : World.getPlayers()) {
+            if (occupiesDoorTile(door, other)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean occupiesDoorTile(DoorHandler door, Player player) {
+        return player != null && player.getPosition().getPlane() == door.plane
+                && player.getPosition().getX() == door.originalX
+                && player.getPosition().getY() == door.originalY;
+    }
+
     public static boolean handleDoor(Player player, int value10, int value22, int value32, int value42) {
         Object value5;
         Object value6;
@@ -89,6 +112,10 @@ public final class DoorHandler {
         value5 = DoorHandler.getOrCreateDoorState(value10, value22, value32, value42);
         if (value5 == null) {
             return false;
+        }
+        if (isClosingOntoPlayer((DoorHandler)value5, player)) {
+            player.packetSender.sendGameMessage("Someone is standing in the doorway.");
+            return true;
         }
         boolean preserveStaticCollision = DoorHandler.preservesStaticCollision((DoorHandler)value5);
         if (((DoorHandler)value5).rapidToggleCount >= 5 && ((DoorHandler)value5).open) {

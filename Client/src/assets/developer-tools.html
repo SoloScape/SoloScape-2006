@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SoloScape developer tools</title>
+<style>
+  :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#14171c;color:#e7edf5}
+  body{max-width:1100px;margin:24px auto;padding:0 16px}
+  header{position:sticky;top:0;background:#14171c;padding:12px 0;border-bottom:1px solid #394353}
+  h1{font-size:24px;margin:0 0 8px} p{color:#afbdd0}
+  button,select{font:inherit;padding:6px 10px;background:#252e3c;color:inherit;border:1px solid #4d5c70;border-radius:5px}
+  label{margin-left:12px} article{padding:12px;margin:12px 0;background:#202733;border:1px solid #394353;border-radius:8px}
+  article.error{border-color:#df6e6e} summary{cursor:pointer} time,.duration{color:#afbdd0;font-size:13px;margin-left:12px}
+  pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;max-height:400px;overflow:auto;background:#14171c;padding:10px}
+  img{display:block;max-width:100%;margin-top:12px;image-rendering:pixelated;cursor:zoom-in}
+  #status{color:#a8ddab} #stats{font-size:14px;margin:8px 0} #empty{padding:24px 0}
+</style>
+<header>
+  <h1>SoloScape developer tools</h1>
+  <div id="status">Connecting…</div>
+  <div id="stats">Waiting for tool calls</div>
+  <button id="pause">Pause</button> <button id="clear">Clear view</button>
+  <select id="filter" aria-label="Filter tool"><option value="">All tools</option></select>
+  <label><input type="checkbox" id="errors"> Errors only</label>
+  <label><input type="checkbox" id="follow" checked> Follow</label>
+</header>
+<p>Live calls to the real revision-443 client. The most recent 100 calls are retained.
+  Click a screenshot to open it at full size.</p>
+<div id="empty">Connect your MCP client to <code id="endpoint"></code> to begin.</div>
+<main id="calls"></main>
+<script>
+const $ = id => document.getElementById(id);
+$('endpoint').textContent = location.origin + '/mcp';
+let cursor = 0, paused = false, entries = [], clearedThrough = 0;
+const names = new Set();
+function render() {
+  const visible = entries.filter(e => e.id > clearedThrough && (!$('filter').value || e.name === $('filter').value)
+    && (!$('errors').checked || e.isError));
+  $('calls').replaceChildren();
+  $('empty').hidden = visible.length > 0;
+  const failures = entries.filter(e => e.isError).length;
+  const average = entries.length ? Math.round(entries.reduce((sum,e) => sum + e.durationMs, 0) / entries.length) : 0;
+  $('stats').textContent = `${entries.length} retained calls · ${failures} errors · ${average} ms average`;
+  for (const entry of visible) {
+    const article = document.createElement('article');
+    article.className = entry.isError ? 'error' : '';
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    const name = document.createElement('strong'); name.textContent = entry.name; summary.append(name);
+    const time = document.createElement('time'); time.textContent = new Date(entry.timestamp).toLocaleTimeString(); summary.append(time);
+    const duration = document.createElement('span'); duration.className = 'duration';
+    duration.textContent = `${entry.durationMs} ms${entry.isError ? ' · ERROR' : ''}`; summary.append(duration);
+    details.append(summary);
+    const args = document.createElement('pre'); args.textContent = JSON.stringify(entry.arguments,null,2); details.append(args);
+    for (const content of entry.result.content || []) {
+      if (content.type === 'image' && content.mimeType === 'image/png') {
+        const img = document.createElement('img'); img.alt = 'Client screenshot';
+        img.src = `data:image/png;base64,${content.data}`;
+        img.onclick = () => { const win = window.open('', '_blank'); if (win) {
+          win.opener = null; const copy = win.document.createElement('img'); copy.src = img.src; win.document.body.append(copy);
+        }};
+        details.append(img); details.open = true;
+      } else if (content.type === 'text') {
+        const output = document.createElement('pre');
+        try { output.textContent = JSON.stringify(JSON.parse(content.text),null,2); }
+        catch { output.textContent = content.text; }
+        details.append(output);
+      }
+    }
+    article.append(details); $('calls').append(article);
+  }
+  if ($('follow').checked && visible.length) window.scrollTo(0,document.body.scrollHeight);
+}
+async function poll() {
+  if (!paused) try {
+    const response = await fetch('/log?after=' + cursor, {cache:'no-store'});
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    let data = await response.json();
+    if (data.lastId < cursor) {
+      entries = []; clearedThrough = 0; cursor = 0;
+      const replay = await fetch('/log?after=0', {cache:'no-store'});
+      if (!replay.ok) throw new Error('HTTP ' + replay.status);
+      data = await replay.json(); render();
+    }
+    if (data.entries.length) {
+      entries.push(...data.entries); entries = entries.slice(-100);
+      for (const entry of data.entries) if (!names.has(entry.name)) {
+        names.add(entry.name); const option = document.createElement('option');
+        option.value = option.textContent = entry.name; $('filter').append(option);
+      }
+      cursor = data.lastId; render();
+    } else cursor = data.lastId;
+    $('status').textContent = 'Connected · ' + location.origin;
+  } catch (error) { $('status').textContent = 'Disconnected · ' + error.message; }
+  setTimeout(poll, 1000);
+}
+$('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? 'Resume' : 'Pause'; };
+$('clear').onclick = () => { clearedThrough = cursor; render(); };
+$('filter').onchange = $('errors').onchange = render;
+poll();
+</script>
+</html>

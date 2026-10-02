@@ -1,6 +1,5 @@
 package com.rs2.model.travel;
 
-import com.rs2.model.Position;
 import com.rs2.model.player.Player;
 
 /**
@@ -61,7 +60,7 @@ public final class WorldTeleportMenu {
     }
 
     public static void open(Player player) {
-        if (player == null) {
+        if (player == null || player.isActionLocked() || player.isDead()) {
             return;
         }
 
@@ -115,9 +114,15 @@ public final class WorldTeleportMenu {
         }
 
         Destination destination = DESTINATIONS[destinationIndex];
+        if (player.isActionLocked() || player.isDead()) {
+            return true;
+        }
         player.interfaceAction = "";
-        player.moveTo(new Position(destination.x, destination.y, destination.plane));
-        player.packetSender.sendGameMessage("Teleported to " + destination.name + ".");
+        player.packetSender.closeInterfaces();
+        player.getMovementQueue().clear();
+        player.getTeleportManager().startStandardTeleport(
+                destination.x, destination.y, destination.plane,
+                "Teleported to " + destination.name + ".", true);
         return true;
     }
 

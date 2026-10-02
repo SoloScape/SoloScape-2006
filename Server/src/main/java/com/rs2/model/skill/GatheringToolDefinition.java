@@ -79,8 +79,25 @@ public enum GatheringToolDefinition {
     }
 
     public final int getRepairCostCoins() {
-        ItemStack itemStack = new ItemStack(this.brokenToolItemId, 1);
-        return itemStack.getDefinition().getValue();
+        switch (this) {
+            case DRAGON_AXE:
+                return 1800;
+            case RUNE_AXE:
+                return 427;
+            case ADAMANT_AXE:
+                return 107;
+            case MITHRIL_AXE:
+                return 18;
+            case BLACK_AXE:
+                return 10;
+            case STEEL_AXE:
+            case IRON_AXE:
+            case BRONZE_AXE:
+                return 0;
+            default:
+                ItemStack itemStack = new ItemStack(this.brokenToolItemId, 1);
+                return itemStack.getDefinition().getValue();
+        }
     }
 }
 

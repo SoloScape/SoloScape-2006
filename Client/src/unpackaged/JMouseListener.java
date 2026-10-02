@@ -79,6 +79,7 @@ public class JMouseListener
 
     public static void method902(JString class3, JString class3_2_, boolean bool,
             int i) {
+        DeveloperToolsClient.chat(class3, class3_2_, i);
         if (i == 0 && IsaacPrng.anInt1095 != -1) {
             OndemandRequest.aClass3_1714 = class3_2_;
             Class46.anInt887 = 0;

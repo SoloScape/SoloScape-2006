@@ -292,6 +292,7 @@ public class Client extends ClientApplet {
     }
 
     public void method22(int i) {
+        DeveloperToolsServer.stop();
         if (Cache.aClass31_123 != null) {
             Cache.aClass31_123.aBoolean554 = false;
         }
@@ -447,6 +448,7 @@ public class Client extends ClientApplet {
     }
 
     public void method33(byte i) {
+        DeveloperToolsClient.pump();
         Class2.logicCycle++;
         method38(0);
         StillGraphic.method534(32257);
@@ -494,6 +496,7 @@ public class Client extends ClientApplet {
     public static void main(String[] strings) {
         try {
             WebClientBridge.startFromProperties();
+            DeveloperToolsServer.startFromProperties();
             if (strings.length != 6) {
                 JString.printArgsUsage();
             }

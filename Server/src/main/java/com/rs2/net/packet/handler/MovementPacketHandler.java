@@ -28,7 +28,11 @@ implements PacketHandler {
         if (opcode == 248 || (revision443Movement && opcode == 80)) {
             packetLength -= 14;
         }
-        if (player.isDead() || player.isActionLocked()) {
+        if (player.isDead()) {
+            return;
+        }
+        player.getTeleportManager().cancelHomeTeleport();
+        if (player.isActionLocked()) {
             return;
         }
         if (player.isMovementLocked()) {

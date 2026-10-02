@@ -46,10 +46,24 @@ public class Class37
 	    anInt663 = -95;
 	if (Class39_Sub5_Sub4_Sub4.anInt2313 != 0 && i_3_ != -1) {
 	    Class41.method891(87, 0, 1, false, Class36.fileLoader11, Class39_Sub5_Sub4_Sub4.anInt2313, i_3_);
-	    JSocket.anInt313 = i_2_;
+	    JSocket.anInt313 = Math.max(20, i_2_);
 	}
     }
     
+    // Keep the music lock until the jingle has loaded and finished playing.
+    // Packet durations can be shorter than the cached MIDI (quest: 320ms vs 9.6s).
+    static boolean updateJingleTimer() {
+        if (JSocket.anInt313 <= 0) return false;
+        JSocket.anInt313 = Math.max(0, JSocket.anInt313 - 20);
+        if (JSocket.anInt313 == 0 && Class55.aClass62_1251 != null
+                && (Class39_Sub5_Sub5.aBoolean1749
+                    || Class39_Sub5_Sub6.aByteArray1768 != null
+                    || Class55.aClass62_1251.isPlaying())) {
+            JSocket.anInt313 = 20;
+        }
+        return JSocket.anInt313 == 0;
+    }
+
     public static boolean method352(byte i, int i_4_) {
 	if (i_4_ >= 97 && i_4_ <= 122)
 	    return true;

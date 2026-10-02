@@ -10,6 +10,9 @@ import com.rs2.model.task.CycleEventContainer;
 public final class HomeTeleportTask extends CycleEvent {
     private static final int[] ANIMATIONS = {4847, 4850, 4853, 4855, 4857};
     private static final int[] GRAPHICS = {800, 801, 802, 803, 804};
+    // Legacy sound IDs, translated to the bundled cache by PacketSender.
+    // The incantation sound includes the final disappearance.
+    private static final int[] SOUNDS = {2500, 2501, 2502, 2503, -1};
     // Revision 443 frame lengths, rounded up from 20 ms frames to 600 ms ticks.
     private static final int[] DURATIONS = {12, 9, 6, 7, 9};
     private final Player player;
@@ -32,11 +35,15 @@ public final class HomeTeleportTask extends CycleEvent {
     private void playStage() {
         this.player.getUpdateState().setAnimation(ANIMATIONS[this.stage]);
         this.player.getUpdateState().setGraphic(GraphicEffect.createHeight0(GRAPHICS[this.stage]));
+        this.player.packetSender.sendSoundEffect(SOUNDS[this.stage], 1, 0);
         this.ticksRemaining = DURATIONS[this.stage];
     }
 
     @Override
     public void execute(CycleEventContainer container) {
+        if (!container.isActive()) {
+            return;
+        }
         Position position = this.player.getPosition();
         if (this.player.isDead() || this.player.isTeleblocked()
                 || this.player.isInTeleportRestrictedArea()
@@ -54,6 +61,7 @@ public final class HomeTeleportTask extends CycleEvent {
             return;
         }
         this.player.moveTo(new Position(3222, 3218, 0));
+        this.player.homeTeleportAvailableAtMillis = System.currentTimeMillis() + 30L * 60L * 1000L;
         container.stop();
     }
 

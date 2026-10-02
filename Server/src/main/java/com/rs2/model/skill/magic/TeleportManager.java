@@ -10,10 +10,12 @@ import com.rs2.model.skill.magic.ScriptedTeleportTask;
 import com.rs2.model.skill.magic.Spellbook;
 import com.rs2.model.skill.magic.StandardTeleportTask;
 import com.rs2.model.task.CycleEventHandler;
+import com.rs2.model.task.CycleEventContainer;
 import com.rs2.util.GameplayTrace;
 
 public final class TeleportManager {
     private Player player;
+    private CycleEventContainer homeTeleport;
     public static final Position RESPAWN_TELEPORT_POSITION = new Position(ServerSettings.respawnX, ServerSettings.respawnY, ServerSettings.respawnPlane);
     public static final Position EDGEVILLE_TELEPORT_POSITION = new Position(3087, 3495);
     public static final Position KARAMJA_TELEPORT_POSITION = new Position(2912, 3170);
@@ -39,12 +41,22 @@ public final class TeleportManager {
         if (!this.canCastSpellbookTeleport()) {
             return false;
         }
+        if (this.player.isActionLocked()) {
+            return false;
+        }
+        this.player.getMovementQueue().clear();
         this.player.setActionLocked(true);
         HomeTeleportTask task = new HomeTeleportTask(this.player);
         task.start();
-        CycleEventHandler.getInstance().schedule(this.player, task, 1);
-        this.player.homeTeleportAvailableAtMillis = now + 30L * 60L * 1000L;
+        this.homeTeleport = CycleEventHandler.getInstance().schedule(this.player, task, 1);
         return true;
+    }
+
+    public final void cancelHomeTeleport() {
+        if (this.homeTeleport != null && this.homeTeleport.isActive()) {
+            this.homeTeleport.stop();
+        }
+        this.homeTeleport = null;
     }
 
     public final boolean castSpellbookTeleport(Position position) {
@@ -115,9 +127,17 @@ public final class TeleportManager {
     }
 
     public final void startStandardTeleport(int value4, int value22, int value32, String text2) {
+        this.startStandardTeleport(value4, value22, value32, text2, false);
+    }
+
+    public final void startStandardTeleport(int value4, int value22, int value32, String text2, boolean immediateDeparture) {
         this.player.setActionLocked(true);
         this.player.getAttributes().put("canTakeDamage", Boolean.FALSE);
-        CycleEventHandler.getInstance().schedule(this.player, new StandardTeleportTask(this, value4, value22, value32, text2), 1);
+        StandardTeleportTask task = new StandardTeleportTask(this, value4, value22, value32, text2);
+        if (immediateDeparture) {
+            task.startImmediately();
+        }
+        CycleEventHandler.getInstance().schedule(this.player, task, 1);
     }
 
     private void startMagicTeleportTask(int value4, int value22, int value32, boolean enabled2) {

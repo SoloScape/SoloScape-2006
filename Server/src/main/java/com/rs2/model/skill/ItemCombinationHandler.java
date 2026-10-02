@@ -206,12 +206,15 @@ public class ItemCombinationHandler {
         while (index < length) {
             GatheringToolDefinition gatheringToolDefinition = gatheringToolDefinitionArray[index];
             if (gatheringToolDefinition.getBrokenToolItemId() == value2) {
-                if (!player.getInventoryManager().containsItemStack(new ItemStack(995, gatheringToolDefinition.getRepairCostCoins()))) {
+                int repairCostCoins = gatheringToolDefinition.getRepairCostCoins();
+                if (repairCostCoins > 0 && !player.getInventoryManager().containsItemStack(new ItemStack(995, repairCostCoins))) {
                     player.packetSender.sendGameMessage("You don't have enough coins to fix that.");
                     return false;
                 }
                 player.getInventoryManager().removeItem(new ItemStack(value2, 1));
-                player.getInventoryManager().removeItem(new ItemStack(995, gatheringToolDefinition.getRepairCostCoins()));
+                if (repairCostCoins > 0) {
+                    player.getInventoryManager().removeItem(new ItemStack(995, repairCostCoins));
+                }
                 player.getInventoryManager().addItem(new ItemStack(gatheringToolDefinition.getToolItemId(), 1));
                 return true;
             }

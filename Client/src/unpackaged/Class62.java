@@ -221,6 +221,10 @@ public abstract class Class62
 			       i, i_18_, 0, i_17_, i_15_);
     }
     
+    public boolean isPlaying() {
+        return false;
+    }
+
     public abstract void method1051(int i, byte[] is, byte i_19_,
 				    boolean bool);
     

@@ -1,5 +1,13 @@
 # SoloScape
 
+## Live AI client testing
+
+Run `Client/Start-Client-Dev-Mode.bat` to enable live HotSwap and the local MCP endpoint at
+`http://127.0.0.1:7780/mcp` and activity dashboard at `http://127.0.0.1:7780/`.
+The tools inspect and operate the real game client. Start the server and log in
+normally first. Setup, supported tools and verification are documented in
+[Client/DEVELOPER-TOOLS.md](Client/DEVELOPER-TOOLS.md).
+
 ## New player guide: build and play
 
 The **server** runs the game world and saves your player. The **client** is the
@@ -81,7 +89,7 @@ server window open while you play: it runs the game world and saves your player.
 | `Start-Server.bat` | Created by the server build. Opens the control panel; click **Start Server**. |
 | `Client/Build-Client.bat` | Turns the client source code into runnable game files. Does not start the game. |
 | `Server/Build-Server.bat` | Turns the server source code into runnable server files. Does not start the server. |
-| `Client/Start-Client-Dev-Mode.bat` | For editing code: starts the client and rebuilds it when source files change. |
+| `Client/Start-Client-Dev-Mode.bat` | For editing code: starts the client with live HotSwap, automatic rebuilds and the developer tools dashboard/MCP endpoint on port 7780. |
 | `Server/Start-Server-Dev-Mode.bat` | For editing code: starts the server and rebuilds it when source files change. |
 | `Client/WebClient/Play-In-Browser-Or-Phone.bat` | Starts the client with browser/phone access and prints the address to open. Start the server first. |
 | `Setup-Java-8.bat` | Helper used automatically by the other scripts to find or install Java 8. You do not need to open it yourself. |
