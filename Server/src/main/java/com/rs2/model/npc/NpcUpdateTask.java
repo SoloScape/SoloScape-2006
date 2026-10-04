@@ -30,6 +30,7 @@ public final class NpcUpdateTask {
             while (iterator.hasNext()) {
                 Npc npc = iterator.next();
                 if (!npc.isActive() || npc.teleportUpdateRequired
+                        || !com.rs2.model.quest.event.GublinchChristmasEvent.isNpcVisible(player, npc.getNpcId())
                         || !npc.getPosition().isWithinViewport(player.getPosition())) {
                     if (npc.teleportUpdateRequired) npc.teleportUpdateRequired = false;
                     packet.writeBoolean(true);
@@ -58,6 +59,7 @@ public final class NpcUpdateTask {
             for (Npc npc : World.getNpcs()) {
                 if (added == 16 || local.size() >= 255) break;
                 if (npc == null || !npc.isActive() || local.contains(npc)
+                        || !com.rs2.model.quest.event.GublinchChristmasEvent.isNpcVisible(player, npc.getNpcId())
                         || !npc.getPosition().isWithinViewport(player.getPosition())) continue;
                 Position delta = GameUtil.getDelta(player.getPosition(), npc.getPosition());
                 packet.writeBits(15, npc.getIndex());

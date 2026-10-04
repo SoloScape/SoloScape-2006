@@ -19,6 +19,12 @@ public final class MusicManager {
     private int currentAreaId = -1;
     private int currentTrackId = -1;
 
+    public static void setAutomaticMode(Player player, boolean enabled) {
+        player.automaticMusicEnabled = enabled;
+        player.configStates[18] = enabled ? 1 : 0;
+        player.packetSender.sendConfig(18, player.configStates[18]);
+    }
+
     public final void updateForPlayerPosition(Player player) {
         int playerX = player.getPosition().getX();
         int playerY = player.getPosition().getY();
@@ -74,7 +80,7 @@ public final class MusicManager {
             int unlockConfigId = musicTrackDefinition.getUnlockConfigId();
             int unlockBitMask = musicTrackDefinition.getUnlockBitMask();
             if (unlockConfigId != -1 && (player.configStates[unlockConfigId] & unlockBitMask) == 0) {
-                player.automaticMusicEnabled = true;
+                setAutomaticMode(player, true);
                 player.configStates[unlockConfigId] = player.configStates[unlockConfigId] + unlockBitMask;
                 player.packetSender.sendConfig(unlockConfigId, player.configStates[unlockConfigId]);
                 player.packetSender.sendGameMessage("@red@You have unlocked a new music track: " + musicTrackDefinition.getName());
@@ -165,7 +171,7 @@ public final class MusicManager {
         }
         player.packetSender.sendMusicTrack(track);
         player.musicManagerTrackId = trackId;
-        player.automaticMusicEnabled = false;
+        setAutomaticMode(player, false);
         return true;
     }
 

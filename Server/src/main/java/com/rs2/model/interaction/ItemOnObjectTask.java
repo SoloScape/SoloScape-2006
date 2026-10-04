@@ -91,6 +91,11 @@ extends TickTask {
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("item-on-object task reached player=" + GameplayTrace.describe(this.player) + " itemId=" + this.itemId + " item=" + ItemDefinition.forId(this.itemId).getName() + " objectId=" + this.objectId + " object=" + ((ObjectDefinition)interactionTargetId).name + " x=" + this.objectX + " y=" + this.objectY + " plane=" + this.objectPlane);
         }
+        if (com.rs2.model.quest.event.GublinchChristmasEvent.useShardsOnCage(
+                this.player, this.itemId, this.objectId, this.objectX, this.objectY, this.objectPlane)) {
+            this.stop();
+            return;
+        }
         if (this.player.getQuestManager().handleItemOnObject(this.itemId, this.objectId)) {
             this.stop();
             return;

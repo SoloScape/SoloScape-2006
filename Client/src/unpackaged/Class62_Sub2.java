@@ -538,6 +538,7 @@ public class Class62_Sub2 extends Class62
 		}
 		Class53.method985(true, false);
 		Class62.method1045(false);
+		ChristmasEventSnow.captureGroundSnow();
 		ClientScript.method479(-128, Class44.aClass38_836,
 					    (Class39_Sub5_Sub12
 					     .aClass27Array1857));

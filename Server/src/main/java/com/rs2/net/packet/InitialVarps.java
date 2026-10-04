@@ -8,6 +8,7 @@ import com.rs2.model.quest.impl.ErnestTheChickenQuest;
 /** Sends the semantically verified revision 443 object-morph varps on login. */
 public final class InitialVarps {
     private static final int[] VERIFIED_VARPS = {
+        18, // Music mode: 1 = Auto, 0 = Manual (native group 239).
         33, 452, 453, 491, 502, 503, 504, 505, 506, 507, 508, 509,
         511, 512, 515, 668, 674, 695,
         // Native combat interfaces read 43 for style/spell attack and 301 for
@@ -45,6 +46,7 @@ public final class InitialVarps {
         if (player == null || player.isBot) {
             return;
         }
+        com.rs2.model.music.MusicManager.setAutomaticMode(player, player.automaticMusicEnabled);
 
         player.packetSender.refreshAutocastConfig();
         player.packetSender.refreshSpecialAttackConfig();

@@ -4,6 +4,19 @@ These files contain decoded location streams, loaded by both the client and
 server when the bundled encrypted map cannot be decoded. Terrain and object
 definitions still come from the bundled revision 443 cache.
 
+## Taverley dungeon entrance
+
+`l45_53.dat` restores the missing surface ladder (`1759`, type 10, rotation 0)
+at `2884,3397,0`. The hole decoration and all other placements are retained.
+The native underground map already contains the exit ladder (`1755`) at
+`2884,9797,0`; the existing server handlers provide travel in both directions.
+Restart the server and client to reload the shared map fallback.
+
+`Client/tests/TaverleyDungeonChecks.java` verifies both cached ladder placements,
+their revision-443 models and click options, and a round trip through the server
+object interaction handler. Compile it with both client/server classes and
+`Server/lib/*`, then run from `Server`.
+
 ## Recovered Varrock maps
 
 The previous `l49_53.dat`, `l49_54.dat`, `l50_54.dat`, and `l51_54.dat` streams

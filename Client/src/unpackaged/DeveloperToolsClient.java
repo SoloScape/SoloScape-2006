@@ -198,7 +198,7 @@ final class DeveloperToolsClient {
         tool(tools, "select_option", "Activate a numbered dialogue option (1-5).", "option:integer!");
         tool(tools, "wait_for", "Wait on client ticks for at_tile, dialogue, dialogue_changed, interface_open, interface_closed, chat_message or logged_in. Chat matching ignores case.",
                 "condition:string!", "x:integer", "y:integer", "interfaceId:integer", "textContains:string", "timeoutMs:integer");
-        tool(tools, "get_snapshot", "Compact state, dialogue text/buttons and inventory in one read. Prefer this to screenshots for routine inspection.");
+        tool(tools, "get_snapshot", "Compact state, combat HP/prayer/target/active-prayer data, dialogue and inventory in one read. Prefer this to screenshots for routine inspection.");
         tool(tools, "act_and_wait", "Perform one action and return confirmed fresh state, dialogue and inventory in one call. Prefer this to separate action/wait/read calls. For dialogue use wait.condition=dialogue_changed; for walking use at_tile; for bank use interface_open.",
                 "action:string!", "arguments:object!", "wait:object!");
         return tools;
@@ -244,8 +244,8 @@ final class DeveloperToolsClient {
     static Object read(String name, Map<String, Object> args) {
         switch (name) {
             case "get_client_state": return state();
-            case "get_snapshot": return McpJson.object("state", state(), "dialogue", compactDialogue(),
-                    "inventory", compactInventory());
+            case "get_snapshot": return McpJson.object("state", state(), "combat", combatSnapshot(),
+                    "dialogue", compactDialogue(), "inventory", compactInventory());
             case "get_skills": {
                 List<Object> skills = new ArrayList<Object>();
                 for (int i = 0; i < 21; i++) skills.add(McpJson.object("id", i,
@@ -356,9 +356,64 @@ final class DeveloperToolsClient {
                 "tick", Class2.logicCycle, "width", 765, "height", 503,
                 "baseX", Class65.anInt1145, "baseY", JKeyListener.anInt618, "plane", NameTable.height,
                 "player", Class31.state == 30 && local != null ? player(local, -1) : null,
+                "appearance", local != null && local.aClass45_2516 != null
+                        ? local.aClass45_2516.anIntArray848 : null,
                 "viewportInterface", Class39_Sub11.anInt1478,
                 "chatboxInterface", Class39_Sub5_Sub14.anInt1912,
                 "sidebarInterface", jagex.world.actors.StillGraphic.anInt2338);
+    }
+
+
+    private static Map<String, Object> combatSnapshot() {
+        Player local = Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109;
+        Integer hp = skillLevel(3, true), maxHp = skillLevel(3, false);
+        Integer prayer = skillLevel(5, true), maxPrayer = skillLevel(5, false);
+        List<Object> activePrayers = new ArrayList<Object>();
+        int[] prayerVarps = {83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,862,863,864,865,866,867};
+        String[] prayerNames = {"Thick Skin","Burst of Strength","Clarity of Thought","Rock Skin","Superhuman Strength","Improved Reflexes","Rapid Restore","Rapid Heal","Protect Item","Steel Skin","Ultimate Strength","Incredible Reflexes","Protect from Magic","Protect from Range","Protect from Melee","Retribution","Redemption","Smite","Sharp Eye","Mystic Will","Hawk Eye","Mystic Lore","Eagle Eye","Mystic Might"};
+        if (Class66.stateValues != null) for (int i = 0; i < prayerVarps.length; i++) {
+            int id = prayerVarps[i];
+            if (id < Class66.stateValues.length && Class66.stateValues[id] != 0)
+                activePrayers.add(McpJson.object("id", i, "name", prayerNames[i], "varp", id));
+        }
+        Map<String, Object> target = local == null ? null : combatTarget(local);
+        return McpJson.object("hp", hp, "maxHp", maxHp, "prayer", prayer, "maxPrayer", maxPrayer,
+                "inCombat", target != null, "target", target, "activePrayers", activePrayers);
+    }
+
+    private static Integer skillLevel(int id, boolean boosted) {
+        int[] values = boosted ? Class31.anIntArray555 : Class39_Sub12.anIntArray1491;
+        return values == null || id < 0 || id >= values.length ? null : values[id];
+    }
+
+    private static Map<String, Object> combatTarget(Player local) {
+        int targetIndex = local.anInt2260;
+        if (targetIndex < 0) return null;
+        if (targetIndex < 32768 && GroundItem.aClass39_Sub5_Sub4_Sub4_Sub1Array2241 != null
+                && targetIndex < GroundItem.aClass39_Sub5_Sub4_Sub4_Sub1Array2241.length) {
+            Npc npc = GroundItem.aClass39_Sub5_Sub4_Sub4_Sub1Array2241[targetIndex];
+            if (npc == null || npc.aClass39_Sub5_Sub13_2492 == null) return null;
+            NpcDefinition definition = npc.aClass39_Sub5_Sub13_2492;
+            if (definition.anIntArray1878 != null) definition = definition.method721(0);
+            if (definition == null) return null;
+            Map<String, Object> target = actor(npc, targetIndex);
+            int currentHp = npc.anInt2318, maximumHp = npc.anInt2269;
+            target.put("type", "npc"); target.put("id", definition.id);
+            target.put("name", text(definition.aClass3_1881));
+            target.put("hp", currentHp); target.put("maxHp", maximumHp);
+            target.put("hpPercent", maximumHp > 0 ? currentHp * 100 / maximumHp : null);
+            target.put("healthBarVisible", Class2.logicCycle < npc.anInt2252);
+            return target;
+        }
+        int playerIndex = targetIndex - 32768;
+        if (Class39_Sub13.anInt1501 == playerIndex) playerIndex = 2047;
+        if (Class14.aClass39_Sub5_Sub4_Sub4_Sub2Array211 == null || playerIndex < 0
+                || playerIndex >= Class14.aClass39_Sub5_Sub4_Sub4_Sub2Array211.length) return null;
+        Player player = Class14.aClass39_Sub5_Sub4_Sub4_Sub2Array211[playerIndex];
+        if (player == null) return null;
+        Map<String, Object> target = player(player, playerIndex);
+        target.put("type", "player");
+        return target;
     }
 
     private static List<Object> objects(Map<String, Object> args) {

@@ -1380,6 +1380,7 @@ public final class CharacterFileManager {
                 ((DataOutputStream)value6).writeUTF("");
             }
             ((DataOutputStream)value6).writeLong(((Player)value).homeTeleportAvailableAtMillis);
+            ((DataOutputStream)value6).writeBoolean(((Player)value).automaticMusicEnabled);
             ((DataOutputStream)value6).flush();
             ((FilterOutputStream)value6).close();
             return;
@@ -2163,6 +2164,7 @@ public final class CharacterFileManager {
                 ((DataOutputStream)value3).writeUTF("");
             }
             ((DataOutputStream)value3).writeLong(((CharacterFileRecord)value).homeTeleportAvailableAtMillis);
+            ((DataOutputStream)value3).writeBoolean(((CharacterFileRecord)value).automaticMusicEnabled);
             ((DataOutputStream)value3).flush();
             ((FilterOutputStream)value3).close();
             return;
@@ -4139,6 +4141,10 @@ public final class CharacterFileManager {
             if (dataInputStream.available() >= 8) {
                 ((CharacterFileRecord)value2).homeTeleportAvailableAtMillis = dataInputStream.readLong();
             }
+            // Files written before music-mode persistence default to Auto.
+            if (dataInputStream.available() >= 1) {
+                ((CharacterFileRecord)value2).automaticMusicEnabled = dataInputStream.readBoolean();
+            }
             dataInputStream.close();
             ((FileInputStream)value).close();
             ((CharacterFileRecord)value2).getStoredItemValue();
@@ -4208,6 +4214,7 @@ public final class CharacterFileManager {
         player.setProfileString2(record.profileString2);
         player.lastSavedMillis = record.lastSavedMillis;
         player.homeTeleportAvailableAtMillis = record.homeTeleportAvailableAtMillis;
+        player.automaticMusicEnabled = record.automaticMusicEnabled;
         player.totalPlaytimeMillis = record.totalPlayTimeMillis;
         player.createdAtMillis = record.createdAtMillis;
         player.loginRestrictionExempt = record.loginRestrictionExempt;

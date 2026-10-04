@@ -138,7 +138,7 @@ public final class Music {
         }
         player.packetSender.sendRevision443MusicTrack(track.name, track.assetId);
         player.musicManagerTrackId = track.legacyId >= 0 ? track.legacyId : -2 - child;
-        player.automaticMusicEnabled = false;
+        MusicManager.setAutomaticMode(player, false);
         return true;
     }
 

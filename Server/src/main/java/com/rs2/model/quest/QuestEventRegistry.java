@@ -4,6 +4,7 @@ import com.rs2.Server;
 import com.rs2.ServerSettings;
 import com.rs2.model.quest.QuestHook;
 import com.rs2.model.quest.event.ChristmasDropEventHook;
+import com.rs2.model.quest.event.GublinchChristmasEvent;
 import com.rs2.model.quest.event.EasterEggDropEventHook;
 import com.rs2.model.quest.event.HalloweenMaskDropEventHook;
 import com.rs2.model.quest.event.NoopQuestEventHook;
@@ -15,7 +16,7 @@ public final class QuestEventRegistry {
     private static int HALLOWEEN_EVENT_TYPE = 1;
     private static int CHRISTMAS_EVENT_TYPE = 2;
     private static int EASTER_EVENT_TYPE = 3;
-    private static QuestHook[] eventHooks = new QuestHook[]{new NoopQuestEventHook(-1), new ServerMaintenanceEventHook(-1, 0), new HalloweenMaskDropEventHook(-1, HALLOWEEN_EVENT_TYPE), new ChristmasDropEventHook(-1, CHRISTMAS_EVENT_TYPE), new EasterEggDropEventHook(-1, EASTER_EVENT_TYPE)};
+    private static QuestHook[] eventHooks = new QuestHook[]{new NoopQuestEventHook(-1), new ServerMaintenanceEventHook(-1, 0), new HalloweenMaskDropEventHook(-1, HALLOWEEN_EVENT_TYPE), new ChristmasDropEventHook(-1, CHRISTMAS_EVENT_TYPE), new EasterEggDropEventHook(-1, EASTER_EVENT_TYPE), new GublinchChristmasEvent()};
 
     public static QuestHook getEventHook(int value2) {
         int index = 0;

@@ -363,8 +363,8 @@ public class PlayerUpdateTask {
             Player player3 = player;
             PacketWriter packetWriter2 = PacketBuffer.allocateWriter(128);
             packetWriter2.writeByte(player3.getGender());
-            packetWriter2.writeByte(player3.getPrayerHeadIcon());
             packetWriter2.writeByte(player3.getSkullIcon());
+            packetWriter2.writeByte(player3.getPrayerHeadIcon());
             if (player3.npcTransformationId <= 0) {
                 if (player3.getEquipmentManager().getContainer().hasItemAtSlot(0) && player3.getEquipmentManager().getContainer().getItemAt(0).isEquippable()) {
                     packetWriter2.writeShort(512 + player3.getEquipmentManager().getContainer().getItemAt(0).getId());
@@ -381,7 +381,7 @@ public class PlayerUpdateTask {
                 } else {
                     packetWriter2.writeByte(0);
                 }
-                if (player3.getEquipmentManager().getContainer().hasItemAtSlot(3) && !player3.shouldHideHeldItemsInAppearance() && player3.getEquipmentManager().getContainer().getItemAt(3).isEquippable()) {
+                if (player3.getEquipmentManager().getContainer().hasItemAtSlot(3) && !player3.shouldHideEquipmentItemInAppearance(3) && player3.getEquipmentManager().getContainer().getItemAt(3).isEquippable()) {
                     packetWriter2.writeShort(512 + player3.getEquipmentManager().getContainer().getItemAt(3).getId());
                 } else {
                     packetWriter2.writeByte(0);
@@ -391,7 +391,7 @@ public class PlayerUpdateTask {
                 } else {
                     packetWriter2.writeShort(256 + player3.getAppearanceParts()[0]);
                 }
-                if (player3.getEquipmentManager().getContainer().hasItemAtSlot(5) && !player3.shouldHideHeldItemsInAppearance() && player3.getEquipmentManager().getContainer().getItemAt(5).isEquippable()) {
+                if (player3.getEquipmentManager().getContainer().hasItemAtSlot(5) && !player3.shouldHideEquipmentItemInAppearance(5) && player3.getEquipmentManager().getContainer().getItemAt(5).isEquippable()) {
                     packetWriter2.writeShort(512 + player3.getEquipmentManager().getContainer().getItemAt(5).getId());
                 } else {
                     packetWriter2.writeByte(0);

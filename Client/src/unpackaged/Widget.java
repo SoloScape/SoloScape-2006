@@ -625,7 +625,8 @@ public class Widget extends SubNode
 		    }
 		}
 	    }
-	    for (int i_34_ = 0; i_34_ < TraversalMap.anInt515; i_34_++) {
+            ChristmasEventMinimap.draw();
+            for (int i_34_ = 0; i_34_ < TraversalMap.anInt515; i_34_++) {
 		Player class39_sub5_sub4_sub4_sub2
 		    = (Class14.aClass39_Sub5_Sub4_Sub4_Sub2Array211
 		       [Class1.anIntArray40[i_34_]]);

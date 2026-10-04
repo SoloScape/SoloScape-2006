@@ -243,6 +243,7 @@ public class Class39_Sub5_Sub7 extends SubNode
 	JImage.method1012(0);
 	((Class55) Class39_Sub5_Sub10_Sub2.anInterface2_2458)
 	    .method1004(Class45.anInt856, false);
+	ChristmasEventSnow.drawSnowfall();
 	Canvas_Sub1.method39(-32024);
 	if (AbstractImage.aBoolean1000 && method586(false, true, 0) == 0)
 	    AbstractImage.aBoolean1000 = false;

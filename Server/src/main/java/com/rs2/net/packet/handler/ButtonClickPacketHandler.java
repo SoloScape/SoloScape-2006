@@ -146,11 +146,12 @@ implements PacketHandler {
             return;
         }
         if (buttonId == 6269) {
-            player.automaticMusicEnabled = true;
+            MusicManager.setAutomaticMode(player, true);
+            new MusicManager().updateForPlayerPosition(player);
             return;
         }
         if (buttonId == 6270) {
-            player.automaticMusicEnabled = false;
+            MusicManager.setAutomaticMode(player, false);
             return;
         }
         switch (buttonId) {

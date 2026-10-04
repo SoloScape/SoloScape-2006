@@ -14,7 +14,7 @@ import java.util.Locale;
 
 /** Translates 443 cache actions to gameplay operations, independently of menu slots. */
 public final class NpcActionRouter {
-    public enum Action { NONE, TALK, ATTACK, BANK, TRADE, PICKPOCKET, FISH, TELEPORT, TAN, EXCHANGE, SHEAR, WOODCUT, HEAL, REWARDS, LEGACY }
+    public enum Action { NONE, TALK, ATTACK, BANK, TRADE, PICKPOCKET, FISH, TELEPORT, TAN, EXCHANGE, SHEAR, WOODCUT, HEAL, REWARDS, PELT, LEGACY }
 
     private NpcActionRouter() { }
 
@@ -24,6 +24,7 @@ public final class NpcActionRouter {
         String action = label.trim().toLowerCase(Locale.ROOT);
         if (action.equals("talk-to") || action.equals("talk")) return Action.TALK;
         if (action.equals("attack")) return Action.ATTACK;
+        if (action.equals("pelt") && com.rs2.model.quest.event.GublinchChristmasEvent.isGublinch(definition.getId())) return Action.PELT;
         if (action.equals("bank")) return Action.BANK;
         if (action.equals("trade") || action.equals("trade-with")) {
             if (isTanner(definition.getId())) return Action.TAN;

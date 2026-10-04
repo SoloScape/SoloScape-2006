@@ -257,8 +257,8 @@ public final class ModernPlayerUpdateTask {
     private static PacketWriter buildAppearance(Player player) {
         PacketWriter appearance = PacketBuffer.allocateWriter(96);
         appearance.writeByte(player.getGender());
-        appearance.writeByte(player.getPrayerHeadIcon());
         appearance.writeByte(player.getSkullIcon());
+        appearance.writeByte(player.getPrayerHeadIcon());
         ItemStack head = visibleEquipment(player, 0);
         ItemStack body = visibleEquipment(player, 4);
         int headType = head == null ? 0 : head.getDefinition().getEquipmentAppearanceType();
@@ -298,7 +298,7 @@ public final class ModernPlayerUpdateTask {
     }
 
     private static ItemStack visibleEquipment(Player player, int slot) {
-        if ((slot == 3 || slot == 5) && player.shouldHideHeldItemsInAppearance()) {
+        if (player.shouldHideEquipmentItemInAppearance(slot)) {
             return null;
         }
         ItemStack item = player.getEquipmentManager().getContainer().getItemAt(slot);

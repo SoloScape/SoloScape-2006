@@ -5489,6 +5489,17 @@ extends Entity {
         return this.hideHeldItemsInAppearance;
     }
 
+    /**
+     * Some wieldable items have no worn model in the active cache. Serializing
+     * one of those as equipment makes the client fail the whole player model.
+     */
+    public final boolean shouldHideEquipmentItemInAppearance(int slot) {
+        if ((slot == 3 || slot == 5) && this.hideHeldItemsInAppearance) {
+            return true;
+        }
+        return slot == 3 && this.getEquipmentManager().getItemIdAtSlot(3) == 10501;
+    }
+
     public final void setHideHeldItemsInAppearance(boolean itemId) {
         this.hideHeldItemsInAppearance = itemId;
     }

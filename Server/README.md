@@ -101,6 +101,66 @@ the working directory so the relative paths to `config/`, `data/`, `cache/`, and
 
 ## Interaction coverage and revision 443 routing
 
+Hold Ctrl and left-click the game view to teleport to the picked ground tile,
+including beneath scenery. The client uses the existing `::tele` command and
+then `::pos` to print the destination coordinates in chat.
+
+### 2006 Christmas rescue
+
+Speak to Shanty Claws on the larger northern Musa Point jetty at `2904,3186,0`.
+The client marks his location with the original wrapped-present minimap icon.
+Continue through his introduction and instructions to start the rescue;
+walking away before finishing the introduction does not start the event.
+Make snowballs south of Karamja Volcano, beside the cave entrance at
+`2843,3141`, and wield them. The 2x2 cave replaces the tree there and has a dungeon minimap icon.
+Pelt a gublinch three times, pick up its
+shards, and use one shard on each of Shanty's ten cages. Talk to Shanty
+after filling all ten to receive the reindeer hat (`10507`) and, on a
+members world with membership, the Wintumber tree (`10508`). Operate the
+worn hat to perform its emote. Diango in Draynor replaces missing rewards;
+items already in the inventory, equipment or bank are not duplicated.
+
+The four Make-ball-of snow piles are at `2841,3147`, `2844,3147`, `2840,3150`
+and `2842,3153`, all on plane 0.
+
+Sixteen Gublinch wander throughout both dungeon loops and the northern furnace
+chamber. After freezing, they respawn at their original anchors and resume wandering.
+
+The client preserves the revision-443 cache's original snow south of Karamja
+Volcano; it does not repaint the eastern terrain. While standing on those snowy
+tiles, chunky screen-space snowballs sweep diagonally from the top-right of the
+game viewport toward the bottom-left, matching the direction visible in the 2006
+footage. There is no camera-following transform or pale screen wash. The effect
+stops inside caves, on upper planes and in instances. Restart the rebuilt client
+and reload the map to remove the previous eastern ground override. The Karamja
+weather layer is a recreation based on the 2006 footage; the separate legacy
+Trollweiss overlay remains interface 11877.
+
+Shanty's conversations use the supplied 2006 transcript, including the ring of
+Charos greeting, questions, progress reminders, item-use replies, and post-event
+dialogue. His five overhead shanties repeat in order. Search the cave entrance
+to read his notice. The hat and members tree are handed over separately: with
+one free slot, take the hat and return with space for the tree. Players who
+received the hat on a free world can collect the tree later on a members world.
+
+The ten required cages are at `2907,3183..3185`, `2904,3188..3191`, and
+`2907,3188..3190`, all on plane 0. All ten cages count toward completion.
+The existing jetty
+terrain is used without extending the map.
+
+The rescue is permanently available with the revision 443 cache, independently
+of seasonal rare-item drops. Cage progress and completion use saved event slot
+5, including offline character rewrites. Children and filled-cage appearances
+reflect each player's progress. The tree is awarded and reclaimable; planting
+awaits a player-owned-house system.
+
+Historical mechanics reference: [2006 Christmas event guide](https://runescape.salmoneus.net/tips/christmas-2006-event.html).
+The event's cache-backed regression entry point is
+`src/test/java/GublinchChristmasEventChecks.java`.
+Client visual checks are `Client/tests/ChristmasSnowChecks.java` and
+`Client/tests/ChristmasMinimapChecks.java`, run from `Server` with the client and
+server classes plus `Server/lib/*` on the classpath.
+
 Run `powershell -ExecutionPolicy Bypass -File tools\interaction-audit.ps1 -Check`
 from the repository root to compile an isolated audit build, inventory the loaded
 cache, and run the interaction regression checks. The output is

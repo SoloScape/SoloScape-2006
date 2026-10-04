@@ -17,6 +17,7 @@ public final class CharacterFileRecord {
     public String profileString2 = "";
     public long lastSavedMillis;
     public long homeTeleportAvailableAtMillis;
+    public boolean automaticMusicEnabled = true;
     public long totalPlayTimeMillis;
     public long createdAtMillis;
     public boolean loginRestrictionExempt;

@@ -510,6 +510,16 @@ public class ItemDefinition {
         }
         // Server metadata uses the later black axe requirement; revision 443 used level 6.
         definitionsById[1361].requiredLevels[8] = 6;
+        // These Christmas assets postdate the legacy server metadata. Snowballs are
+        // weapons, shards/tree are inventory items, and the hat has no combat bonuses.
+        definitionsById[10501].equipmentSlot = 3;
+        definitionsById[10506].equipmentSlot = -1;
+        definitionsById[10507].equipmentSlot = 0;
+        definitionsById[10508].equipmentSlot = -1;
+        for (int id : new int[]{10501, 10506, 10507, 10508}) {
+            definitionsById[id].untradeable = true;
+            java.util.Arrays.fill(definitionsById[id].bonuses, 0);
+        }
         load2009scapeExamines();
     }
 

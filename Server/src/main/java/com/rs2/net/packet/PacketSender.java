@@ -664,8 +664,8 @@ public final class PacketSender {
             if (interfaceId == InterfaceBridge.UNMAPPED) return this;
             PacketWriter packetWriter = PacketBuffer.allocateWriter(9);
             packetWriter.writeOpcode(this.player.getOutboundCipher(), 232);
-            packetWriter.writeShort(value2, ByteTransform.ADD);
-            packetWriter.writeShort(value32, ByteTransform.ADD, ByteOrder.LITTLE);
+            packetWriter.writeShort(value32, ByteTransform.ADD);
+            packetWriter.writeShort(value2);
             packetWriter.writeInt(interfaceId, ByteOrder.INVERSE_MIDDLE);
             this.player.writePacketBuffer(packetWriter.getBuffer());
             return this;
@@ -2038,8 +2038,9 @@ public final class PacketSender {
             if (interfaceId == InterfaceBridge.UNMAPPED) return this;
             PacketWriter packetWriter = PacketBuffer.allocateWriter(9);
             packetWriter.writeOpcode(this.player.getOutboundCipher(), 232);
-            packetWriter.writeShort(value2, ByteTransform.ADD);
-            packetWriter.writeShort(value32, ByteTransform.ADD, ByteOrder.LITTLE);
+            // Revision 443 reads signed Y (big endian, low byte +128), then signed X.
+            packetWriter.writeShort(value32, ByteTransform.ADD);
+            packetWriter.writeShort(value2);
             packetWriter.writeInt(interfaceId, ByteOrder.INVERSE_MIDDLE);
             this.player.writePacketBuffer(packetWriter.getBuffer());
             return this;

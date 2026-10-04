@@ -30,6 +30,15 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 || !player.isInterfaceIdOpen(4439)) {
             return false;
         }
+        if (child == 180) { // Native Auto control.
+            MusicManager.setAutomaticMode(player, true);
+            new MusicManager().updateForPlayerPosition(player);
+            return true;
+        }
+        if (child == 181) { // Native Manual control.
+            MusicManager.setAutomaticMode(player, false);
+            return true;
+        }
         return com.rs2.model.music.Music.play(player, child);
     }
 

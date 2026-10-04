@@ -32,6 +32,11 @@ public final class SkillActionHelper {
     }
 
     public static WorldObject findWorldObjectById(int objectId, int value2, int value32, int value42) {
+        if (com.rs2.model.quest.event.GublinchChristmasEvent.isCageAppearance(objectId, value2, value32, value42)) {
+            DynamicObject cage = ObjectManager.findDynamicObjectByIdAt(
+                    com.rs2.model.quest.event.GublinchChristmasEvent.CAGE, value2, value32, value42);
+            if (cage != null) return new WorldObject(objectId, 10, 0, cage.getWorldObject().getPosition());
+        }
         ObjectManager.getInstance();
         DynamicObject dynamicObject = ObjectManager.findDynamicObjectByIdAt(objectId, value2, value32, value42);
         if (dynamicObject != null) {

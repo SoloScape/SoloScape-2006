@@ -64,7 +64,7 @@ public final class SettingsPersistenceChecks {
                     // A version-30 non-bot file ends with botEnabled. Remove only the new area value.
                     byte[] saved = Files.readAllBytes(file);
                     // Strip the optional home teleport timestamp before constructing a v30 save.
-                    byte[] current = java.util.Arrays.copyOf(saved, saved.length - 8);
+                    byte[] current = java.util.Arrays.copyOf(saved, saved.length - 9);
                     byte[] legacy = new byte[current.length - 4];
                     System.arraycopy(current, 0, legacy, 0, current.length - 5);
                     legacy[0] = 0;

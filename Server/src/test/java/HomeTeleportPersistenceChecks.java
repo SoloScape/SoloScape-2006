@@ -47,7 +47,7 @@ public final class HomeTeleportPersistenceChecks {
             require(load(username).homeTeleportAvailableAtMillis == availableAt,
                     "Offline record rewrite lost cooldown");
             byte[] current = Files.readAllBytes(file);
-            Files.write(file, Arrays.copyOf(current, current.length - 8));
+            Files.write(file, Arrays.copyOf(current, current.length - 9));
             Player legacy = load(username);
             require(legacy.getQuestState(0) == 1, "Old character file failed to load");
             require(legacy.homeTeleportAvailableAtMillis == 0L,

@@ -1475,6 +1475,9 @@ implements PacketHandler {
         BarrowsRepairHandler barrowsRepairHandler = BarrowsRepairHandler.forItem(itemStack);
         if (itemStack.getDefinition().hasDestroyOption() || barrowsRepairHandler != null && itemStack.getDefinition().isUntradeable()) {
             String destroyMessage = "Dropping this item will make you lose it forever.";
+            if (itemStack.getId() == 10507 || itemStack.getId() == 10508) {
+                destroyMessage = "Diango in Draynor Village can replace this Christmas reward.";
+            }
             if (barrowsRepairHandler != null) {
                 destroyMessage = "Dropping this item will make it degrade to 0.";
             }
@@ -1600,6 +1603,10 @@ implements PacketHandler {
             if (equipmentManager != null) {
                 player2.setSelectedItemId(((ItemStack)equipmentManager).getId());
                 switch (((ItemStack)equipmentManager).getId()) {
+                    case 10507: {
+                        com.rs2.model.quest.event.GublinchChristmasEvent.operateHat(player2);
+                        break;
+                    }
                     case 2552: 
                     case 2554: 
                     case 2556: 

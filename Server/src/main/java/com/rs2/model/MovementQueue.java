@@ -164,6 +164,9 @@ public final class MovementQueue {
         }
         if (this.entity.isPlayer() && ServerSettings.clientBuild == 443
                 && !((Player)this.entity).isBot) {
+            // The native client bypasses the legacy movement callbacks below.
+            // Refresh music here for walking, region rebuilds and teleports alike.
+            new MusicManager().updateForPlayerPosition((Player)this.entity);
             return;
         }
         if (this.entity.isPlayer()) {

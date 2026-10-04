@@ -874,6 +874,8 @@ public class DialogueManager {
     }
 
     public final void showTwoItemMessage(String itemId, String value2, ItemStack itemStack, ItemStack itemStack2) {
+        // Restore the standard placement after item-specific preview adjustments.
+        this.player.packetSender.sendInterfacePosition(4957, 0, 0);
         Player player = this.player;
         player.packetSender.sendInterfaceText("", 4953);
         player = this.player;
