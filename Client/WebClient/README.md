@@ -40,6 +40,24 @@ The console prints the exact phone URL, for example:
 
 Keep both the command window and Java client window open.
 
+## Original Windows EXE
+
+For the original Jagex `runescape.exe` with its URL changed to
+`http://127.0.0.1:8081/`, run `Enable-Original-Client.bat` once, then close and
+reopen the EXE. This enables IE11 rendering for that executable for the current
+Windows user. The page automatically selects an ES5 desktop view for its embedded
+browser, with the same framebuffer, mouse and keyboard connection to Java.
+Its game area stays at 765x503 pixels at 1:1 scale. The patched original EXE has
+a fixed window with resizing and maximize disabled. The game remains focusable
+for keyboard input without drawing a dotted focus outline.
+
+Start the game server and `Start-Original-Client.bat` before opening the EXE.
+The latter runs Java in the background with an off-screen utility window so
+rendering remains available without a second visible game window. Rebuild the
+client after pulling this change. Normal desktop/phone startup stays visible.
+The game server on port 43594 does not serve the webpage on port 8081; the Java
+client bridge provides that page. Modern browsers keep using the existing view.
+
 ## Phone controls
 
 - Tap = normal left click.
@@ -50,4 +68,6 @@ Keep both the command window and Java client window open.
 
 ## Current transport
 
-Frames are lossless PNG at up to 10 FPS. This prioritises correctness/fidelity over bandwidth for the first working version. The next optimisation can change the transport to dirty rectangles or a faster codec without changing any game/client behaviour.
+Frames are lossless PNG at up to 50 FPS, matching the Java client loop. Encoding
+uses a fast Sub filter and level-1 compression to reduce latency. Slow decoding
+keeps the newest waiting frame rather than accumulating a playback backlog.

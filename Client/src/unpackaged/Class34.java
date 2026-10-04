@@ -575,10 +575,10 @@ public abstract class Class34 {
                         if (Class38.anInt682 != -1) {
                             int i_30_ = Class38.anInt677;
                             int i_31_ = Class38.anInt682;
-                            boolean bool = (CtrlClickTeleport.completePick(i_31_, i_30_) || Class26.method293(24134, 0, i_30_, 0, 0, 0, 0, true, 0,
+                            boolean bool = Class26.method293(24134, 0, i_30_, 0, 0, 0, 0, true, 0,
                                     (Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109.anIntArray2314[0]),
                                     (Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109.anIntArray2255[0]),
-                                    i_31_));
+                                    i_31_);
                             if (bool) {
                                 Class4.anInt80 = 1;
                                 Class26.anInt503 = 0;

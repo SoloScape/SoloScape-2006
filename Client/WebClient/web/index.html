@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#000000">
@@ -17,6 +18,10 @@
     <button id="keyboard" type="button" aria-label="Open keyboard">⌨</button>
     <input id="softInput" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Game keyboard input">
   </main>
-  <script src="/app.js" defer></script>
+  <script>
+    var clientScript = document.createElement('script');
+    clientScript.src = document.documentMode ? '/windows-client.js' : '/app.js';
+    document.body.appendChild(clientScript);
+  </script>
 </body>
 </html>

@@ -224,6 +224,14 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	    Deque.anInt919 = i_7_;
 	    IsaacPrng.anInt1087 = i_6_;
 	    Class10.frame = new Frame();
+	    boolean background = Boolean.getBoolean("client.background")
+		&& Integer.getInteger("web.bridge.port", -1) > 0;
+	    if (background) {
+		// Keep a native peer for software rendering without a second game window.
+		Class10.frame.setType(java.awt.Window.Type.UTILITY);
+		Class10.frame.setFocusableWindowState(false);
+		Class10.frame.setLocation(-10000, -10000);
+	    }
 	    Class10.frame.setTitle("Jagex");
 	    Class10.frame.setResizable(true);
 	    Class10.frame.setLayout(null);
@@ -235,7 +243,7 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	    });
 	    Class10.frame.addWindowListener(this);
 	    Class10.frame.setVisible(true);
-	    Class10.frame.toFront();
+	    if (!background) Class10.frame.toFront();
 	    Insets insets = Class10.frame.getInsets();
 	    Class10.frame.setSize(insets.right + (insets.left + i_6_), insets.top + i_7_ + insets.bottom);
 	    Class10.frame.setMinimumSize(new Dimension(Class10.frame.getWidth(), Class10.frame.getHeight()));

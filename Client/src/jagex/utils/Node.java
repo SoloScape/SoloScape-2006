@@ -265,7 +265,6 @@ public class Node
 	if (Class30.anInt534 == 0
 	    && NpcDefinition.aClass39_Sub5_Sub17_1864 == null) {
 	    int i_14_ = Class46.anInt887;
-            if (unpackaged.CtrlClickTeleport.beginClick(i_14_, Class39_Sub4.anInt1329, Bzip2Block.anInt1054)) return;
 	    if (IsaacPrng.aBoolean1100 && Class39_Sub4.anInt1329 >= 516
 		&& Bzip2Block.anInt1054 >= 160 && Class39_Sub4.anInt1329 <= 765
 		&& Bzip2Block.anInt1054 <= 205)

@@ -39,7 +39,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.imageio.ImageIO;
 
 /**
  * Streams the real Java client's 765x503 software-rendered framebuffer to a
@@ -307,20 +306,17 @@ public final class WebClientBridge {
     public static void publishFrame() {
         if (!enabled || CLIENTS.isEmpty()) return;
         long now = System.nanoTime();
-        if (now - lastFrameNanos < 100_000_000L) return; // max 10 fps for the first reliable build
+        // Allow 2 ms of timer jitter without dropping alternate 50 Hz frames.
+        if (now - lastFrameNanos < 18_000_000L) return;
         if (!ENCODE_PENDING.compareAndSet(false, true)) return;
-        lastFrameNanos = now;
+        lastFrameNanos = Math.max(lastFrameNanos + 20_000_000L, now - 2_000_000L);
         final int[] snapshot = new int[FRAME.length];
         synchronized (FRAME_LOCK) {
             System.arraycopy(FRAME, 0, snapshot, 0, FRAME.length);
         }
         ENCODER.execute(() -> {
             try {
-                BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
-                image.setRGB(0, 0, WIDTH, HEIGHT, snapshot, 0, WIDTH);
-                ByteArrayOutputStream encoded = new ByteArrayOutputStream(256 * 1024);
-                ImageIO.write(image, "png", encoded);
-                byte[] frame = encoded.toByteArray();
+                byte[] frame = FramePngEncoder.encode(snapshot, WIDTH, HEIGHT);
                 for (ClientSession client : CLIENTS) {
                     client.sendBinary(frame);
                 }
