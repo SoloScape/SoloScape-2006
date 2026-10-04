@@ -77,6 +77,9 @@ public final class GrandExchangeCompatibilityChecks {
         try (Js5CacheStore store = new Js5CacheStore(new File("cache"))) {
             Widget normalInventory = new Widget();
             normalInventory.decodeOldFormat(new jagex.io.Buffer(store.readFiles(3, 149).get(0)));
+            normalInventory.anInt2084 = 149 << 16;
+            Class62_Sub1.widgets[149] = new Widget[] {normalInventory};
+            Class39_Sub5_Sub4.widgetsLoaded[149] = true;
             Widget sellInventory = GrandExchangeWidgets.get(19102);
             require(sellInventory.anInt2091 == normalInventory.anInt2091
                     && sellInventory.anInt2021 == normalInventory.anInt2021
@@ -100,11 +103,11 @@ public final class GrandExchangeCompatibilityChecks {
         render(500, "buy");
         render(501, "sell");
         Class39_Sub11.anInt1478 = 500;
-        Class37.anInt663 = 2;
+        Class37.anInt663 = 1512;
         ItemDefinition searchedItem = new ItemDefinition();
         searchedItem.aClass3_1661 = Class39_Sub5_Sub9.createJstring("Logs");
         searchedItem.anInt1644 = -1;
-        Class53.itemDefinitionCache.put(searchedItem, 1L, (byte) 104);
+        Class53.itemDefinitionCache.put(searchedItem, 1511L, (byte) 104);
         require(GrandExchangeWidgets.click(InterfaceBridge.translate(18897)), "Item chooser didn't open");
         require(GrandExchangeWidgets.submitSearch(Class39_Sub5_Sub9.createJstring("logs")), "Item chooser didn't consume input");
         require(FrameBuffer.outgoingGameBuffer.offset == 3, "Item selection wasn't sent");
@@ -215,10 +218,82 @@ public final class GrandExchangeCompatibilityChecks {
                 pump(input, cipher, player);
                 require(Class39_Sub11.anInt1478 == -1, "Exchange didn't close");
                 require(!GrandExchangeWidgets.searching, "Exchange close left search active");
+                developerItemChecks(player, input, cipher);
             }
         }
         System.out.println("Exchange checks passed: cached clerk repair, all widget/button mappings, actual overview/buy/sell/status/progress/close packets.");
         System.exit(0);
+    }
+
+    private static void developerItemChecks(com.rs2.model.player.Player player,
+            DataInputStream input, IsaacCipher cipher) throws Exception {
+        player.getInventoryManager().getContainer().clear();
+        player.handleCommand("item", new String[0], "");
+        pump(input, cipher, player);
+        require(player.getOpenInterfaceId() == 19103 && Class39_Sub11.anInt1478 == 505
+                && GrandExchangeWidgets.searching, "::item did not open developer search");
+        renderSearch("developer-item-empty");
+        require(GrandExchangeSearch.isSearchable(995), "Coins missing from developer search");
+        require(GrandExchangeSearch.isSearchable(5070), "Untradeable bird nest missing");
+        require(GrandExchangeSearch.isSearchable(437), "Noted copper ore missing");
+        require(GrandExchangeSearch.name(437).equals("Copper ore (noted)"), "Noted result is ambiguous");
+        require(GrandExchangeSearch.name(5070).equals("Bird nest"), "Free world masked members item name");
+        Class66.aClass3_1151 = GrandExchangeWidgets.literal("bird nest");
+        GrandExchangeSearch.update(Class66.aClass3_1151);
+        require(GrandExchangeSearch.resultCount() > 0, "Developer name search missing untradeables");
+        renderSearch("developer-item-results");
+        FrameBuffer.outgoingGameBuffer.offset = 0;
+        require(GrandExchangeWidgets.click(0x7fff0000), "Result click was not handled");
+        require(FrameBuffer.outgoingGameBuffer.offset == 3 && GrandExchangeWidgets.searching,
+                "Click did not send selection or closed developer picker");
+        require(((FrameBuffer.outgoingGameBuffer.payload[1] & 255) << 8
+                | (FrameBuffer.outgoingGameBuffer.payload[2] & 255)) == 5070,
+                "Result click selected the wrong item");
+        int selected = player.selectedGrandExchangeItemId;
+        for (int id : new int[] {5070, 437, 995}) {
+            selectTestItem(player, id);
+            pump(input, cipher, player);
+            require(player.getInventoryManager().getContainer().getItemAmount(id) == 1,
+                    "Test item was not added: " + id);
+        }
+        require(player.selectedGrandExchangeItemId == selected, "Developer spawn changed GE offer");
+        selectTestItem(player, -1);
+        selectTestItem(player, 32767);
+        require(player.getInventoryManager().getContainer().getFreeSlots() == 25,
+                "Invalid selection changed inventory");
+        player.getInventoryManager().getContainer().clear();
+        for (int slot = 0; slot < 28; slot++) {
+            player.getInventoryManager().getContainer().setItem(slot, new com.rs2.model.item.ItemStack(1511));
+        }
+        selectTestItem(player, 5070);
+        pump(input, cipher, player);
+        require(player.getInventoryManager().getContainer().getItemAmount(5070) == 0,
+                "Full inventory accepted an item");
+        player.getInventoryManager().getContainer().clear();
+        GrandExchangeSearch.key(0, -1);
+        require(!GrandExchangeWidgets.searching && Class39_Sub11.anInt1478 == -1,
+                "Escape did not close developer picker");
+        new com.rs2.net.packet.handler.CloseInterfacePacketHandler().handle(player,
+                new com.rs2.net.packet.IncomingPacket(70, 0,
+                        com.rs2.net.packet.PacketBuffer.wrapReader(java.nio.ByteBuffer.allocate(0))));
+        selectTestItem(player, 5070);
+        require(player.getInventoryManager().getContainer().getFreeSlots() == 28,
+                "Closed picker still granted items");
+        player.setOpenInterfaceId(18890);
+        selectTestItem(player, 1511);
+        require(player.getInventoryManager().getContainer().getFreeSlots() == 28,
+                "Normal GE selection granted a free item");
+        player.packetSender.closeInterfaces();
+        pump(input, cipher, player);
+        System.out.println("Developer item checks passed: command, search, free selections, full inventory, close and GE isolation.");
+    }
+
+    private static void selectTestItem(com.rs2.model.player.Player player, int id) {
+        java.nio.ByteBuffer choice = java.nio.ByteBuffer.allocate(2).putShort((short) id);
+        choice.flip();
+        new com.rs2.net.packet.handler.ItemSpawnPacketHandler().handle(player,
+                new com.rs2.net.packet.IncomingPacket(19, 2,
+                        com.rs2.net.packet.PacketBuffer.wrapReader(choice)));
     }
 
     private static void searchChecks() throws Exception {

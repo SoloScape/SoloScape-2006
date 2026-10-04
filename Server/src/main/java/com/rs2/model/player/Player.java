@@ -2337,7 +2337,13 @@ extends Entity {
     public final void handleCommand(String password, String[] stringValues2, String text22) {
         Object value;
         int value2;
-        if ((password = password.toLowerCase()).equals("pos")) {
+        if ((password = password.toLowerCase()).equals("item")) {
+            if (!this.isActionLocked()) {
+                this.packetSender.closeInterfaces();
+                this.packetSender.showInterface(19103);
+            }
+            return;
+        } else if (password.equals("pos")) {
             this.packetSender.sendGameMessage(
                     this.getPosition().getX() + ", "
                     + this.getPosition().getY() + ", "

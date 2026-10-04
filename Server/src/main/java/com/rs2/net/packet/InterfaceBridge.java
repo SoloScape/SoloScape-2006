@@ -25,6 +25,7 @@ public final class InterfaceBridge {
         mappings.put(18984, 502);
         mappings.put(19018, 503);
         mappings.put(19101, 504);
+        mappings.put(19103, 505); // developer item search
         mappings.put(3917, 320); // skills
         mappings.put(8714, 308); // legacy skill guide -> revision 443 skill guide
         mappings.put(638, 274);  // quest journal
@@ -95,6 +96,7 @@ public final class InterfaceBridge {
         mappings.put(5063, 15);   // bank inventory overlay
         mappings.put(3824, 300);  // shop
         mappings.put(3822, 301);  // shop inventory overlay
+        mappings.put(1743, 307);  // cooking quantity chatbox
         mappings.put(679, 324);  // tanning (legacy fallback)
         mappings.put(14670, 324); // tanning
         mappings.put(8134, 275);  // quest detail page
@@ -180,6 +182,10 @@ public final class InterfaceBridge {
         }
         put(mappings, 153, 261, 0);    // toggle run
         put(mappings, 3214, 149, 0);   // inventory container
+        put(mappings, 13716, 307, 2);  // cooking item model
+        put(mappings, 13718, 307, 4);  // Cook X
+        put(mappings, 13719, 307, 5);  // Cook 5
+        put(mappings, 13720, 307, 6);  // Cook 1
         put(mappings, 30000, 192, 591); // standard spellbook: Lumbridge Home Teleport
         put(mappings, 1688, 387, 25);  // worn equipment container
         put(mappings, 15107, 465, 103); // items on the equipment statistics screen
@@ -711,6 +717,18 @@ public final class InterfaceBridge {
         // Keep newly-added spell mappings visible to a live HotSwap server; the
         // static reverse table is built only once when this class is first loaded.
         if (packedId == (192 << 16 | 591)) return 30000;
+        // Native cooking quantity chatbox. Child 3 is intentionally reverse-only:
+        // legacy 13717 is also used as a text target, and mapping it forward would
+        // overwrite the native "Cook All" label with the food name.
+        if ((packedId >>> 16) == 307) {
+            switch (packedId & 0xffff) {
+                case 3: return 13717; // Cook All
+                case 4: return 13718; // Cook X
+                case 5: return 13719; // Cook 5
+                case 6: return 13720; // Cook 1
+                default: break;
+            }
+        }
         Integer legacyId = LEGACY_COMPONENTS.get(packedId);
         if (legacyId == null && packedId >>> 16 == 312) {
             // Smithing may have been added after the dev server loaded its maps.

@@ -95,6 +95,14 @@ Administrators can alternatively enter `::debug` in-game to toggle these
 diagnostics for only their player; the terminal prints an `[interaction-debug]`
 confirmation when the toggle changes.
 
+Enter `::item` to open the developer item picker in the matching client. Type
+part of an item's name and click a result to add one to your inventory for free.
+The GE-style search includes coins, untradeable items, members items and noted
+items, which are labelled `(noted)`. It stays open for repeated selections;
+press Escape or click its close button to exit. A full inventory uses the usual
+no-space message. Like the existing test cheats, this command is available to
+local players without an administrator rank.
+
 Keep the project directory structure intact. `Start-Server.bat` uses the project root as
 the working directory so the relative paths to `config/`, `data/`, `cache/`, and
 `lib/` resolve correctly.

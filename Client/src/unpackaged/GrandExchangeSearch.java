@@ -12,6 +12,7 @@ import jagex.graphics.BitmapFont;
 import jagex.graphics.DrawingArea;
 import jagex.graphics.sprites.DirectColorSprite;
 import jagex.io.FrameBuffer;
+import jagex.io.Buffer;
 import jagex.utils.JString;
 import jagex.utils.Queue;
 
@@ -30,6 +31,7 @@ public final class GrandExchangeSearch {
     private static AbstractImage panel;
     private static String lastQuery = "";
     private static int hovered = -1;
+    private static final java.util.Map<Integer, String> developerNames = new java.util.HashMap<Integer, String>();
 
     private static void ensurePanel() {
         if (panel == null)
@@ -94,7 +96,44 @@ public final class GrandExchangeSearch {
         return new String(value.bytes, 0, value.length, Charset.forName("windows-1252"));
     }
 
-    public static String name(int id) { return string(Class26.getItemDefinition(id).aClass3_1661); }
+    public static String name(int id) {
+        if (!developerPicker()) return string(Class26.getItemDefinition(id).aClass3_1661);
+        String name = developerNames.get(id);
+        if (name != null) return name;
+        // Read the original name: the ordinary item loader masks members items on free worlds.
+        byte[] data = Class31.itemFileLoader.lookupFile(10, id);
+        ItemDefinition item = new ItemDefinition();
+        if (data != null) item.decode(0, new Buffer(data));
+        name = item.aClass3_1661 == null ? "null" : string(item.aClass3_1661);
+        if (item.anInt1644 != -1 && item.anInt1651 != id) name = name(item.anInt1651) + " (noted)";
+        developerNames.put(id, name);
+        return name;
+    }
+
+    static boolean developerPicker() { return Class39_Sub11.anInt1478 == 505; }
+
+    static boolean hasSearchInterface() {
+        return Class39_Sub11.anInt1478 == 500 || developerPicker();
+    }
+
+    static int itemLimit() {
+        return Math.min(Class37.anInt663, developerPicker() ? 32768 : 11884);
+    }
+
+    static boolean isSearchable(int id) {
+        if (id < 0 || id >= itemLimit()) return false;
+        ItemDefinition item = Class26.getItemDefinition(id);
+        if (!developerPicker() && item.aClass3_1661 == null) return false;
+        String name = name(id).trim();
+        if (name.isEmpty() || name.equalsIgnoreCase("null") || name.equalsIgnoreCase("null (noted)")) return false;
+        return developerPicker() || (GrandExchangeCatalog.contains(id) && item.anInt1644 == -1 && id != 995);
+    }
+
+    private static void dismiss() {
+        boolean developer = developerPicker();
+        GrandExchangeWidgets.cancelSearch();
+        if (developer) Class55.method999(31121);
+    }
 
     public static void update(JString value) {
         String text = string(value).trim().toLowerCase(Locale.ROOT);
@@ -105,10 +144,8 @@ public final class GrandExchangeSearch {
             hovered = -1;
             if (!text.isEmpty()) {
                 String[] terms = text.split("\\s+");
-                for (int id = 0; id < Math.min(Class37.anInt663, 11884); id++) {
-                    if (!GrandExchangeCatalog.contains(id)) continue;
-                    ItemDefinition item = Class26.getItemDefinition(id);
-                    if (item.anInt1644 != -1 || item.aClass3_1661 == null || id == 995) continue;
+                for (int id = 0; id < itemLimit(); id++) {
+                    if (!isSearchable(id)) continue;
                     String name = name(id).toLowerCase(Locale.ROOT);
                     if (name.equals("null")) continue;
                     boolean match = true;
@@ -133,15 +170,15 @@ public final class GrandExchangeSearch {
     public static void selectFirst() { if (!results.isEmpty()) select(results.get(0)); }
 
     public static void select(int id) {
-        if (!GrandExchangeWidgets.searching || Class39_Sub11.anInt1478 != 500) return;
+        if (!GrandExchangeWidgets.searching || !hasSearchInterface() || !isSearchable(id)) return;
         FrameBuffer.outgoingGameBuffer.putFrame(19);
         FrameBuffer.outgoingGameBuffer.putWord(id);
-        GrandExchangeWidgets.cancelSearch();
+        if (!developerPicker()) GrandExchangeWidgets.cancelSearch();
     }
 
     static boolean click(int hash) {
         if (!GrandExchangeWidgets.searching || (hash & 0xffff0000) != RESULT) return false;
-        if (hash == CLOSE) GrandExchangeWidgets.cancelSearch();
+        if (hash == CLOSE) dismiss();
         else {
             int index = hash & 0xffff;
             if (index < results.size()) select(results.get(index));
@@ -166,7 +203,7 @@ public final class GrandExchangeSearch {
 
     public static void mouse(int x, int y) {
         if (!GrandExchangeWidgets.searching) return;
-        if (Class39_Sub11.anInt1478 != 500) { GrandExchangeWidgets.cancelSearch(); return; }
+        if (!hasSearchInterface()) { GrandExchangeWidgets.cancelSearch(); return; }
         int height = Math.max(LIST_HEIGHT, results.size() * ROW_HEIGHT + 7);
         if (height > LIST_HEIGHT)
             Class39_Sub4.method456((byte) 121, 500, x, y, 3, LIST_HEIGHT, 0, height, scrollbar);
@@ -192,9 +229,11 @@ public final class GrandExchangeSearch {
         DrawingArea.setDimensions(60, 0, 500, LIST_HEIGHT);
         if (lastQuery.isEmpty()) {
             Class32.aClass39_Sub5_Sub10_Sub1_587.method629(
-                    GrandExchangeWidgets.literal("Grand Exchange Item Search"), 280, 27, 0xa05a00);
+                    GrandExchangeWidgets.literal(developerPicker() ? "Developer Item Search" : "Grand Exchange Item Search"), 280, 27, 0xa05a00);
             small.method629(GrandExchangeWidgets.literal("To search for an item, start by typing part of its name."), 280, 56, 0xa05a00);
-            small.method629(GrandExchangeWidgets.literal("Then, simply select the item you want from the results on display."), 280, 71, 0xa05a00);
+            small.method629(GrandExchangeWidgets.literal(developerPicker()
+                    ? "Click a result to add one item to your inventory for free."
+                    : "Then, simply select the item you want from the results on display."), 280, 71, 0xa05a00);
         } else if (results.isEmpty()) {
             small.method629(GrandExchangeWidgets.literal("No matching items found."), 280, 56, 0xa05a00);
         } else {
@@ -215,9 +254,9 @@ public final class GrandExchangeSearch {
 
     public static boolean key(int key, int character) {
         if (!GrandExchangeWidgets.searching) return false;
-        if (Class39_Sub11.anInt1478 != 500) { GrandExchangeWidgets.cancelSearch(); return false; }
+        if (!hasSearchInterface()) { GrandExchangeWidgets.cancelSearch(); return false; }
         // AWT Escape (27) maps to client key 0.
-        if (key == 0) { GrandExchangeWidgets.cancelSearch(); return true; }
+        if (key == 0) { dismiss(); return true; }
         if (key == 84) { GrandExchangeWidgets.submitSearch(Class66.aClass3_1151); return true; }
         if (key == 85 && Class66.aClass3_1151.length > 0)
             Class66.aClass3_1151 = Class66.aClass3_1151.method59(0, -1, Class66.aClass3_1151.length - 1);

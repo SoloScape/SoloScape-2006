@@ -15,6 +15,21 @@ public final class GrandExchangeWidgets {
     private static Widget searchGlass;
 
     public static boolean load(int group) {
+        if (group == 505) {
+            if (Class62_Sub1.widgets.length < 506) {
+                Class62_Sub1.widgets = Arrays.copyOf(Class62_Sub1.widgets, 506);
+                Class39_Sub5_Sub4.widgetsLoaded = Arrays.copyOf(Class39_Sub5_Sub4.widgetsLoaded, 506);
+            }
+            if (Class62_Sub1.widgets[group] != null && Class39_Sub5_Sub4.widgetsLoaded[group]) return true;
+            // The developer picker uses only the GE chat-panel overlay.
+            Widget root = new Widget();
+            root.anInt2084 = group << 16;
+            root.anInt2050 = -1;
+            root.type = 0;
+            Class62_Sub1.widgets[group] = new Widget[] {root};
+            Class39_Sub5_Sub4.widgetsLoaded[group] = true;
+            return true;
+        }
         if (group < 500 || group > 504) return false;
         if (Class62_Sub1.widgets.length < 505) {
             Class62_Sub1.widgets = Arrays.copyOf(Class62_Sub1.widgets, 505);
@@ -278,6 +293,11 @@ public final class GrandExchangeWidgets {
     }
 
     public static void opened(int group) {
+        if (group == 505) {
+            load(group);
+            startSearch();
+            return;
+        }
         if (group != 500 && group != 501) return;
         load(group);
         int shift = group == 501 ? 49 : 0;
@@ -354,13 +374,17 @@ public final class GrandExchangeWidgets {
         if (searching && hash != packed(18897)) cancelSearch();
         if (hash != packed(18897)) return false;
         if (Class39_Sub11.anInt1478 != 500) return true;
+        startSearch();
+        return true;
+    }
+
+    private static void startSearch() {
         searching = true;
         Class39_Sub5_Sub4_Sub4.anInt2285 = 2;
         Class39_Sub12.aBoolean1489 = false;
         Class66.aClass3_1151 = Class66.blankString;
         Class14.aBoolean245 = true;
         GrandExchangeSearch.open();
-        return true;
     }
 
     public static void cancelSearch() {
@@ -372,12 +396,11 @@ public final class GrandExchangeWidgets {
 
     public static boolean submitSearch(JString name) {
         if (!searching) return false;
-        if (Class39_Sub11.anInt1478 != 500) { cancelSearch(); return true; }
+        if (!GrandExchangeSearch.hasSearchInterface()) { cancelSearch(); return true; }
         if (name.length == 0) return true;
-        for (int id = 0; id < Math.min(Class37.anInt663, 11884); id++) {
-            ItemDefinition item = Class26.getItemDefinition(id);
-            if (item.anInt1644 == -1 && item.aClass3_1661 != null
-                    && item.aClass3_1661.method77().isEqual(name.method77())) {
+        for (int id = 0; id < GrandExchangeSearch.itemLimit(); id++) {
+            if (GrandExchangeSearch.isSearchable(id)
+                    && literal(GrandExchangeSearch.name(id)).method77().isEqual(name.method77())) {
                 GrandExchangeSearch.select(id);
                 return true;
             }

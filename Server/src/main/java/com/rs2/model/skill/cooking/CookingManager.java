@@ -12,6 +12,7 @@ import com.rs2.model.player.Player;
 import com.rs2.model.skill.SkillActionHelper;
 import com.rs2.model.skill.cooking.CookableFoodDefinition;
 import com.rs2.model.skill.cooking.CookingTask;
+import com.rs2.model.skill.firemaking.FiremakingHandler;
 import com.rs2.model.task.CycleEventHandler;
 import com.rs2.util.GameplayTrace;
 import com.rs2.util.GameUtil;
@@ -49,8 +50,8 @@ public final class CookingManager {
         Object worldObjectById = SkillActionHelper.findWorldObjectById(value5, value32, value42, this.player.getPosition().getPlane());
         if (value2 != null || worldObjectById != null) {
             value2 = ObjectDefinition.forId(value2 != null ? ((LoadedWorldObject)value2).getWorldObject().getObjectId() : ((WorldObject)worldObjectById).getObjectId());
-            worldObjectById = ((ObjectDefinition)value2).name.toLowerCase();
-            if (((String)worldObjectById).equalsIgnoreCase("fire") || ((String)worldObjectById).equalsIgnoreCase("fireplace")) {
+            worldObjectById = ((ObjectDefinition)value2).name;
+            if (CookingManager.isFireCookingSurface(value5, (String)worldObjectById)) {
                 if (GameplayTrace.enabled()) {
                     GameplayTrace.log("cooking item-on-object accepted player=" + GameplayTrace.describe(this.player) + " rawItemId=" + objectId + " raw=" + ItemDefinition.forId(objectId).getName() + " objectId=" + value5 + " objectName=" + ((ObjectDefinition)value2).name + " action=cookFire x=" + value32 + " y=" + value42 + " plane=" + this.player.getPosition().getPlane());
                 }
@@ -73,7 +74,7 @@ public final class CookingManager {
                 ((Player)value2).packetSender.showChatboxInterface(1743);
                 return true;
             }
-            if (((String)worldObjectById).equalsIgnoreCase("stove") || ((String)worldObjectById).equalsIgnoreCase("range") || ((String)worldObjectById).equalsIgnoreCase("cooking range") || ((String)worldObjectById).equalsIgnoreCase("cooking pot")) {
+            if (CookingManager.isRangeCookingSurface((String)worldObjectById)) {
                 if (GameplayTrace.enabled()) {
                     GameplayTrace.log("cooking item-on-object accepted player=" + GameplayTrace.describe(this.player) + " rawItemId=" + objectId + " raw=" + ItemDefinition.forId(objectId).getName() + " objectId=" + value5 + " objectName=" + ((ObjectDefinition)value2).name + " action=cookRange x=" + value32 + " y=" + value42 + " plane=" + this.player.getPosition().getPlane());
                 }
@@ -110,6 +111,35 @@ public final class CookingManager {
         return false;
     }
 
+    static boolean isFireCookingSurface(int objectId, String objectName) {
+        if (FiremakingHandler.isFireObjectId(objectId)) {
+            return true;
+        }
+        if (objectName == null) {
+            return false;
+        }
+        String name = objectName.trim().toLowerCase();
+        return name.equals("fire")
+                || name.equals("fireplace")
+                || name.equals("campfire")
+                || name.equals("ogre fire")
+                || name.startsWith("firepit")
+                || name.endsWith(" fireplace");
+    }
+
+    static boolean isRangeCookingSurface(String objectName) {
+        if (objectName == null) {
+            return false;
+        }
+        String name = objectName.trim().toLowerCase();
+        return name.equals("stove")
+                || name.equals("range")
+                || name.equals("cooking range")
+                || name.equals("cooking pot")
+                || name.equals("cooking pots")
+                || name.endsWith(" range");
+    }
+
     public static void startCookingTask(Player player, int value3) {
         int value2 = player.nextActionSequence();
         player.getMovementQueue().clear();
@@ -135,11 +165,11 @@ public final class CookingManager {
         player2.packetSender.closeInterfaces();
         player.getInventoryManager().removeItem(new ItemStack(player.getSelectedSkillItemId()));
         player2 = player;
-        if (player2.interfaceAction == "cookFire") {
+        if ("cookFire".equals(player2.interfaceAction)) {
             player.getUpdateState().setAnimation(897);
         } else {
             player2 = player;
-            if (player2.interfaceAction == "cookRange") {
+            if ("cookRange".equals(player2.interfaceAction)) {
                 player.getUpdateState().setAnimation(883);
             }
         }
@@ -165,7 +195,7 @@ public final class CookingManager {
         }
         if (!cookableFoodDefinition.canCookOnFire()) {
             player2 = player;
-            if (player2.interfaceAction == "cookFire") {
+            if ("cookFire".equals(player2.interfaceAction)) {
                 CookingManager.processCookingResult(player, player.getSelectedSkillItemId(), true);
                 return;
             }
