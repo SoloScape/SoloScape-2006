@@ -1008,6 +1008,9 @@ public class GameplayHelper {
     }
 
     public static void openProductionInterface(Player interfaceId, String interfaceId2) {
+        if (com.rs2.model.skill.fletching.logs.LogFletchingMenu.open(interfaceId, interfaceId2)) {
+            return;
+        }
         Object value;
         if (interfaceId2 == "potteryUnfired") {
             if (!ItemDefinition.isDefined(4438)) {

@@ -164,6 +164,9 @@ public class DialogueManager {
     }
 
     public final boolean handleOptionButton(int buttonId) {
+        if (com.rs2.model.skill.fletching.logs.LogFletchingMenu.handleButton(this.player, buttonId)) {
+            return true;
+        }
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("dialogue option-button player=" + GameplayTrace.describe(this.player) + " buttonId=" + buttonId + " id=" + this.dialogueId + " step=" + this.dialogueStep + " type=" + this.dialogueType + " npcId=" + this.dialogueNpcId);
         }
