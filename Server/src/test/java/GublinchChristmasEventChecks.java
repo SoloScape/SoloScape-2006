@@ -299,12 +299,70 @@ public final class GublinchChristmasEventChecks {
         player.setActionLocked(false);
         GublinchChristmasEvent.operateHat(player);
         check(player.getUpdateState().getAnimationId() == 5059, "Hat operation animation missing");
+        checkHatEquipmentOperation();
         checkRewardBranches(other);
         checkPeltVisuals();
         checkGublinchRespawns();
         checkSnowballAccuracy();
         System.out.println("Gublinch Christmas checks passed: dungeon population, roaming, respawns, routing, terrain, snowballs, pelting, private shards, cages, rescue, rewards, reclaim and persistence.");
         System.exit(0);
+    }
+
+    private static void checkHatEquipmentOperation() throws Exception {
+        Player wearer = player(8);
+        wearer.setSidebarInterfaceId(4, 1644);
+        wearer.getEquipmentManager().getContainer().setItem(0, new ItemStack(10507, 1));
+        // Exercise the native equipment Operate packet, not a direct helper call.
+        try (ServerSocketChannel listener = ServerSocketChannel.open()) {
+            listener.bind(new InetSocketAddress("127.0.0.1", 0));
+            try (SocketChannel sender = SocketChannel.open(listener.getLocalAddress());
+                 SocketChannel receiver = listener.accept()) {
+                receiver.socket().setSoTimeout(3000);
+                Field socket = Player.class.getDeclaredField("socketChannel");
+                socket.setAccessible(true);
+                socket.set(wearer, sender);
+                wearer.setOutboundCipher(new IsaacCipher(new int[4]));
+                hatOperatePacket(wearer, 1, 10507);
+                check(wearer.getUpdateState().getAnimationId() != 5059,
+                        "Wrong equipment slot activated the hat");
+                hatOperatePacket(wearer, 0, 10501);
+                check(wearer.getUpdateState().getAnimationId() != 5059,
+                        "Mismatched item activated the hat");
+                wearer.setActionLocked(true);
+                hatOperatePacket(wearer, 0, 10507);
+                check(wearer.getUpdateState().getAnimationId() != 5059,
+                        "Locked player activated the hat");
+                wearer.setActionLocked(false);
+                hatOperatePacket(wearer, 0, 10507);
+                check(wearer.getUpdateState().getAnimationId() == 5059
+                                && wearer.getUpdateState().getGraphicId() == 859,
+                        "Native equipment Operate did not start the reindeer emote");
+                DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
+                IsaacCipher decoder = new IsaacCipher(new int[4]);
+                check(((input.readUnsignedByte() - decoder.nextInt()) & 255) == 157,
+                        "Reindeer emote did not send a chatbox game message");
+                byte[] message = new byte[input.readUnsignedByte()];
+                input.readFully(message);
+                check(message[message.length - 1] == 0
+                                && new String(message, 0, message.length - 1, "ISO-8859-1")
+                                        .equals("You act like a reindeer."),
+                        "Reindeer emote chat text or punctuation changed");
+                check(wearer.getEquipmentManager().getItemIdAtSlot(0) == 10507,
+                        "Operating the hat unequipped it");
+            }
+        }
+    }
+
+    private static void hatOperatePacket(Player player, int slot, int item) {
+        int widget = 387 << 16 | 25;
+        ByteBuffer payload = ByteBuffer.allocate(8);
+        // Native option 2: inverse-middle widget, little-endian item, add/little slot.
+        payload.put((byte)(widget >> 16)).put((byte)(widget >> 24))
+                .put((byte)widget).put((byte)(widget >> 8))
+                .put((byte)item).put((byte)(item >> 8))
+                .put((byte)(slot + 128)).put((byte)(slot >> 8)).flip();
+        new com.rs2.net.packet.handler.ItemActionPacketHandler().handle(player,
+                new IncomingPacket(ClientPackets.WIDGET_ITEM_OPTION_2, 8, PacketBuffer.wrapReader(payload)));
     }
 
     private static void checkSharedSnowPiles(Player collector) throws Exception {
