@@ -432,7 +432,6 @@ public final class GublinchChristmasEvent extends QuestHook {
         World.scheduleTickTask(new TickTask(10, false) {
             @Override public void execute() { spawnOnce(5017, spawn.getX(), spawn.getY()); stop(); }
         });
-        player.packetSender.sendGameMessage("The frozen gublinch crumbles into shards. Pick them up for Shanty Claws.");
     }
 
     @Override public boolean handleInventoryItemFirstOption(Player player, int id, int slot, int state) {
