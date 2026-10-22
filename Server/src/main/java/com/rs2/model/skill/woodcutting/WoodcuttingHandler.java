@@ -200,6 +200,11 @@ public class WoodcuttingHandler {
         this(entity, entity2, entity2.getPosition(), projectileDefinition);
     }
 
+    /** Arrival time in 20 ms client cycles, including the launch delay. */
+    public int getEndDelay() {
+        return this.endDelay;
+    }
+
     public void sendProjectileToNearbyPlayers() {
         if (this.projectileDefinition.getProjectileId() == -1) {
             return;
