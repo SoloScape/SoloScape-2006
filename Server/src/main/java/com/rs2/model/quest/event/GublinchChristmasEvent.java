@@ -118,9 +118,9 @@ public final class GublinchChristmasEvent extends QuestHook {
         // (3161,5363), Jill at (3163,5363), and Jack at (3165,5363), plus the logs
         // and furnace. Separate dungeon NPCs duplicate those original children.
         removeDungeonChildCopies();
-        spawnOnce(5046, 2905, 3185);
-        spawnOnce(5047, 2905, 3186);
-        spawnOnce(5048, 2905, 3187);
+        spawnOnce(5046, 2905, 3177);
+        spawnOnce(5047, 2905, 3177);
+        spawnOnce(5048, 2905, 3174);
     }
 
     private static void placeObject(int id, int x, int y) {
@@ -143,14 +143,15 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static int cageOrientation(int x) { return x == 2907 ? 1 : 3; }
 
     private static void spawnOnce(int id, int x, int y) {
+        boolean roaming = isGublinch(id) || id >= 5046 && id <= 5048;
         for (Npc npc : World.getNpcs()) {
             if (npc != null && npc.getOriginalNpcId() == id
                     && npc.getSpawnPosition().equals(new Position(x, y, 0))) {
-                if (isGublinch(id)) npc.setMovementMode(NpcMovementMode.ROAMING);
+                if (roaming) npc.setMovementMode(NpcMovementMode.ROAMING);
                 return;
             }
         }
-        GameplayHelper.spawnNpc(id, x, y, 0, isGublinch(id) ? 1 : id == SHANTY_CLAWS ? 3 : 4);
+        GameplayHelper.spawnNpc(id, x, y, 0, roaming ? 1 : id == SHANTY_CLAWS ? 3 : 4);
     }
 
     private static void removeDungeonChildCopies() {
@@ -179,11 +180,10 @@ public final class GublinchChristmasEvent extends QuestHook {
     }
 
     public static boolean isNpcVisible(Player player, int id) {
-        boolean rescued = (player.questHookStates[STATE_SLOT] & ALL_CAGES) == ALL_CAGES;
         // The dungeon children are part of scenery 20100. Hide old NPC copies
         // on every update too: live reload does not rerun initialize().
         if (id >= 5023 && id <= 5025) return false;
-        if (id >= 5046 && id <= 5048) return rescued;
+        if (id >= 5046 && id <= 5048) return isComplete(player);
         return true;
     }
 
