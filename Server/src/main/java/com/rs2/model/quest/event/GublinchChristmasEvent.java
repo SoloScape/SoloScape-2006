@@ -33,7 +33,7 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int GUBLINCH_HITS_TO_DEFEAT = 3;
     private static final int[] SNOWBALL_RANGED_LEVELS = {1, 10, 20, 30, 40, 50, 60, 69, 70};
     // Hit chances in basis points: 10,000 is 100%.
-    private static final int[] SNOWBALL_HIT_CHANCES = {5900, 6450, 7030, 7620, 8240, 8830, 9410, 9960, 10000};
+    private static final int[] SNOWBALL_HIT_CHANCES = {5900, 6442, 7044, 7646, 8248, 8850, 9452, 9994, 10000};
     private static final String GUBLINCH_HITS_ATTRIBUTE = "christmasSnowballHits";
     private static final String GUBLINCH_FLIGHT_ATTRIBUTE = "christmasSnowballInFlight";
     private static final String SNOWBALL_THROW_ATTRIBUTE = "christmasSnowballThrow";
