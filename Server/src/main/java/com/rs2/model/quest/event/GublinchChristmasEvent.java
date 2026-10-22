@@ -30,6 +30,8 @@ public final class GublinchChristmasEvent extends QuestHook {
     public static final int STATE_SLOT = 5;
     public static final int SHANTY_CLAWS = 828;
     public static final int SNOWBALL = 10501;
+    private static final int GUBLINCH_HITS_TO_DEFEAT = 4;
+    private static final String GUBLINCH_HITS_ATTRIBUTE = "christmasSnowballHits";
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
