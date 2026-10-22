@@ -152,6 +152,10 @@ public final class GublinchChristmasEventChecks {
                             "Rescued child has the wrong spawn: " + npc.getNpcId());
                     check(npc.getMovementMode() == NpcMovementMode.ROAMING,
                             "Rescued child cannot wander: " + npc.getNpcId());
+                    Position spawn = npc.getSpawnPosition();
+                    check(npc.getSpawnMinPosition().equals(new Position(spawn.getX() - 1, spawn.getY() - 1))
+                                    && npc.getSpawnMaxPosition().equals(new Position(spawn.getX() + 2, spawn.getY() + 2)),
+                            "Rescued child wandering must stay within one tile of its spawn");
                 }
                 check((WalkingCollisionMap.getTileFlags(tile.getX(), tile.getY(), 0) & 0x200100) == 0,
                         "Event NPC spawned on blocked terrain: " + tile);
@@ -502,6 +506,44 @@ public final class GublinchChristmasEventChecks {
                         "Reindeer emote chat text or punctuation changed");
                 check(wearer.getEquipmentManager().getItemIdAtSlot(0) == 10507,
                         "Operating the hat unequipped it");
+                TickTask finish = (TickTask) World.getTaskScheduler().getTasks().get(
+                        World.getTaskScheduler().getTasks().size() - 1);
+                check(finish.getIntervalTicks() == 8, "Reindeer replay lock must cover the 4.4-second emote");
+                for (int tick = 0; tick < 8; tick++) {
+                    wearer.getUpdateState().reset();
+                    int tasks = World.getTaskScheduler().getTasks().size();
+                    for (int click = 0; click < 5; click++) hatOperatePacket(wearer, 0, 10507);
+                    check(!wearer.getUpdateState().isAnimationUpdateRequired()
+                                    && !wearer.getUpdateState().isGraphicUpdateRequired(),
+                            "Repeated Operate restarted the reindeer animation or effect");
+                    check(World.getTaskScheduler().getTasks().size() == tasks && input.available() == 0,
+                            "Repeated Operate scheduled extra releases or spammed chat");
+                    check(finish.isActive(), "Reindeer lock ended before the animation completed");
+                    finish.tick();
+                }
+                check(!finish.isActive() && wearer.getUpdateState().getAnimationId() == -1
+                                && wearer.getUpdateState().getGraphicId() == -1,
+                        "Reindeer animation/effect did not finish cleanly");
+                hatOperatePacket(wearer, 0, 10507);
+                check(wearer.getUpdateState().getAnimationId() == 5059
+                                && wearer.getUpdateState().getGraphicId() == 859,
+                        "Reindeer emote could not replay after completion");
+                check(((input.readUnsignedByte() - decoder.nextInt()) & 255) == 157,
+                        "Replayed emote did not send its chat message");
+                byte[] replayMessage = new byte[input.readUnsignedByte()];
+                input.readFully(replayMessage);
+                check(new String(replayMessage, 0, replayMessage.length - 1, "ISO-8859-1")
+                                .equals("You act like a reindeer."),
+                        "Replayed emote message changed");
+                TickTask replayFinish = (TickTask) World.getTaskScheduler().getTasks().get(
+                        World.getTaskScheduler().getTasks().size() - 1);
+                wearer.getUpdateState().setAnimation(855);
+                wearer.getUpdateState().setGraphic(86);
+                for (int tick = 0; tick < 8; tick++) replayFinish.tick();
+                check(wearer.getUpdateState().getAnimationId() == 855
+                                && wearer.getUpdateState().getGraphicId() == 86,
+                        "Old reindeer cleanup erased a different action's animation");
+
             }
         }
     }
@@ -994,7 +1036,7 @@ public final class GublinchChristmasEventChecks {
         check(play != null, "Rescued children have no play controller");
         // Verify both chosen 2006 sequences and their actual frame assets.
         try (Js5CacheStore cache = new Js5CacheStore(new File("cache"))) {
-            for (int animation : new int[]{866, 862}) {
+            for (int animation : new int[]{866, 862, 5059, 5060}) {
                 ConfigReader sequence = new ConfigReader(Definitions.readGroup(12).get(animation));
                 int opcode;
                 while ((opcode = sequence.readUnsignedByte()) != 1) {
@@ -1006,8 +1048,8 @@ public final class GublinchChristmasEventChecks {
                 }
                 int count = sequence.readUnsignedByte(), duration = 0;
                 for (int frame = 0; frame < count; frame++) duration += sequence.readUnsignedShort();
-                check(duration == (animation == 866 ? 204 : 120),
-                        "Child play pause no longer matches the native emote duration");
+                check(duration == (animation == 866 ? 204 : animation == 862 ? 120 : 220),
+                        "Emote pause/replay lock no longer matches the native duration");
                 int[] frames = new int[count];
                 for (int frame = 0; frame < count; frame++) frames[frame] = sequence.readUnsignedShort();
                 for (int frame = 0; frame < count; frame++) frames[frame] |= sequence.readUnsignedShort() << 16;
