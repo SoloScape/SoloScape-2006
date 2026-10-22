@@ -39,7 +39,8 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final String SNOWBALL_THROW_ATTRIBUTE = "christmasSnowballThrow";
     private static final int CLIENT_CYCLES_PER_TICK = 30;
     private static final int SNOWBALL_ANIMATION_DELAY_CYCLES = 10; // 200 ms.
-    private static final int SNOWBALL_LAUNCH_TICK = 1;
+    // Let the throwing motion wind up before displaying the airborne projectile.
+    private static final int SNOWBALL_LAUNCH_TICK = 2;
     private static final int SNOWBALL_IMPACT_TICK = 3;
     // Round the requested five-second interval up to whole 600 ms game ticks.
     private static final int PELT_INTERVAL_TICKS = 9;
