@@ -134,6 +134,7 @@ public final class GublinchChristmasEventChecks {
         check(World.getTaskScheduler().getTasks().size() == scheduledTasks, "Initialization duplicated shanties");
         checkGublinchSpawns();
         checkShanties();
+        checkChildPlaying();
         checkCharosDialogue();
         for (Npc npc : World.getNpcs()) {
             if (npc != null && (GublinchChristmasEvent.isGublinch(npc.getNpcId())
@@ -981,6 +982,68 @@ public final class GublinchChristmasEventChecks {
             System.setOut(original);
         }
     }
+    private static void checkChildPlaying() throws Exception {
+        TickTask play = null;
+        for (Object scheduled : World.getTaskScheduler().getTasks()) {
+            TickTask task = (TickTask) scheduled;
+            if (task.getClass().getSimpleName().equals("RescuedChildPlayTask")) {
+                check(play == null, "Initialization duplicated the child play controller");
+                play = task;
+            }
+        }
+        check(play != null, "Rescued children have no play controller");
+        // Verify both chosen 2006 sequences and their actual frame assets.
+        try (Js5CacheStore cache = new Js5CacheStore(new File("cache"))) {
+            for (int animation : new int[]{866, 862}) {
+                ConfigReader sequence = new ConfigReader(Definitions.readGroup(12).get(animation));
+                int opcode;
+                while ((opcode = sequence.readUnsignedByte()) != 1) {
+                    if (opcode == 2 || opcode == 6 || opcode == 7) sequence.skip(2);
+                    else if (opcode == 3) sequence.skip(sequence.readUnsignedByte());
+                    else if (opcode == 4) { /* Boolean flag. */ }
+                    else if (opcode >= 5 && opcode <= 11) sequence.skip(1);
+                    else throw new AssertionError("Unexpected child emote sequence opcode " + opcode);
+                }
+                int count = sequence.readUnsignedByte(), duration = 0;
+                for (int frame = 0; frame < count; frame++) duration += sequence.readUnsignedShort();
+                check(duration == (animation == 866 ? 204 : 120),
+                        "Child play pause no longer matches the native emote duration");
+                int[] frames = new int[count];
+                for (int frame = 0; frame < count; frame++) frames[frame] = sequence.readUnsignedShort();
+                for (int frame = 0; frame < count; frame++) frames[frame] |= sequence.readUnsignedShort() << 16;
+                for (int frame : frames)
+                    check(cache.readFiles(0, frame >>> 16).get(frame & 65535) != null,
+                            "Child emote frame missing from 2006 cache");
+            }
+        }
+        boolean[] danced = new boolean[3], cheered = new boolean[3];
+        int[] firstDance = {-1, -1, -1};
+        for (int tick = 0; tick < 40; tick++) {
+            play.execute();
+            for (Npc npc : World.getNpcs()) {
+                if (npc == null) continue;
+                int child = npc.getOriginalNpcId() - 5046;
+                if (child < 0 || child > 2) continue;
+                int animation = npc.getUpdateState().getAnimationId();
+                if (animation == 866 || animation == 862) {
+                    if (animation == 866) {
+                        danced[child] = true;
+                        if (firstDance[child] < 0) firstDance[child] = tick;
+                    } else cheered[child] = true;
+                    check(npc.getMovementMode() == NpcMovementMode.STATIONARY
+                                    && npc.getMovementQueue().getSteps().size() <= 1,
+                            "Rescued child kept walking during its emote");
+                }
+                if (tick == 39)
+                    check(npc.getMovementMode() == NpcMovementMode.ROAMING && animation == -1,
+                            "Child failed to resume wandering after playing");
+            }
+        }
+        for (int child = 0; child < 3; child++)
+            check(danced[child] && cheered[child] && firstDance[child] == child * 5,
+                    "Child did not dance and cheer independently: " + child);
+    }
+
     private static void checkShanties() {
         String[] expected = {"'Sailing on the sea...happy as can be...'", "'...to exotic places...fair winds in our faces...'",
                 "'...and we'll sink a drink to our sailor ways...'", "'...polish ye cutlass's makes 'em rust-less...'",
@@ -991,7 +1054,8 @@ public final class GublinchChristmasEventChecks {
         TickTask song = null;
         for (Object scheduled : World.getTaskScheduler().getTasks()) {
             TickTask task = (TickTask)scheduled;
-            if (task.getClass().getEnclosingClass() == GublinchChristmasEvent.class) song = task;
+            if (task.getClass().getEnclosingClass() == GublinchChristmasEvent.class
+                    && task.getIntervalTicks() == 10) song = task;
         }
         check(song != null, "No shanty scheduler");
         for (int i = 0; i < 7; i++) {
