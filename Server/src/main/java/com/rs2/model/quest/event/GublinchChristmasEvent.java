@@ -38,6 +38,7 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final String GUBLINCH_FLIGHT_ATTRIBUTE = "christmasSnowballInFlight";
     private static final String SNOWBALL_THROW_ATTRIBUTE = "christmasSnowballThrow";
     private static final int CLIENT_CYCLES_PER_TICK = 30;
+    private static final int SNOWBALL_ANIMATION_DELAY_CYCLES = 10; // 200 ms.
     private static final int SNOWBALL_LAUNCH_TICK = 1;
     private static final int SNOWBALL_IMPACT_TICK = 3;
     // Round the requested five-second interval up to whole 600 ms game ticks.
@@ -342,11 +343,11 @@ public final class GublinchChristmasEvent extends QuestHook {
         final boolean hit = snowballHits(player.getSkillManager().getCurrentLevels()[4], accuracyRoll);
         final Object throwToken = new Object();
         player.getAttributes().put(SNOWBALL_THROW_ATTRIBUTE, throwToken);
-        player.getUpdateState().setAnimation(5063);
+        player.getUpdateState().setAnimation(5063, SNOWBALL_ANIMATION_DELAY_CYCLES);
         player.setAppearanceUpdateRequired(true);
         // This cache effect is animated with the throwing hand; the sequence
         // hides the equipped ball while this effect carries it through the throw.
-        player.getUpdateState().setGraphic(860);
+        player.getUpdateState().setGraphic(860, SNOWBALL_ANIMATION_DELAY_CYCLES);
         player.getUpdateState().setFacePosition(npc.getPosition().copy());
         // Use the landing tile rather than a client NPC index: the final throw
         // removes that NPC, and its index can be reused before the ball lands.
