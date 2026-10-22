@@ -33,14 +33,18 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int GUBLINCH_HITS_TO_DEFEAT = 4;
     private static final String GUBLINCH_HITS_ATTRIBUTE = "christmasSnowballHits";
     private static final String GUBLINCH_FLIGHT_ATTRIBUTE = "christmasSnowballInFlight";
-    // Native throw sequence 5063 lasts 100 client cycles (2 seconds).
+    private static final String SNOWBALL_THROW_ATTRIBUTE = "christmasSnowballThrow";
+    private static final int CLIENT_CYCLES_PER_TICK = 30;
+    private static final int SNOWBALL_LAUNCH_TICK = 1;
+    private static final int SNOWBALL_IMPACT_TICK = 3;
     private static final int PELT_INTERVAL_TICKS = 4;
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
     private static final int MAKE_SNOWBALL_TICKS = 5;
     private static final ProjectileDefinition SNOWBALL_PROJECTILE =
-            new ProjectileDefinition(861, ProjectileTiming.STANDARD);
+            new ProjectileDefinition(861, ProjectileTiming.STANDARD.copy()
+                    .setStartDelay(SNOWBALL_LAUNCH_TICK * CLIENT_CYCLES_PER_TICK));
     public static final int SHARDS = 10506;
     public static final int REINDEER_HAT = 10507;
     public static final int WINTUMBER_TREE = 10508;
@@ -327,6 +331,8 @@ public final class GublinchChristmasEvent extends QuestHook {
             player.packetSender.sendGameMessage("You must wield snowballs to pelt the gublinch.");
             return false;
         }
+        final Object throwToken = new Object();
+        player.getAttributes().put(SNOWBALL_THROW_ATTRIBUTE, throwToken);
         player.getUpdateState().setAnimation(5063);
         player.setAppearanceUpdateRequired(true);
         // This cache effect is animated with the throwing hand; the sequence
@@ -336,18 +342,20 @@ public final class GublinchChristmasEvent extends QuestHook {
         // Use the landing tile rather than a client NPC index: the final throw
         // removes that NPC, and its index can be reused before the ball lands.
         WoodcuttingHandler projectile = new WoodcuttingHandler(player.getPosition().copy(), player.getSize(),
-                npc.getPosition().copy(), 0, SNOWBALL_PROJECTILE);
+                npc.getPosition().copy(), 0, SNOWBALL_PROJECTILE)
+                .setEndDelay(SNOWBALL_IMPACT_TICK * CLIENT_CYCLES_PER_TICK);
         projectile.sendProjectileToNearbyPlayers();
         Integer previousHits = (Integer) npc.getAttributes().get(GUBLINCH_HITS_ATTRIBUTE);
         // Returning to the normal form after warming up starts a fresh freeze cycle.
         final int hits = npc.getNpcId() == 5017 || previousHits == null ? 1 : previousHits + 1;
         final int targetIndex = npc.getIndex();
         npc.getAttributes().put(GUBLINCH_FLIGHT_ATTRIBUTE, Boolean.TRUE);
-        // A 600 ms server tick contains 30 client cycles. Never apply the hit before arrival.
-        int impactTicks = (projectile.getEndDelay() + 29) / 30;
+        // Arrival, reaction and animation completion all share tick 3 (1,800 ms).
+        int impactTicks = projectile.getEndDelay() / CLIENT_CYCLES_PER_TICK;
         World.scheduleTickTask(new TickTask(impactTicks, false) {
             @Override public void execute() {
                 stop();
+                finishSnowballThrow(player, throwToken);
                 npc.getAttributes().remove(GUBLINCH_FLIGHT_ATTRIBUTE);
                 if (!npc.isActive() || npc.isDead() || targetIndex < 0
                         || World.getNpcs()[targetIndex] != npc || !isGublinch(npc.getNpcId())) return;
@@ -355,6 +363,18 @@ public final class GublinchChristmasEvent extends QuestHook {
             }
         });
         return hits < GUBLINCH_HITS_TO_DEFEAT;
+    }
+
+    private static void finishSnowballThrow(Player player, Object throwToken) {
+        // An older flight must not stop a newer throw or a different action's animation.
+        if (player.getAttributes().get(SNOWBALL_THROW_ATTRIBUTE) != throwToken) return;
+        player.getAttributes().remove(SNOWBALL_THROW_ATTRIBUTE);
+        if (player.getUpdateState().getAnimationId() == 5063) {
+            player.getUpdateState().setAnimation(-1);
+        }
+        if (player.getUpdateState().getGraphicId() == 860) {
+            player.getUpdateState().setGraphic(-1);
+        }
     }
 
     private static void applySnowballImpact(Player player, Npc npc, int hits) {
@@ -370,7 +390,7 @@ public final class GublinchChristmasEvent extends QuestHook {
         // instance inactive so the next update sends its removal immediately.
         npc.setActive(false);
         World.unregisterNpc(npc);
-        // Let the final throw finish naturally instead of cancelling its wind-up.
+        // The throw has completed at impact; stop following the defeated target.
         if (player.getInteractionTarget() == npc) {
             player.getUpdateState().setFaceEntity(65535);
             player.setInteractionTarget(null);
