@@ -1034,9 +1034,9 @@ public final class GublinchChristmasEventChecks {
             }
         }
         check(play != null, "Rescued children have no play controller");
-        // Verify both chosen 2006 sequences and their actual frame assets.
+        // Verify the native child rig, celebration, and reindeer sequences, not just file existence.
         try (Js5CacheStore cache = new Js5CacheStore(new File("cache"))) {
-            for (int animation : new int[]{866, 862, 5059, 5060}) {
+            for (int animation : new int[]{197, 189, 195, 5059, 5060}) {
                 ConfigReader sequence = new ConfigReader(Definitions.readGroup(12).get(animation));
                 int opcode;
                 while ((opcode = sequence.readUnsignedByte()) != 1) {
@@ -1048,18 +1048,24 @@ public final class GublinchChristmasEventChecks {
                 }
                 int count = sequence.readUnsignedByte(), duration = 0;
                 for (int frame = 0; frame < count; frame++) duration += sequence.readUnsignedShort();
-                check(duration == (animation == 866 ? 204 : animation == 862 ? 120 : 220),
+                check(duration == (animation == 197 ? 98 : animation == 189 ? 40 : animation == 195 ? 42 : 220),
                         "Emote pause/replay lock no longer matches the native duration");
                 int[] frames = new int[count];
                 for (int frame = 0; frame < count; frame++) frames[frame] = sequence.readUnsignedShort();
                 for (int frame = 0; frame < count; frame++) frames[frame] |= sequence.readUnsignedShort() << 16;
-                for (int frame : frames)
-                    check(cache.readFiles(0, frame >>> 16).get(frame & 65535) != null,
-                            "Child emote frame missing from 2006 cache");
+                for (int frame : frames) {
+                    byte[] bytes = cache.readFiles(0, frame >>> 16).get(frame & 65535);
+                    check(bytes != null, "Emote frame missing from 2006 cache");
+                    if (animation == 197 || animation == 189 || animation == 195) {
+                        int skeleton = (bytes[0] & 255) << 8 | bytes[1] & 255;
+                        check(skeleton == 319,
+                                "Child animation uses the adult skeleton and will stretch the model");
+                    }
+                }
             }
         }
-        boolean[] danced = new boolean[3], cheered = new boolean[3];
-        int[] firstDance = {-1, -1, -1};
+        boolean[] celebrated = new boolean[3];
+        int[] firstCelebration = {-1, -1, -1};
         for (int tick = 0; tick < 40; tick++) {
             play.execute();
             for (Npc npc : World.getNpcs()) {
@@ -1067,11 +1073,11 @@ public final class GublinchChristmasEventChecks {
                 int child = npc.getOriginalNpcId() - 5046;
                 if (child < 0 || child > 2) continue;
                 int animation = npc.getUpdateState().getAnimationId();
-                if (animation == 866 || animation == 862) {
-                    if (animation == 866) {
-                        danced[child] = true;
-                        if (firstDance[child] < 0) firstDance[child] = tick;
-                    } else cheered[child] = true;
+                check(animation != 866 && animation != 862,
+                        "Incompatible adult emote was applied to a child");
+                if (animation == 197) {
+                    celebrated[child] = true;
+                    if (firstCelebration[child] < 0) firstCelebration[child] = tick;
                     check(npc.getMovementMode() == NpcMovementMode.STATIONARY
                                     && npc.getMovementQueue().getSteps().size() <= 1,
                             "Rescued child kept walking during its emote");
@@ -1082,8 +1088,8 @@ public final class GublinchChristmasEventChecks {
             }
         }
         for (int child = 0; child < 3; child++)
-            check(danced[child] && cheered[child] && firstDance[child] == child * 5,
-                    "Child did not dance and cheer independently: " + child);
+            check(celebrated[child] && firstCelebration[child] == child * 5,
+                    "Child did not celebrate independently: " + child);
     }
 
     private static void checkShanties() {
