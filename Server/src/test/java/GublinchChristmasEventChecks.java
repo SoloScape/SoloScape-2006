@@ -236,7 +236,7 @@ public final class GublinchChristmasEventChecks {
         check(NpcActionRouter.resolve(target.getDefinition(), 1) == NpcActionRouter.Action.PELT, "Pelt cache action not routed");
         check(!GublinchChristmasEvent.pelt(player, target), "Pelt worked without wielding balls");
         player.getInventoryManager().removeItem(new ItemStack(10501, 3));
-        player.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 4));
+        player.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 3));
         player.setPosition(new Position(targetTile.getX() + 1, targetTile.getY(), 0));
         player.getLastKnownRegionPosition().set(player.getPosition());
         player.refreshLocalViewArea();
@@ -251,9 +251,9 @@ public final class GublinchChristmasEventChecks {
                 if (tick.isActive()) tick.tick();
             }
         }
-        check(player.getEquipmentManager().getContainer().getItemAmount(10501) == 0, "Pelt did not consume four balls");
+        check(player.getEquipmentManager().getContainer().getItemAmount(10501) == 0, "Pelt did not consume three balls");
         GroundItem shards = GroundItemManager.findVisibleItem(player, 10506, targetTile);
-        check(shards != null, "Four hits did not drop shards");
+        check(shards != null, "Three successful hits did not drop shards");
         check(GroundItemManager.findVisibleItem(other, 10506, targetTile) == null, "Shards leaked to another account");
         check(!GublinchChristmasEvent.pelt(player, target), "Removed target accepted another pelt");
         checkClimb(player, 19040, 3168, 5319, new Position(2844, 3143, 0));
@@ -324,6 +324,7 @@ public final class GublinchChristmasEventChecks {
         checkRewardBranches(other);
         checkPeltVisuals();
         checkGublinchRespawns();
+        checkSnowballAccuracy();
         System.out.println("Gublinch Christmas checks passed: dungeon population, roaming, respawns, routing, terrain, snowballs, pelting, private shards, cages, rescue, rewards, reclaim and persistence.");
         System.exit(0);
     }
@@ -378,7 +379,7 @@ public final class GublinchChristmasEventChecks {
         checkGublinchSpawns();
         Player thrower = player(3);
         thrower.questHookStates[5] = 1 << 10;
-        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 64));
+        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 48));
         Set<String> anchors = new HashSet<String>();
         for (Npc npc : World.getNpcs().clone()) {
             if (npc == null || !GublinchChristmasEvent.isGublinch(npc.getOriginalNpcId())) continue;
@@ -390,12 +391,10 @@ public final class GublinchChristmasEventChecks {
             advanceEventTicks(3);
             check(GublinchChristmasEvent.pelt(thrower, npc), "Second snowball failed");
             advanceEventTicks(3);
-            check(GublinchChristmasEvent.pelt(thrower, npc), "Third snowball removed target too soon");
-            advanceEventTicks(3);
             check(npc.isActive() && World.getNpcs()[index] == npc,
-                    "Gublinch must survive three hits");
-            check(!GublinchChristmasEvent.pelt(thrower, npc), "Fourth snowball did not finish pelting");
-            check(npc.isActive(), "Fourth throw removed the target before impact");
+                    "Gublinch must survive two successful hits");
+            check(!GublinchChristmasEvent.pelt(thrower, npc), "Third successful shot did not finish pelting");
+            check(npc.isActive(), "Third throw removed the target before impact");
             advanceEventTicks(3);
             check(World.getNpcs()[index] != npc, "Frozen Gublinch was not removed");
             check(!npc.isActive(), "Removed Gublinch remains visible in local NPC lists");
@@ -410,6 +409,69 @@ public final class GublinchChristmasEventChecks {
             }
         }
         check(anchors.isEmpty(), "Gublinch respawns missing");
+    }
+
+    private static void checkSnowballAccuracy() throws Exception {
+        Method chance = GublinchChristmasEvent.class.getDeclaredMethod("snowballHitChance", int.class);
+        Method roll = GublinchChristmasEvent.class.getDeclaredMethod("snowballHits", int.class, int.class);
+        Method pelt = GublinchChristmasEvent.class.getDeclaredMethod("pelt", Player.class, Npc.class, int.class);
+        chance.setAccessible(true);
+        roll.setAccessible(true);
+        pelt.setAccessible(true);
+        int[][] table = {
+            {1,5900}, {10,6450}, {20,7030}, {30,7620}, {40,8240}, {50,8830},
+            {60,9410}, {69,9960}, {70,10000}, {99,10000},
+            {0,5900}, {5,6144}, {15,6740}, {65,9716}
+        };
+        for (int[] row : table) {
+            check((Integer) chance.invoke(null, row[0]) == row[1],
+                    "Incorrect snowball hit chance at Ranged " + row[0]);
+            int hits = 0;
+            for (int value = 0; value < 10000; value++) {
+                if ((Boolean) roll.invoke(null, row[0], value)) hits++;
+            }
+            check(hits == row[1], "Accuracy roll has an off-by-one at Ranged " + row[0]);
+        }
+
+        advanceEventTicks(12);
+        Npc target = gublinch();
+        Position tile = target.getPosition().copy();
+        Player thrower = player(5);
+        thrower.questHookStates[5] = 1 << 10;
+        thrower.getSkillManager().getCurrentLevels()[4] = 1;
+        thrower.setPosition(new Position(tile.getX() + 1, tile.getY(), 0));
+        thrower.getLastKnownRegionPosition().set(thrower.getPosition());
+        thrower.refreshLocalViewArea();
+        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 6));
+
+        // Miss before each successful hit, including the potentially lethal third hit.
+        // Misses must neither advance nor reset the normal/chilled/frozen progression.
+        int successfulHits = 0;
+        for (int shot = 0; shot < 6; shot++) {
+            boolean hit = (shot & 1) != 0;
+            int previousForm = target.getNpcId();
+            boolean keepPelting = (Boolean) pelt.invoke(null, thrower, target, hit ? 0 : 9999);
+            if (hit) successfulHits++;
+            check(keepPelting == (successfulHits < 3), "Miss stopped automatic pelting");
+            check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 5 - shot,
+                    "A missed shot did not consume exactly one snowball");
+            advanceEventTicks(2);
+            check(target.isActive() && target.getNpcId() == previousForm,
+                    "Accuracy result was applied before tick 3");
+            advanceEventTicks(1);
+            if (successfulHits < 3) {
+                check(target.isActive() && target.getNpcId() == 5017 + successfulHits,
+                        "Miss advanced or reset the Gublinch freeze stage");
+                check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                        "Misses caused a premature shard drop");
+            } else {
+                check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
+                        "Three successful hits with intervening misses did not defeat the Gublinch");
+            }
+            check(thrower.getUpdateState().getAnimationId() == -1
+                            && thrower.getUpdateState().getGraphicId() == -1,
+                    "Misses changed the tick-3 animation completion");
+        }
     }
 
     private static void advanceEventTicks(int count) {
@@ -439,7 +501,7 @@ public final class GublinchChristmasEventChecks {
         thrower.setPosition(new Position(tile.getX() + 1, tile.getY(), 0));
         thrower.getLastKnownRegionPosition().set(thrower.getPosition());
         thrower.refreshLocalViewArea();
-        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 4));
+        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 3));
         check(!thrower.shouldHideEquipmentItemInAppearance(3),
                 "Equipped snowball must remain visible between throws");
         check(!thrower.shouldHideEquipmentItemInAppearance(5),
@@ -464,22 +526,22 @@ public final class GublinchChristmasEventChecks {
                 observer.getLocalNpcs().add(target);
                 IsaacCipher decoder = new IsaacCipher(new int[4]);
                 DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
-                for (int hit = 0; hit < 4; hit++) {
+                for (int hit = 0; hit < 3; hit++) {
                     // The fixed timeline must hold at short, medium and maximum range.
-                    int distance = new int[]{1, 3, 6, 1}[hit];
+                    int distance = new int[]{1, 3, 6}[hit];
                     thrower.setPosition(new Position(tile.getX() + distance, tile.getY(), 0));
                     thrower.getLastKnownRegionPosition().set(thrower.getPosition());
                     thrower.refreshLocalViewArea();
                     int previousForm = target.getNpcId();
-                    check(GublinchChristmasEvent.pelt(thrower, target) == (hit < 3), "Pelt progression wrong");
-                    check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - hit,
+                    check(GublinchChristmasEvent.pelt(thrower, target) == (hit < 2), "Pelt progression wrong");
+                    check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 2 - hit,
                             "Each successful throw must consume exactly one snowball");
                     check(target.isActive() && target.getNpcId() == previousForm,
                             "Gublinch reacted before the projectile arrived");
                     check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
                             "Shards appeared before the final projectile arrived");
                     check(GublinchChristmasEvent.pelt(thrower, target)
-                                    && thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - hit,
+                                    && thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 2 - hit,
                             "An overlapping throw consumed extra ammo");
                     byte[] packet = new byte[19];
                     input.readFully(packet);
@@ -504,7 +566,7 @@ public final class GublinchChristmasEventChecks {
                                     && thrower.getUpdateState().getGraphicId() == 860,
                             "Throw animation or hand effect ended before tick 3");
                     advanceEventTicks(1);
-                    if (hit < 3) {
+                    if (hit < 2) {
                         check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
                                 "Gublinch did not react when the snowball arrived");
                     } else {
@@ -685,6 +747,8 @@ public final class GublinchChristmasEventChecks {
         Field socket = Player.class.getDeclaredField("socketChannel"); socket.setAccessible(true); socket.set(player, transport);
         player.setOutboundCipher(new IsaacCipher(new int[4]));
         player.setIndex(index); player.setEncodedIndex(32768 + index);
+        // Existing event/visual fixtures use guaranteed-hit Ranged; accuracy is tested separately.
+        player.getSkillManager().getCurrentLevels()[4] = 70;
         player.setQuestState(0, 1); player.setPosition(new Position(2918, 3175, 0)); player.refreshLocalViewArea();
         return player;
     }
