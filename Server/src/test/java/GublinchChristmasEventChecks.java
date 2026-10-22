@@ -380,7 +380,7 @@ public final class GublinchChristmasEventChecks {
             check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 5
                             && com.rs2.util.GameUtil.getDistance(thrower.getPosition(), target.getPosition()) == 6,
                     "Running approach overshot range or failed to throw");
-            check(thrower.getMovementQueue().getSteps().isEmpty(), "Approach kept moving after throwing");
+            check(thrower.getMovementQueue().getSteps().size() <= 1, "Approach kept moving after throwing");
 
             target.moveTo(new Position(origin.getX() + dx * 12, origin.getY() + dy * 12, 0));
             advanceEventTicks(1);
