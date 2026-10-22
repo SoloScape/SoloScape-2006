@@ -32,12 +32,15 @@ public final class GublinchChristmasEvent extends QuestHook {
     public static final int SNOWBALL = 10501;
     private static final int GUBLINCH_HITS_TO_DEFEAT = 4;
     private static final String GUBLINCH_HITS_ATTRIBUTE = "christmasSnowballHits";
+    private static final String GUBLINCH_FLIGHT_ATTRIBUTE = "christmasSnowballInFlight";
+    // Native throw sequence 5063 lasts 100 client cycles (2 seconds).
+    private static final int PELT_INTERVAL_TICKS = 4;
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
     private static final int MAKE_SNOWBALL_TICKS = 5;
     private static final ProjectileDefinition SNOWBALL_PROJECTILE =
-            new ProjectileDefinition(860, ProjectileTiming.STANDARD);
+            new ProjectileDefinition(861, ProjectileTiming.STANDARD);
     public static final int SHARDS = 10506;
     public static final int REINDEER_HAT = 10507;
     public static final int WINTUMBER_TREE = 10508;
@@ -298,7 +301,7 @@ public final class GublinchChristmasEvent extends QuestHook {
 
     public static void startPelting(Player player, Npc npc) {
         final int sequence = player.nextActionSequence();
-        World.scheduleTickTask(new TickTask(3, true) {
+        World.scheduleTickTask(new TickTask(PELT_INTERVAL_TICKS, true) {
             @Override public void execute() {
                 if (!player.isCurrentActionSequence(sequence) || npc.isDead() || !isGublinch(npc.getNpcId())
                         || npc.getIndex() < 0 || World.getNpcs()[npc.getIndex()] != npc
@@ -318,6 +321,8 @@ public final class GublinchChristmasEvent extends QuestHook {
         }
         if (isComplete(player) || !isGublinch(npc.getNpcId()) || npc.isDead()
                 || npc.getIndex() < 0 || World.getNpcs()[npc.getIndex()] != npc) return false;
+        // One outstanding projectile per target prevents overlapping hits or extra ammo use.
+        if (Boolean.TRUE.equals(npc.getAttributes().get(GUBLINCH_FLIGHT_ATTRIBUTE))) return true;
         if (!player.getEquipmentManager().removeItem(new ItemStack(SNOWBALL, 1))) {
             player.packetSender.sendGameMessage("You must wield snowballs to pelt the gublinch.");
             return false;
@@ -330,16 +335,34 @@ public final class GublinchChristmasEvent extends QuestHook {
         player.getUpdateState().setFacePosition(npc.getPosition().copy());
         // Use the landing tile rather than a client NPC index: the final throw
         // removes that NPC, and its index can be reused before the ball lands.
-        new WoodcuttingHandler(player.getPosition().copy(), player.getSize(),
-                npc.getPosition().copy(), 0, SNOWBALL_PROJECTILE).sendProjectileToNearbyPlayers();
+        WoodcuttingHandler projectile = new WoodcuttingHandler(player.getPosition().copy(), player.getSize(),
+                npc.getPosition().copy(), 0, SNOWBALL_PROJECTILE);
+        projectile.sendProjectileToNearbyPlayers();
         Integer previousHits = (Integer) npc.getAttributes().get(GUBLINCH_HITS_ATTRIBUTE);
         // Returning to the normal form after warming up starts a fresh freeze cycle.
-        int hits = npc.getNpcId() == 5017 || previousHits == null ? 1 : previousHits + 1;
+        final int hits = npc.getNpcId() == 5017 || previousHits == null ? 1 : previousHits + 1;
+        final int targetIndex = npc.getIndex();
+        npc.getAttributes().put(GUBLINCH_FLIGHT_ATTRIBUTE, Boolean.TRUE);
+        // A 600 ms server tick contains 30 client cycles. Never apply the hit before arrival.
+        int impactTicks = (projectile.getEndDelay() + 29) / 30;
+        World.scheduleTickTask(new TickTask(impactTicks, false) {
+            @Override public void execute() {
+                stop();
+                npc.getAttributes().remove(GUBLINCH_FLIGHT_ATTRIBUTE);
+                if (!npc.isActive() || npc.isDead() || targetIndex < 0
+                        || World.getNpcs()[targetIndex] != npc || !isGublinch(npc.getNpcId())) return;
+                applySnowballImpact(player, npc, hits);
+            }
+        });
+        return hits < GUBLINCH_HITS_TO_DEFEAT;
+    }
+
+    private static void applySnowballImpact(Player player, Npc npc, int hits) {
         npc.getAttributes().put(GUBLINCH_HITS_ATTRIBUTE, hits);
         if (hits < GUBLINCH_HITS_TO_DEFEAT) {
             // Keep the original chilled/frozen models; the third hit stays frozen.
             npc.transformToNpcId(5017 + Math.min(hits, 2), 100);
-            return true;
+            return;
         }
         GroundItemManager.getInstance().spawn(new GroundItem(new ItemStack(SHARDS, 1), npc.getPosition(), false, player));
         Position spawn = npc.getSpawnPosition().copy();
@@ -347,15 +370,16 @@ public final class GublinchChristmasEvent extends QuestHook {
         // instance inactive so the next update sends its removal immediately.
         npc.setActive(false);
         World.unregisterNpc(npc);
-        player.getUpdateState().setAnimation(-1);
-        player.getUpdateState().setFaceEntity(65535);
-        player.setInteractionTarget(null);
-        player.getMovementQueue().clear();
+        // Let the final throw finish naturally instead of cancelling its wind-up.
+        if (player.getInteractionTarget() == npc) {
+            player.getUpdateState().setFaceEntity(65535);
+            player.setInteractionTarget(null);
+            player.getMovementQueue().clear();
+        }
         World.scheduleTickTask(new TickTask(10, false) {
             @Override public void execute() { spawnOnce(5017, spawn.getX(), spawn.getY()); stop(); }
         });
         player.packetSender.sendGameMessage("The frozen gublinch crumbles into shards. Pick them up for Shanty Claws.");
-        return false;
     }
 
     @Override public boolean handleInventoryItemFirstOption(Player player, int id, int slot, int state) {
