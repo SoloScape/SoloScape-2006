@@ -26,7 +26,7 @@ jobs:
       - name: Compile client, server and focused checks
         working-directory: Server
         run: |
-          mkdir -p /tmp/snowball-classes
+          mkdir -p /tmp/snowball-classes data/characters
           find src/main/java ../Client/src -name '*.java' > /tmp/snowball-sources.txt
           javac -encoding UTF-8 -cp 'lib/*' -d /tmp/snowball-classes @/tmp/snowball-sources.txt
           javac -encoding UTF-8 -cp '/tmp/snowball-classes:lib/*' -d /tmp/snowball-classes src/test/java/ArmourAppearanceChecks.java src/test/java/GublinchChristmasEventChecks.java ../Client/tests/SnowballAppearanceChecks.java
