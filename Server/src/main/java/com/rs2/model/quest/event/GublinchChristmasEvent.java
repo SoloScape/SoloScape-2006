@@ -89,6 +89,8 @@ public final class GublinchChristmasEvent extends QuestHook {
         {2907, 3188}, {2907, 3190}, {2907, 3189}
     };
 
+    private static boolean childPlayScheduled;
+
     public GublinchChristmasEvent() { super(STATE_SLOT); }
 
     @Override public void initialize() {
@@ -124,6 +126,39 @@ public final class GublinchChristmasEvent extends QuestHook {
         spawnOnce(5046, 2906, 3177);
         spawnOnce(5047, 2905, 3177);
         spawnOnce(5048, 2905, 3174);
+        if (!childPlayScheduled) {
+            childPlayScheduled = true;
+            World.scheduleTickTask(new RescuedChildPlayTask());
+        }
+    }
+
+    /** Recreation of the documented dock dancing; original choreography is unverified. */
+    private static final class RescuedChildPlayTask extends TickTask {
+        private int tick = -1;
+
+        RescuedChildPlayTask() { super(1, false); }
+
+        @Override public void execute() {
+            tick = (tick + 1) % 40;
+            for (Npc npc : World.getNpcs()) {
+                if (npc == null || !npc.isActive() || npc.isDead()) continue;
+                int child = npc.getOriginalNpcId() - 5046;
+                if (child < 0 || child > 2) continue;
+                // Offset each child so they play independently rather than in unison.
+                int phase = (tick - child * 5 + 40) % 40;
+                if (phase == 0 || phase == 20) {
+                    npc.getMovementQueue().clear();
+                    npc.setMovementMode(NpcMovementMode.STATIONARY);
+                    npc.getUpdateState().setAnimation(phase == 0 ? 866 : 862);
+                } else if (phase == 7 || phase == 24) {
+                    // Cache durations: dance 204 client cycles, cheer 120 cycles.
+                    int animation = phase == 7 ? 866 : 862;
+                    if (npc.getUpdateState().getAnimationId() == animation)
+                        npc.getUpdateState().setAnimation(-1);
+                    npc.setMovementMode(NpcMovementMode.ROAMING);
+                }
+            }
+        }
     }
 
     private static void placeObject(int id, int x, int y) {
