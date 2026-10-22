@@ -243,8 +243,8 @@ public final class GublinchChristmasEventChecks {
         new RoutedNpcActionTask(player, player.nextActionSequence(), target, 1, NpcActionRouter.Action.PELT).execute();
         TickTask pelting = (TickTask) World.getTaskScheduler().getTasks().get(
                 World.getTaskScheduler().getTasks().size() - 1);
-        check(pelting.getIntervalTicks() * 30 >= 100,
-                "Repeat pelting cuts off the native 100-cycle throw animation");
+        check(pelting.getIntervalTicks() == 4,
+                "Next throw must start on tick 4");
         for (int i = 0; i < 20; i++) {
             for (Object task : new ArrayList<Object>(World.getTaskScheduler().getTasks())) {
                 TickTask tick = (TickTask)task;
@@ -387,16 +387,16 @@ public final class GublinchChristmasEventChecks {
             int index = npc.getIndex();
             thrower.setPosition(new Position(npc.getPosition().getX() + 1, npc.getPosition().getY(), 0));
             check(GublinchChristmasEvent.pelt(thrower, npc), "First snowball failed");
-            advanceEventTicks(2);
+            advanceEventTicks(3);
             check(GublinchChristmasEvent.pelt(thrower, npc), "Second snowball failed");
-            advanceEventTicks(2);
+            advanceEventTicks(3);
             check(GublinchChristmasEvent.pelt(thrower, npc), "Third snowball removed target too soon");
-            advanceEventTicks(2);
+            advanceEventTicks(3);
             check(npc.isActive() && World.getNpcs()[index] == npc,
                     "Gublinch must survive three hits");
             check(!GublinchChristmasEvent.pelt(thrower, npc), "Fourth snowball did not finish pelting");
             check(npc.isActive(), "Fourth throw removed the target before impact");
-            advanceEventTicks(2);
+            advanceEventTicks(3);
             check(World.getNpcs()[index] != npc, "Frozen Gublinch was not removed");
             check(!npc.isActive(), "Removed Gublinch remains visible in local NPC lists");
         }
@@ -465,6 +465,11 @@ public final class GublinchChristmasEventChecks {
                 IsaacCipher decoder = new IsaacCipher(new int[4]);
                 DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
                 for (int hit = 0; hit < 4; hit++) {
+                    // The fixed timeline must hold at short, medium and maximum range.
+                    int distance = new int[]{1, 3, 6, 1}[hit];
+                    thrower.setPosition(new Position(tile.getX() + distance, tile.getY(), 0));
+                    thrower.getLastKnownRegionPosition().set(thrower.getPosition());
+                    thrower.refreshLocalViewArea();
                     int previousForm = target.getNpcId();
                     check(GublinchChristmasEvent.pelt(thrower, target) == (hit < 3), "Pelt progression wrong");
                     check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - hit,
@@ -480,7 +485,7 @@ public final class GublinchChristmasEventChecks {
                     input.readFully(packet);
                     check(((packet[0] & 255) - decoder.nextInt() & 255) == 82, "Projectile zone base missing");
                     check(((packet[3] & 255) - decoder.nextInt() & 255) == 101, "Snowball projectile packet missing");
-                    check(packet[5] == -1 && packet[6] == 0, "Snowball flies to the wrong tile");
+                    check(packet[5] == -distance && packet[6] == 0, "Snowball flies to the wrong tile");
                     check(packet[7] == 0 && packet[8] == 0, "Snowball follows a removed/reused NPC index");
                     check(((packet[9] & 255) << 8 | packet[10] & 255) == 861, "Hand effect was used as the flying projectile");
                     check(thrower.getUpdateState().getGraphicId() == 860, "Animated snowball in the throwing hand missing");
@@ -488,11 +493,16 @@ public final class GublinchChristmasEventChecks {
                             "Throw animation was cancelled on the final launch");
                     int startCycle = (packet[13] & 255) << 8 | packet[14] & 255;
                     int endCycle = (packet[15] & 255) << 8 | packet[16] & 255;
-                    check(startCycle == 44 && endCycle > startCycle, "Projectile release/arrival timing is invalid");
-                    int arrivalTicks = (endCycle + 29) / 30;
-                    advanceEventTicks(arrivalTicks - 1);
+                    check(startCycle == 30 && endCycle == 90,
+                            "Snowball must launch at 600 ms and arrive at 1,800 ms at every range");
+                    check(com.rs2.model.combat.ProjectileTiming.STANDARD.getStartDelay() == 44,
+                            "Snowball timing changed other projectiles");
+                    advanceEventTicks(2);
                     check(target.isActive() && target.getNpcId() == previousForm,
-                            "Hit was applied before the packet's arrival time");
+                            "Hit was applied before tick 3");
+                    check(thrower.getUpdateState().getAnimationId() == 5063
+                                    && thrower.getUpdateState().getGraphicId() == 860,
+                            "Throw animation or hand effect ended before tick 3");
                     advanceEventTicks(1);
                     if (hit < 3) {
                         check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
@@ -501,8 +511,9 @@ public final class GublinchChristmasEventChecks {
                         check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
                                 "Final impact did not remove the Gublinch and drop shards");
                     }
-                    check(thrower.getUpdateState().getAnimationId() == 5063,
-                            "Impact cancelled the throw's follow-through");
+                    check(thrower.getUpdateState().getAnimationId() == -1
+                                    && thrower.getUpdateState().getGraphicId() == -1,
+                            "Throw animation and hand effect must finish together on tick 3");
                 }
                 check(!target.isActive(), "Frozen target remains active");
                 check(thrower.getInteractionTarget() == null && thrower.getMovementQueue().getSteps().size() <= 1,
