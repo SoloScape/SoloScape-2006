@@ -46,6 +46,9 @@ public final class GublinchChristmasEvent extends QuestHook {
     // Round the requested five-second interval up to whole 600 ms game ticks.
     private static final int PELT_INTERVAL_TICKS = 9;
     private static final int PELT_RANGE = 6;
+    private static final String REINDEER_EMOTE_ATTRIBUTE = "christmasReindeerEmote";
+    // Both native sequences last 220 client cycles (4.4 s); round up to whole ticks.
+    private static final int REINDEER_EMOTE_TICKS = 8;
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
@@ -126,6 +129,13 @@ public final class GublinchChristmasEvent extends QuestHook {
         spawnOnce(5046, 2906, 3177);
         spawnOnce(5047, 2905, 3177);
         spawnOnce(5048, 2905, 3174);
+        for (Npc npc : World.getNpcs()) {
+            if (npc == null || npc.getOriginalNpcId() < 5046 || npc.getOriginalNpcId() > 5048) continue;
+            Position spawn = npc.getSpawnPosition();
+            npc.setSpawnMinPosition(new Position(spawn.getX() - 1, spawn.getY() - 1));
+            // Roaming samples the upper bound exclusively: include just the 3x3 area.
+            npc.setSpawnMaxPosition(new Position(spawn.getX() + 2, spawn.getY() + 2));
+        }
         if (!childPlayScheduled) {
             childPlayScheduled = true;
             World.scheduleTickTask(new RescuedChildPlayTask());
@@ -591,9 +601,23 @@ public final class GublinchChristmasEvent extends QuestHook {
     }
 
     public static void operateHat(Player player) {
-        if (!player.getEquipmentManager().containsItem(REINDEER_HAT) || player.isActionLocked()) return;
+        if (!player.getEquipmentManager().containsItem(REINDEER_HAT) || player.isActionLocked()
+                || player.getAttributes().containsKey(REINDEER_EMOTE_ATTRIBUTE)) return;
+        final Object emote = new Object();
+        player.getAttributes().put(REINDEER_EMOTE_ATTRIBUTE, emote);
         player.getUpdateState().setAnimation(5059);
         player.getUpdateState().setGraphic(859);
         player.packetSender.sendGameMessage("You act like a reindeer.");
+        World.scheduleTickTask(new TickTask(REINDEER_EMOTE_TICKS, false) {
+            @Override public void execute() {
+                stop();
+                if (player.getAttributes().get(REINDEER_EMOTE_ATTRIBUTE) != emote) return;
+                player.getAttributes().remove(REINDEER_EMOTE_ATTRIBUTE);
+                if (player.getUpdateState().getAnimationId() == 5059)
+                    player.getUpdateState().setAnimation(-1);
+                if (player.getUpdateState().getGraphicId() == 859)
+                    player.getUpdateState().setGraphic(-1);
+            }
+        });
     }
 }
