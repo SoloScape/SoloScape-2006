@@ -241,7 +241,7 @@ public final class GublinchChristmasEventChecks {
         player.getLastKnownRegionPosition().set(player.getPosition());
         player.refreshLocalViewArea();
         new RoutedNpcActionTask(player, player.nextActionSequence(), target, 1, NpcActionRouter.Action.PELT).execute();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 20; i++) {
             for (Object task : new ArrayList<Object>(World.getTaskScheduler().getTasks())) {
                 TickTask tick = (TickTask)task;
                 if (tick.isActive()) tick.tick();
@@ -381,12 +381,18 @@ public final class GublinchChristmasEventChecks {
             Position spawn = npc.getSpawnPosition();
             anchors.add(spawn.getX() + "," + spawn.getY());
             int index = npc.getIndex();
+            thrower.setPosition(new Position(npc.getPosition().getX() + 1, npc.getPosition().getY(), 0));
             check(GublinchChristmasEvent.pelt(thrower, npc), "First snowball failed");
+            advanceEventTicks(2);
             check(GublinchChristmasEvent.pelt(thrower, npc), "Second snowball failed");
+            advanceEventTicks(2);
             check(GublinchChristmasEvent.pelt(thrower, npc), "Third snowball removed target too soon");
+            advanceEventTicks(2);
             check(npc.isActive() && World.getNpcs()[index] == npc,
                     "Gublinch must survive three hits");
-            check(!GublinchChristmasEvent.pelt(thrower, npc), "Fourth snowball did not remove target");
+            check(!GublinchChristmasEvent.pelt(thrower, npc), "Fourth snowball did not finish pelting");
+            check(npc.isActive(), "Fourth throw removed the target before impact");
+            advanceEventTicks(2);
             check(World.getNpcs()[index] != npc, "Frozen Gublinch was not removed");
             check(!npc.isActive(), "Removed Gublinch remains visible in local NPC lists");
         }
@@ -412,11 +418,15 @@ public final class GublinchChristmasEventChecks {
     }
 
     private static void checkPeltVisuals() throws Exception {
-        ConfigReader graphic = new ConfigReader(Definitions.readGroup(13).get(860));
+        ConfigReader graphic = new ConfigReader(Definitions.readGroup(13).get(861));
         check(graphic.readUnsignedByte() == 1 && graphic.readUnsignedShort() == 20502,
                 "Snowball projectile uses the wrong cache model");
-        check(graphic.readUnsignedByte() == 2 && graphic.readUnsignedShort() == 5064,
+        check(graphic.readUnsignedByte() == 2 && graphic.readUnsignedShort() == 5065,
                 "Snowball projectile uses the wrong cache sequence");
+        ConfigReader hand = new ConfigReader(Definitions.readGroup(13).get(860));
+        check(hand.readUnsignedByte() == 1 && hand.readUnsignedShort() == 20502
+                        && hand.readUnsignedByte() == 2 && hand.readUnsignedShort() == 5064,
+                "Hand effect must retain the matching native throw sequence");
         advanceEventTicks(12);
         Npc target = gublinch();
         Position tile = target.getPosition().copy();
@@ -449,25 +459,44 @@ public final class GublinchChristmasEventChecks {
                 IsaacCipher decoder = new IsaacCipher(new int[4]);
                 DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
                 for (int hit = 0; hit < 4; hit++) {
+                    int previousForm = target.getNpcId();
                     check(GublinchChristmasEvent.pelt(thrower, target) == (hit < 3), "Pelt progression wrong");
                     check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - hit,
-                            "Each successful hit must consume exactly one snowball");
-                    if (hit < 3) {
-                        check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
-                                "Gublinch froze or disappeared at the wrong hit");
-                        check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
-                                "Shards appeared before the fourth hit");
-                    }
+                            "Each successful throw must consume exactly one snowball");
+                    check(target.isActive() && target.getNpcId() == previousForm,
+                            "Gublinch reacted before the projectile arrived");
+                    check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                            "Shards appeared before the final projectile arrived");
+                    check(GublinchChristmasEvent.pelt(thrower, target)
+                                    && thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - hit,
+                            "An overlapping throw consumed extra ammo");
                     byte[] packet = new byte[19];
                     input.readFully(packet);
                     check(((packet[0] & 255) - decoder.nextInt() & 255) == 82, "Projectile zone base missing");
                     check(((packet[3] & 255) - decoder.nextInt() & 255) == 101, "Snowball projectile packet missing");
                     check(packet[5] == -1 && packet[6] == 0, "Snowball flies to the wrong tile");
                     check(packet[7] == 0 && packet[8] == 0, "Snowball follows a removed/reused NPC index");
-                    check(((packet[9] & 255) << 8 | packet[10] & 255) == 860, "Wrong snowball effect sent");
+                    check(((packet[9] & 255) << 8 | packet[10] & 255) == 861, "Hand effect was used as the flying projectile");
                     check(thrower.getUpdateState().getGraphicId() == 860, "Animated snowball in the throwing hand missing");
-                    check(thrower.getUpdateState().getAnimationId() == (hit < 3 ? 5063 : -1),
-                            "Throw animation missing or continued after final hit");
+                    check(thrower.getUpdateState().getAnimationId() == 5063,
+                            "Throw animation was cancelled on the final launch");
+                    int startCycle = (packet[13] & 255) << 8 | packet[14] & 255;
+                    int endCycle = (packet[15] & 255) << 8 | packet[16] & 255;
+                    check(startCycle == 44 && endCycle > startCycle, "Projectile release/arrival timing is invalid");
+                    int arrivalTicks = (endCycle + 29) / 30;
+                    advanceEventTicks(arrivalTicks - 1);
+                    check(target.isActive() && target.getNpcId() == previousForm,
+                            "Hit was applied before the packet's arrival time");
+                    advanceEventTicks(1);
+                    if (hit < 3) {
+                        check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
+                                "Gublinch did not react when the snowball arrived");
+                    } else {
+                        check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
+                                "Final impact did not remove the Gublinch and drop shards");
+                    }
+                    check(thrower.getUpdateState().getAnimationId() == 5063,
+                            "Impact cancelled the throw's follow-through");
                 }
                 check(!target.isActive(), "Frozen target remains active");
                 check(thrower.getInteractionTarget() == null && thrower.getMovementQueue().getSteps().size() <= 1,
