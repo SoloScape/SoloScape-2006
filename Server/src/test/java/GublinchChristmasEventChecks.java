@@ -198,30 +198,7 @@ public final class GublinchChristmasEventChecks {
         check(player.getDialogueManager().getDialogueStep() / 100 == 19, "Wrong item-use conversation");
         finishConversation(player);
         check(!GublinchChristmasEvent.isNpcVisible(player, 5046), "Rescued child visible too early");
-        int[][] snowPiles = {{2841,3147}, {2844,3147}, {2840,3150}, {2842,3153}};
-        for (int i = 0; i < snowPiles.length; i++) {
-            int id = i % 2 == 0 ? 19030 : 19031;
-            int x = snowPiles[i][0], y = snowPiles[i][1];
-            check(ObjectManager.findDynamicObjectByIdAt(id,x,y,0) != null, "Missing snow pile at " + x + "," + y);
-            check(player.getQuestManager().handleFirstObjectAction(id,x,y), "Snow pile interaction not routed");
-            check(player.getInventoryManager().getItemAmount(10501) == 3, "Snow pile did not give three balls");
-            check(player.getUpdateState().getAnimationId() == 5067, "Snowball-making animation missing");
-            check(player.isActionLocked(), "Snowball collection did not lock actions during animation");
-            TickTask collection = (TickTask) World.getTaskScheduler().getTasks().get(
-                    World.getTaskScheduler().getTasks().size() - 1);
-            for (int tick = 0; tick < 5; tick++) {
-                for (int click = 0; click < 10; click++) {
-                    player.getQuestManager().handleFirstObjectAction(19031,2844,3147);
-                }
-                check(player.getInventoryManager().getItemAmount(10501) == 3,
-                        "Repeated snow pile clicks bypassed the animation");
-                check(player.isActionLocked(), "Snowball collection unlocked before the animation ended");
-                collection.tick();
-            }
-            check(!player.isActionLocked() && !collection.isActive(),
-                    "Snowball collection did not unlock after the animation ended");
-            player.getInventoryManager().removeItem(new ItemStack(10501,3));
-        }
+        checkSharedSnowPiles(player);
         check(ObjectManager.findDynamicObjectByIdAt(19030,2841,3143,0) == null
                 && ObjectManager.findDynamicObjectByIdAt(19031,2844,3143,0) == null, "Old snow piles remain");
         check(!player.getQuestManager().handleFirstObjectAction(19030,2841,3143), "Old snow pile position still accepted");
@@ -328,6 +305,102 @@ public final class GublinchChristmasEventChecks {
         checkSnowballAccuracy();
         System.out.println("Gublinch Christmas checks passed: dungeon population, roaming, respawns, routing, terrain, snowballs, pelting, private shards, cages, rescue, rewards, reclaim and persistence.");
         System.exit(0);
+    }
+
+    private static void checkSharedSnowPiles(Player collector) throws Exception {
+        int[][] tiles = {{2841,3147}, {2844,3147}, {2840,3150}, {2842,3153}};
+        Player peer = player(6);
+        Player lateViewer = player(7);
+        peer.questHookStates[5] = 1 << 10;
+        Player previousPeer = World.getPlayers()[6], previousViewer = World.getPlayers()[7];
+        World.getPlayers()[6] = peer;
+        try {
+            for (int[] tile : tiles) {
+                int x = tile[0], y = tile[1];
+                peer.setPosition(new Position(x + 1, y, 0));
+                peer.getLastKnownRegionPosition().set(peer.getPosition());
+                peer.refreshLocalViewArea();
+                ObjectManager.getInstance().refreshDynamicObjectsForPlayer(peer);
+                DynamicObject large = ObjectManager.findDynamicObjectByIdAt(19030, x, y, 0);
+                check(large != null, "Snow pile did not start large at " + x + "," + y);
+                int collision = WalkingCollisionMap.getTileFlags(x, y, 0);
+                // A failed inventory addition must not reserve or deplete the pile.
+                for (int slot = 0; slot < 28; slot++)
+                    peer.getInventoryManager().getContainer().setItem(slot, new ItemStack(590, 1));
+                peer.getQuestManager().handleFirstObjectAction(19030, x, y);
+                check(!peer.isActionLocked()
+                                && ObjectManager.findDynamicObjectAt(x, y, 0) == large,
+                        "Full inventory reserved or depleted the shared pile");
+                for (int slot = 0; slot < 28; slot++)
+                    peer.getInventoryManager().getContainer().setItem(slot, null);
+
+                check(collector.getQuestManager().handleFirstObjectAction(19030, x, y),
+                        "Snow pile collection was not routed");
+                check(collector.getInventoryManager().getItemAmount(10501) == 3,
+                        "Collection did not award three snowballs");
+                check(collector.getUpdateState().getAnimationId() == 5067 && collector.isActionLocked(),
+                        "Collection did not retain its five-tick animation lock");
+                TickTask collection = (TickTask) World.getTaskScheduler().getTasks().get(
+                        World.getTaskScheduler().getTasks().size() - 1);
+                for (int tick = 0; tick < 5; tick++) {
+                    collector.getQuestManager().handleFirstObjectAction(19030, x, y);
+                    peer.getQuestManager().handleFirstObjectAction(19030, x, y);
+                    check(collector.getInventoryManager().getItemAmount(10501) == 3
+                                    && peer.getInventoryManager().getItemAmount(10501) == 0
+                                    && !peer.isActionLocked(),
+                            "Another player or repeated click collected a reserved pile");
+                    check(ObjectManager.findDynamicObjectAt(x, y, 0) == large,
+                            "Large pile shrank before collection completed");
+                    collection.tick();
+                }
+                check(!collector.isActionLocked() && !collection.isActive(),
+                        "Collection failed to unlock");
+                DynamicObject small = ObjectManager.findDynamicObjectByIdAt(19035, x, y, 0);
+                check(small != null && small.owner == null, "Collection did not create shared small snow");
+                check(!peer.visibleDynamicObjects.contains(large) && peer.visibleDynamicObjects.contains(small),
+                        "Existing viewer retained stale large-pile state");
+                ObjectManager.getInstance().refreshDynamicObjectsForPlayer(peer);
+                check(peer.visibleDynamicObjects.contains(small), "Refresh lost the depleted pile");
+
+                // A player arriving after depletion sees the same unavailable object.
+                lateViewer.setPosition(peer.getPosition().copy());
+                lateViewer.getLastKnownRegionPosition().set(lateViewer.getPosition());
+                lateViewer.refreshLocalViewArea();
+                World.getPlayers()[7] = lateViewer;
+                ObjectManager.getInstance().refreshDynamicObjectsForPlayer(lateViewer);
+                check(lateViewer.visibleDynamicObjects.contains(small),
+                        "Late viewer did not see the shared depleted pile");
+                TickTask regrowth = (TickTask) World.getTaskScheduler().getTasks().get(
+                        World.getTaskScheduler().getTasks().size() - 1);
+                int delay = regrowth.getIntervalTicks();
+                check(delay >= 6 && delay <= 10, "Regrowth estimate escaped six-to-ten tick range");
+                for (int elapsed = 1; elapsed < delay; elapsed++) {
+                    // Test both real small-object clicks and stale large-object clicks.
+                    collector.getQuestManager().handleFirstObjectAction(19035, x, y);
+                    peer.getQuestManager().handleFirstObjectAction(19030, x, y);
+                    check(collector.getInventoryManager().getItemAmount(10501) == 3
+                                    && peer.getInventoryManager().getItemAmount(10501) == 0,
+                            "Small pile or stale large-pile click awarded snowballs");
+                    regrowth.tick();
+                    check(ObjectManager.findDynamicObjectAt(x, y, 0) == small,
+                            "Pile regrew before the selected delay");
+                }
+                regrowth.tick();
+                DynamicObject regrown = ObjectManager.findDynamicObjectByIdAt(19030, x, y, 0);
+                check(regrown != null && regrown != large && !regrowth.isActive(),
+                        "Small pile did not regrow at the selected delay");
+                check(!peer.visibleDynamicObjects.contains(small)
+                                && !lateViewer.visibleDynamicObjects.contains(small)
+                                && lateViewer.visibleDynamicObjects.contains(regrown),
+                        "Regrowth did not update existing and late viewers");
+                check(WalkingCollisionMap.getTileFlags(x, y, 0) == collision,
+                        "Snow-pile size change altered walking collision");
+                collector.getInventoryManager().removeItem(new ItemStack(10501, 3));
+            }
+        } finally {
+            World.getPlayers()[6] = previousPeer;
+            World.getPlayers()[7] = previousViewer;
+        }
     }
 
     private static void checkGublinchSpawns() {
