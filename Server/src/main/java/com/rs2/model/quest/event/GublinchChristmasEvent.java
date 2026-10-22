@@ -40,7 +40,8 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int CLIENT_CYCLES_PER_TICK = 30;
     private static final int SNOWBALL_LAUNCH_TICK = 1;
     private static final int SNOWBALL_IMPACT_TICK = 3;
-    private static final int PELT_INTERVAL_TICKS = 4;
+    // Round the requested five-second interval up to whole 600 ms game ticks.
+    private static final int PELT_INTERVAL_TICKS = 9;
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
