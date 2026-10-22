@@ -523,12 +523,21 @@ public final class GublinchChristmasEvent extends QuestHook {
             npc.transformToNpcId(5017 + Math.min(hits, 2), 100);
             return;
         }
-        GroundItemManager.getInstance().spawn(new GroundItem(new ItemStack(SHARDS, 1), npc.getPosition(), false, player));
+        final Position dropTile = npc.getPosition().copy();
         Position spawn = npc.getSpawnPosition().copy();
         // Local NPC lists retain references after unregistering. Mark this
         // instance inactive so the next update sends its removal immediately.
         npc.setActive(false);
         World.unregisterNpc(npc);
+        // NPC removals are serialized at the end of this tick. A ground-item
+        // create is sent immediately, so wait until the next tick to show shards.
+        World.scheduleTickTask(new TickTask(1, false) {
+            @Override public void execute() {
+                stop();
+                GroundItemManager.getInstance().spawn(
+                        new GroundItem(new ItemStack(SHARDS, 1), dropTile, false, player));
+            }
+        });
         // The throw has completed at impact; stop following the defeated target.
         if (player.getInteractionTarget() == npc) {
             player.getUpdateState().setFaceEntity(65535);
