@@ -437,6 +437,8 @@ public final class GublinchChristmasEventChecks {
         Player thrower = player(3);
         thrower.questHookStates[5] = 1 << 10;
         thrower.setPosition(new Position(tile.getX() + 1, tile.getY(), 0));
+        thrower.getLastKnownRegionPosition().set(thrower.getPosition());
+        thrower.refreshLocalViewArea();
         thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 4));
         check(!thrower.shouldHideEquipmentItemInAppearance(3),
                 "Equipped snowball must remain visible between throws");
