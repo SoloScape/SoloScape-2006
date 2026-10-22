@@ -30,7 +30,10 @@ public final class GublinchChristmasEvent extends QuestHook {
     public static final int STATE_SLOT = 5;
     public static final int SHANTY_CLAWS = 828;
     public static final int SNOWBALL = 10501;
-    private static final int GUBLINCH_HITS_TO_DEFEAT = 4;
+    private static final int GUBLINCH_HITS_TO_DEFEAT = 3;
+    private static final int[] SNOWBALL_RANGED_LEVELS = {1, 10, 20, 30, 40, 50, 60, 69, 70};
+    // Hit chances in basis points: 10,000 is 100%.
+    private static final int[] SNOWBALL_HIT_CHANCES = {5900, 6450, 7030, 7620, 8240, 8830, 9410, 9960, 10000};
     private static final String GUBLINCH_HITS_ATTRIBUTE = "christmasSnowballHits";
     private static final String GUBLINCH_FLIGHT_ATTRIBUTE = "christmasSnowballInFlight";
     private static final String SNOWBALL_THROW_ATTRIBUTE = "christmasSnowballThrow";
@@ -317,8 +320,12 @@ public final class GublinchChristmasEvent extends QuestHook {
         });
     }
 
-    /** Returns true while the same target needs another snowball. */
+    /** Returns true while the same target needs another snowball, including after a miss. */
     public static boolean pelt(Player player, Npc npc) {
+        return pelt(player, npc, GameUtil.randomInt(10000));
+    }
+
+    private static boolean pelt(Player player, Npc npc, int accuracyRoll) {
         if (!started(player)) {
             player.packetSender.sendGameMessage("Speak to Shanty Claws on the Musa Point dock first.");
             return false;
@@ -331,6 +338,7 @@ public final class GublinchChristmasEvent extends QuestHook {
             player.packetSender.sendGameMessage("You must wield snowballs to pelt the gublinch.");
             return false;
         }
+        final boolean hit = snowballHits(player.getSkillManager().getCurrentLevels()[4], accuracyRoll);
         final Object throwToken = new Object();
         player.getAttributes().put(SNOWBALL_THROW_ATTRIBUTE, throwToken);
         player.getUpdateState().setAnimation(5063);
@@ -359,10 +367,33 @@ public final class GublinchChristmasEvent extends QuestHook {
                 npc.getAttributes().remove(GUBLINCH_FLIGHT_ATTRIBUTE);
                 if (!npc.isActive() || npc.isDead() || targetIndex < 0
                         || World.getNpcs()[targetIndex] != npc || !isGublinch(npc.getNpcId())) return;
-                applySnowballImpact(player, npc, hits);
+                if (hit) {
+                    applySnowballImpact(player, npc, hits);
+                } else {
+                    player.packetSender.sendGameMessage("Your snowball misses the gublinch.");
+                }
             }
         });
-        return hits < GUBLINCH_HITS_TO_DEFEAT;
+        return !hit || hits < GUBLINCH_HITS_TO_DEFEAT;
+    }
+
+    private static boolean snowballHits(int rangedLevel, int accuracyRoll) {
+        return accuracyRoll < snowballHitChance(rangedLevel);
+    }
+
+    /** Interpolate the supplied Ranged table, rounded to the nearest basis point. */
+    private static int snowballHitChance(int rangedLevel) {
+        if (rangedLevel <= SNOWBALL_RANGED_LEVELS[0]) return SNOWBALL_HIT_CHANCES[0];
+        for (int i = 1; i < SNOWBALL_RANGED_LEVELS.length; i++) {
+            if (rangedLevel <= SNOWBALL_RANGED_LEVELS[i]) {
+                int span = SNOWBALL_RANGED_LEVELS[i] - SNOWBALL_RANGED_LEVELS[i - 1];
+                int offset = rangedLevel - SNOWBALL_RANGED_LEVELS[i - 1];
+                return SNOWBALL_HIT_CHANCES[i - 1] + (int) Math.round(
+                        (SNOWBALL_HIT_CHANCES[i] - SNOWBALL_HIT_CHANCES[i - 1])
+                                * (double) offset / span);
+            }
+        }
+        return 10000;
     }
 
     private static void finishSnowballThrow(Player player, Object throwToken) {
@@ -380,7 +411,7 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static void applySnowballImpact(Player player, Npc npc, int hits) {
         npc.getAttributes().put(GUBLINCH_HITS_ATTRIBUTE, hits);
         if (hits < GUBLINCH_HITS_TO_DEFEAT) {
-            // Keep the original chilled/frozen models; the third hit stays frozen.
+            // First successful hit chills, second freezes, third shatters.
             npc.transformToNpcId(5017 + Math.min(hits, 2), 100);
             return;
         }
