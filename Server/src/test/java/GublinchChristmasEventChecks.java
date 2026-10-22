@@ -153,9 +153,9 @@ public final class GublinchChristmasEventChecks {
                     check(npc.getMovementMode() == NpcMovementMode.ROAMING,
                             "Rescued child cannot wander: " + npc.getNpcId());
                     Position spawn = npc.getSpawnPosition();
-                    check(npc.getSpawnMinPosition().equals(new Position(spawn.getX() - 1, spawn.getY() - 1))
-                                    && npc.getSpawnMaxPosition().equals(new Position(spawn.getX() + 2, spawn.getY() + 2)),
-                            "Rescued child wandering must stay within one tile of its spawn");
+                    check(npc.getSpawnMinPosition().equals(new Position(spawn.getX() - 5, spawn.getY() - 5))
+                                    && npc.getSpawnMaxPosition().equals(new Position(spawn.getX() + 6, spawn.getY() + 6)),
+                            "Rescued child wandering must stay within five tiles of its spawn");
                 }
                 check((WalkingCollisionMap.getTileFlags(tile.getX(), tile.getY(), 0) & 0x200100) == 0,
                         "Event NPC spawned on blocked terrain: " + tile);
