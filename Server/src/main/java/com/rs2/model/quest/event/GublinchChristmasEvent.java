@@ -92,6 +92,8 @@ public final class GublinchChristmasEvent extends QuestHook {
         {2907, 3188}, {2907, 3190}, {2907, 3189}
     };
 
+    // Native small-character celebration/chanting sequence, using the children's skeleton 319.
+    private static final int CHILD_CELEBRATION_ANIMATION = 197;
     private static boolean childPlayScheduled;
 
     public GublinchChristmasEvent() { super(STATE_SLOT); }
@@ -159,10 +161,10 @@ public final class GublinchChristmasEvent extends QuestHook {
                 if (phase == 0 || phase == 20) {
                     npc.getMovementQueue().clear();
                     npc.setMovementMode(NpcMovementMode.STATIONARY);
-                    npc.getUpdateState().setAnimation(phase == 0 ? 866 : 862);
-                } else if (phase == 7 || phase == 24) {
-                    // Cache durations: dance 204 client cycles, cheer 120 cycles.
-                    int animation = phase == 7 ? 866 : 862;
+                    npc.getUpdateState().setAnimation(CHILD_CELEBRATION_ANIMATION);
+                } else if (phase == 4 || phase == 24) {
+                    // Sequence 197 lasts 98 client cycles: round up to four game ticks.
+                    int animation = CHILD_CELEBRATION_ANIMATION;
                     if (npc.getUpdateState().getAnimationId() == animation)
                         npc.getUpdateState().setAnimation(-1);
                     npc.setMovementMode(NpcMovementMode.ROAMING);
