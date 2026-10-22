@@ -144,6 +144,13 @@ public final class GublinchChristmasEventChecks {
                     check(tile.equals(new Position(2904,3186,0)), "Shanty Claws is at the wrong position");
                     check(npc.getFacingDirection() == 3, "Shanty Claws must face south");
                 }
+                if (npc.getNpcId() >= 5046 && npc.getNpcId() <= 5048) {
+                    int expectedY = npc.getNpcId() == 5048 ? 3174 : 3177;
+                    check(npc.getSpawnPosition().equals(new Position(2905, expectedY, 0)),
+                            "Rescued child has the wrong spawn: " + npc.getNpcId());
+                    check(npc.getMovementMode() == NpcMovementMode.ROAMING,
+                            "Rescued child cannot wander: " + npc.getNpcId());
+                }
                 check((WalkingCollisionMap.getTileFlags(tile.getX(), tile.getY(), 0) & 0x200100) == 0,
                         "Event NPC spawned on blocked terrain: " + tile);
             }
@@ -258,7 +265,8 @@ public final class GublinchChristmasEventChecks {
         GublinchChristmasEvent.useShardsOnCage(player, 10506, 19036, cages[9][0], cages[9][1], 0);
         check(GublinchChristmasEvent.cageDisplayId(player,19036,2907,3188,0) == 19037,
                 "New required cage did not record progress");
-        check(GublinchChristmasEvent.isNpcVisible(player, 5046) && !GublinchChristmasEvent.isNpcVisible(player, 5023), "Children did not escape");
+        check(!GublinchChristmasEvent.isNpcVisible(player, 5046) && !GublinchChristmasEvent.isNpcVisible(player, 5023),
+                "Dock children appeared before the completion handoff");
         player.getInventoryManager().getContainer().clear();
         player.getInventoryManager().addItem(new ItemStack(554, 1));
         player.getInventoryManager().addItem(new ItemStack(555, 1));
@@ -270,6 +278,10 @@ public final class GublinchChristmasEventChecks {
         finishConversation(player);
         check(GublinchChristmasEvent.isComplete(player) && player.ownsItem(10507) && !player.ownsItem(10508),
                 "One free slot must award the hat and defer the tree");
+        for (int id = 5046; id <= 5048; id++) {
+            check(GublinchChristmasEvent.isNpcVisible(player, id), "Completed player cannot see child " + id);
+            check(!GublinchChristmasEvent.isNpcVisible(other, id), "Dock children leaked to unfinished player");
+        }
         player.getInventoryManager().removeItem(new ItemStack(590, 1));
         player.getQuestManager().handleFirstNpcAction(828);
         finishConversation(player);
