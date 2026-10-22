@@ -47,6 +47,11 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
     private static final int MAKE_SNOWBALL_TICKS = 5;
+    private static final int LARGE_SNOW_PILE = 19030;
+    private static final int SMALL_SNOW_PILE = 19035;
+    // Recreation estimate supplied by the user, not a verified 2006 regrowth value.
+    private static final int SNOW_REGROW_MIN_TICKS = 6;
+    private static final int SNOW_REGROW_MAX_TICKS = 10;
     private static final ProjectileDefinition SNOWBALL_PROJECTILE =
             new ProjectileDefinition(861, ProjectileTiming.STANDARD.copy()
                     .setStartDelay(SNOWBALL_LAUNCH_TICK * CLIENT_CYCLES_PER_TICK));
@@ -65,6 +70,7 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int[][] SNOW_PILES = {
         {2841, 3147}, {2844, 3147}, {2840, 3150}, {2842, 3153}
     };
+    private static final boolean[] SNOW_PILE_COLLECTING = new boolean[SNOW_PILES.length];
     private static boolean shantiesScheduled;
     // Both cave loops, including the northern furnace chamber. Keep spawn
     // anchors on walkable floor; normal NPC pathfinding clips their wandering.
@@ -103,7 +109,7 @@ public final class GublinchChristmasEvent extends QuestHook {
         }
         placeObject(ENTRANCE, ENTRY_X, ENTRY_Y);
         for (int i = 0; i < SNOW_PILES.length; i++)
-            placeObject(i % 2 == 0 ? 19030 : 19031, SNOW_PILES[i][0], SNOW_PILES[i][1]);
+            placeObject(LARGE_SNOW_PILE, SNOW_PILES[i][0], SNOW_PILES[i][1]);
         for (int[] cage : CAGES) placeObject(CAGE, cage[0], cage[1]);
         for (int[] tile : GUBLINCH_SPAWNS) {
             spawnOnce(5017, tile[0], tile[1]);
@@ -251,15 +257,23 @@ public final class GublinchChristmasEvent extends QuestHook {
         if ((id == 19030 || id == 19031 || id >= 19033 && id <= 19035)
                 && isSnowPile(x, y) && player.getPosition().getPlane() == 0) {
             if (player.isActionLocked()) return true;
-            if (!started(player) || isComplete(player)) player.packetSender.sendGameMessage("Speak to Shanty Claws on the Musa Point dock first.");
-            else if (player.getInventoryManager().addItem(new ItemStack(SNOWBALL, 3))) {
+            final int pile = snowPileIndex(x, y);
+            if (!started(player) || isComplete(player)) {
+                player.packetSender.sendGameMessage("Speak to Shanty Claws on the Musa Point dock first.");
+            } else if (SNOW_PILE_COLLECTING[pile]
+                    || ObjectManager.findDynamicObjectByIdAt(LARGE_SNOW_PILE, x, y, 0) == null) {
+                player.packetSender.sendGameMessage("There isn't enough snow here yet.");
+            } else if (player.getInventoryManager().addItem(new ItemStack(SNOWBALL, 3))) {
+                SNOW_PILE_COLLECTING[pile] = true;
                 player.setActionLocked(true);
                 player.getUpdateState().setAnimation(MAKE_SNOWBALL_ANIMATION);
                 player.packetSender.sendGameMessage("You make three snowballs.");
                 World.scheduleTickTask(new TickTask(MAKE_SNOWBALL_TICKS, false) {
                     @Override public void execute() {
-                        player.setActionLocked(false);
                         stop();
+                        player.setActionLocked(false);
+                        SNOW_PILE_COLLECTING[pile] = false;
+                        depleteSnowPile(pile);
                     }
                 });
             }
@@ -279,8 +293,42 @@ public final class GublinchChristmasEvent extends QuestHook {
     }
 
     private static boolean isSnowPile(int x, int y) {
-        for (int[] tile : SNOW_PILES) if (tile[0] == x && tile[1] == y) return true;
-        return false;
+        return snowPileIndex(x, y) >= 0;
+    }
+
+    private static int snowPileIndex(int x, int y) {
+        for (int i = 0; i < SNOW_PILES.length; i++) {
+            if (SNOW_PILES[i][0] == x && SNOW_PILES[i][1] == y) return i;
+        }
+        return -1;
+    }
+
+    private static void depleteSnowPile(int pile) {
+        int x = SNOW_PILES[pile][0], y = SNOW_PILES[pile][1];
+        if (ObjectManager.findDynamicObjectByIdAt(LARGE_SNOW_PILE, x, y, 0) == null) return;
+        final DynamicObject small = replaceSnowPile(pile, SMALL_SNOW_PILE);
+        int regrowTicks = SNOW_REGROW_MIN_TICKS
+                + GameUtil.randomInt(SNOW_REGROW_MAX_TICKS - SNOW_REGROW_MIN_TICKS + 1);
+        World.scheduleTickTask(new TickTask(regrowTicks, false) {
+            @Override public void execute() {
+                stop();
+                if (ObjectManager.findDynamicObjectAt(x, y, 0) == small) {
+                    replaceSnowPile(pile, LARGE_SNOW_PILE);
+                }
+            }
+        });
+    }
+
+    private static DynamicObject replaceSnowPile(int pile, int id) {
+        int x = SNOW_PILES[pile][0], y = SNOW_PILES[pile][1];
+        DynamicObject old = ObjectManager.findDynamicObjectAt(x, y, 0);
+        ObjectManager.getInstance().removeDynamicObjectAt(x, y, 0, 10);
+        // Retire old viewer references so a later refresh cannot undo the replacement.
+        for (Player viewer : World.getPlayers()) {
+            if (viewer != null) viewer.visibleDynamicObjects.remove(old);
+        }
+        // These native variants share a tile footprint; retain the pile's collision.
+        return new DynamicObject(id, x, y, 0, 0, 10, LARGE_SNOW_PILE, 999999, false);
     }
 
     public static boolean useShardsOnCage(Player player, int item, int object, int x, int y, int plane) {
