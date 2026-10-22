@@ -659,6 +659,16 @@ implements PacketHandler {
             }
             return;
         }
+        // Native 443 equipment lists Remove first and Operate second.
+        // Legacy option 2 otherwise routes to bank/shop amount-five handling.
+        if (widgetOption && interfaceId == 1688 && option == 2
+                && itemId == com.rs2.model.quest.event.GublinchChristmasEvent.REINDEER_HAT) {
+            if (slot == 0 && player.isInterfaceIdOpen(1688)
+                    && player.getEquipmentManager().getItemIdAtSlot(0) == itemId) {
+                com.rs2.model.quest.event.GublinchChristmasEvent.operateHat(player);
+            }
+            return;
+        }
         if (widgetOption && handleRevision443BankShopItemOption(player, packedInterface, slot, itemId, option)) {
             return;
         }
