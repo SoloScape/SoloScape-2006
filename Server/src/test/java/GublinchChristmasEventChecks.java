@@ -421,10 +421,10 @@ public final class GublinchChristmasEventChecks {
         thrower.questHookStates[5] = 1 << 10;
         thrower.setPosition(new Position(tile.getX() + 1, tile.getY(), 0));
         thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 3));
-        check(thrower.shouldHideEquipmentItemInAppearance(3),
-                "Snowball without a worn model must be hidden from player appearance");
+        check(!thrower.shouldHideEquipmentItemInAppearance(3),
+                "Equipped snowball must remain visible between throws");
         check(!thrower.shouldHideEquipmentItemInAppearance(5),
-                "Snowball appearance workaround must not hide the shield slot");
+                "Snowball must not hide the shield slot");
         check(thrower.getStandAnimation() == 808 && thrower.getWalkAnimation() == 819
                 && thrower.getRunAnimation() == 824, "Snowball must use player-safe movement animations");
         Player observer = player(4);
