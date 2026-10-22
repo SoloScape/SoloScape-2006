@@ -332,8 +332,13 @@ public final class GublinchChristmasEvent extends QuestHook {
         // removes that NPC, and its index can be reused before the ball lands.
         new WoodcuttingHandler(player.getPosition().copy(), player.getSize(),
                 npc.getPosition().copy(), 0, SNOWBALL_PROJECTILE).sendProjectileToNearbyPlayers();
-        if (npc.getNpcId() < 5019) {
-            npc.transformToNpcId(npc.getNpcId() + 1, 100);
+        Integer previousHits = (Integer) npc.getAttributes().get(GUBLINCH_HITS_ATTRIBUTE);
+        // Returning to the normal form after warming up starts a fresh freeze cycle.
+        int hits = npc.getNpcId() == 5017 || previousHits == null ? 1 : previousHits + 1;
+        npc.getAttributes().put(GUBLINCH_HITS_ATTRIBUTE, hits);
+        if (hits < GUBLINCH_HITS_TO_DEFEAT) {
+            // Keep the original chilled/frozen models; the third hit stays frozen.
+            npc.transformToNpcId(5017 + Math.min(hits, 2), 100);
             return true;
         }
         GroundItemManager.getInstance().spawn(new GroundItem(new ItemStack(SHARDS, 1), npc.getPosition(), false, player));
