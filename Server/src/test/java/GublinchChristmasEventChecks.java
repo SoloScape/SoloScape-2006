@@ -228,8 +228,8 @@ public final class GublinchChristmasEventChecks {
         new RoutedNpcActionTask(player, player.nextActionSequence(), target, 1, NpcActionRouter.Action.PELT).execute();
         TickTask pelting = (TickTask) World.getTaskScheduler().getTasks().get(
                 World.getTaskScheduler().getTasks().size() - 1);
-        check(pelting.getIntervalTicks() == 9,
-                "Five-second throw interval must round up to nine game ticks");
+        check(pelting.getIntervalTicks() == 1,
+                "Pelting pursuit must check movement every tick");
         // Exercise the scheduled action: first shot is immediate, then ticks 9 and 18.
         for (int elapsed = 0; elapsed <= 24; elapsed++) {
             advanceEventTicks(1);
@@ -318,8 +318,101 @@ public final class GublinchChristmasEventChecks {
         checkPeltVisuals();
         checkGublinchRespawns();
         checkSnowballAccuracy();
+        checkPeltingRangeAndPursuit();
         System.out.println("Gublinch Christmas checks passed: dungeon population, roaming, respawns, routing, terrain, snowballs, pelting, private shards, cages, rescue, rewards, reclaim and persistence.");
         System.exit(0);
+    }
+
+    private static void checkPeltingRangeAndPursuit() throws Exception {
+        // Find a real, straight cave corridor long enough to approach and follow.
+        Position origin = null;
+        int dx = 0, dy = 0;
+        search: for (int x = 3158; x < 3198; x++) for (int y = 5320; y < 5374; y++) {
+            for (int direction = 0; direction < 2; direction++) {
+                int sx = direction == 0 ? 1 : 0, sy = direction == 0 ? 0 : 1;
+                boolean clear = true;
+                for (int step = 0; step <= 12; step++) {
+                    int tx = x + sx * step, ty = y + sy * step;
+                    if ((WalkingCollisionMap.getTileFlags(tx, ty, 0) & 0x200100) != 0
+                            || step > 0 && !WalkingCollisionMap.canTravelBetween(
+                                    tx - sx, ty - sy, tx, ty, 0, 1, 1)) {
+                        clear = false;
+                        break;
+                    }
+                }
+                if (clear && com.rs2.util.GameUtil.hasClearPath(
+                        new Position(x, y, 0), new Position(x + sx * 12, y + sy * 12, 0), true)) {
+                    origin = new Position(x, y, 0);
+                    dx = sx; dy = sy;
+                    break search;
+                }
+            }
+        }
+        check(origin != null, "No real cave corridor for ranged pursuit checks");
+        Player thrower = player(10);
+        thrower.questHookStates[5] = 1 << 10;
+        thrower.setPosition(origin.copy());
+        thrower.getLastKnownRegionPosition().set(origin);
+        thrower.refreshLocalViewArea();
+        thrower.getMovementQueue().setRunning(true);
+        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 6));
+        Npc target = new Npc(5017);
+        target.moveTo(new Position(origin.getX() + dx * 10, origin.getY() + dy * 10, 0));
+        target.setSpawnPosition(target.getPosition().copy());
+        World.registerNpc(target);
+        try {
+            // Use the actual Pelt click; it must immediately suppress melee following.
+            normalNpcAttack(thrower, target);
+            check(thrower.getMovementTarget() == null, "Pelt click retained melee following");
+            advanceEventTicks(1);
+            check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 6,
+                    "Out-of-range click threw before approaching");
+            check(!thrower.getMovementQueue().getSteps().isEmpty(), "Pelt click did not approach");
+            Position end = (Position) thrower.getMovementQueue().getSteps().getLast();
+            check(com.rs2.util.GameUtil.getDistance(end, target.getPosition()) == 6,
+                    "Approach did not end at maximum throwing range");
+            for (int tick = 0; tick < 8
+                    && thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 6; tick++) {
+                thrower.getTargetMovement().process();
+                thrower.getMovementQueue().process();
+                advanceEventTicks(1);
+            }
+            check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 5
+                            && com.rs2.util.GameUtil.getDistance(thrower.getPosition(), target.getPosition()) == 6,
+                    "Running approach overshot range or failed to throw");
+            check(thrower.getMovementQueue().getSteps().isEmpty(), "Approach kept moving after throwing");
+
+            target.moveTo(new Position(origin.getX() + dx * 12, origin.getY() + dy * 12, 0));
+            advanceEventTicks(1);
+            check(!thrower.getMovementQueue().getSteps().isEmpty(), "Escaping target was not followed");
+            end = (Position) thrower.getMovementQueue().getSteps().getLast();
+            check(com.rs2.util.GameUtil.getDistance(end, target.getPosition()) == 6,
+                    "Pursuit chased closer than maximum throwing range");
+            thrower.getMovementQueue().process();
+            check(com.rs2.util.GameUtil.getDistance(thrower.getPosition(), target.getPosition()) == 6,
+                    "Running pursuit overshot maximum throwing range");
+            for (int elapsed = 2; elapsed <= 9; elapsed++) {
+                advanceEventTicks(1);
+                int expected = elapsed < 9 ? 5 : 4;
+                check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == expected,
+                        "Pursuit reset the throw cadence or failed to resume automatically");
+            }
+
+            // A new player command cancels pursuit without deleting the new walk.
+            thrower.nextActionSequence();
+            thrower.getMovementQueue().addStep(new Position(
+                    thrower.getPosition().getX() - dx, thrower.getPosition().getY() - dy, 0));
+            int steps = thrower.getMovementQueue().getSteps().size();
+            advanceEventTicks(1);
+            check(thrower.getMovementQueue().getSteps().size() == steps,
+                    "Old pelting action erased a newer movement command");
+            advanceEventTicks(10);
+            check(thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 4,
+                    "Cancelled pursuit kept throwing");
+        } finally {
+            thrower.nextActionSequence();
+            World.unregisterNpc(target);
+        }
     }
 
     private static void checkSnowballsAgainstNormalNpc() throws Exception {
