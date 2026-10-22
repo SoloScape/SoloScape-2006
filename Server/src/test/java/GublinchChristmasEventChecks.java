@@ -241,6 +241,10 @@ public final class GublinchChristmasEventChecks {
         player.getLastKnownRegionPosition().set(player.getPosition());
         player.refreshLocalViewArea();
         new RoutedNpcActionTask(player, player.nextActionSequence(), target, 1, NpcActionRouter.Action.PELT).execute();
+        TickTask pelting = (TickTask) World.getTaskScheduler().getTasks().get(
+                World.getTaskScheduler().getTasks().size() - 1);
+        check(pelting.getIntervalTicks() * 30 >= 100,
+                "Repeat pelting cuts off the native 100-cycle throw animation");
         for (int i = 0; i < 20; i++) {
             for (Object task : new ArrayList<Object>(World.getTaskScheduler().getTasks())) {
                 TickTask tick = (TickTask)task;
