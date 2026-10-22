@@ -132,9 +132,9 @@ public final class GublinchChristmasEvent extends QuestHook {
         for (Npc npc : World.getNpcs()) {
             if (npc == null || npc.getOriginalNpcId() < 5046 || npc.getOriginalNpcId() > 5048) continue;
             Position spawn = npc.getSpawnPosition();
-            npc.setSpawnMinPosition(new Position(spawn.getX() - 1, spawn.getY() - 1));
-            // Roaming samples the upper bound exclusively: include just the 3x3 area.
-            npc.setSpawnMaxPosition(new Position(spawn.getX() + 2, spawn.getY() + 2));
+            npc.setSpawnMinPosition(new Position(spawn.getX() - 5, spawn.getY() - 5));
+            // Roaming samples the upper bound exclusively: include the full five-tile radius.
+            npc.setSpawnMaxPosition(new Position(spawn.getX() + 6, spawn.getY() + 6));
         }
         if (!childPlayScheduled) {
             childPlayScheduled = true;
