@@ -118,7 +118,7 @@ public final class GublinchChristmasEvent extends QuestHook {
         // (3161,5363), Jill at (3163,5363), and Jack at (3165,5363), plus the logs
         // and furnace. Separate dungeon NPCs duplicate those original children.
         removeDungeonChildCopies();
-        spawnOnce(5046, 2905, 3177);
+        spawnOnce(5046, 2906, 3177);
         spawnOnce(5047, 2905, 3177);
         spawnOnce(5048, 2905, 3174);
     }
