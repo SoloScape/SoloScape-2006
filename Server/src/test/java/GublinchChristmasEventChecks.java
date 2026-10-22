@@ -554,6 +554,9 @@ public final class GublinchChristmasEventChecks {
                     check(thrower.getUpdateState().getGraphicId() == 860, "Animated snowball in the throwing hand missing");
                     check(thrower.getUpdateState().getAnimationId() == 5063,
                             "Throw animation was cancelled on the final launch");
+                    check(thrower.getUpdateState().getAnimationDelay() == 10
+                                    && (thrower.getUpdateState().getGraphicDelay() & 65535) == 10,
+                            "Throw animation and hand effect must share a 200 ms delay");
                     int startCycle = (packet[13] & 255) << 8 | packet[14] & 255;
                     int endCycle = (packet[15] & 255) << 8 | packet[16] & 255;
                     check(startCycle == 30 && endCycle == 90,
