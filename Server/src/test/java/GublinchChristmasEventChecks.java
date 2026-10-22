@@ -243,13 +243,14 @@ public final class GublinchChristmasEventChecks {
         new RoutedNpcActionTask(player, player.nextActionSequence(), target, 1, NpcActionRouter.Action.PELT).execute();
         TickTask pelting = (TickTask) World.getTaskScheduler().getTasks().get(
                 World.getTaskScheduler().getTasks().size() - 1);
-        check(pelting.getIntervalTicks() == 4,
-                "Next throw must start on tick 4");
-        for (int i = 0; i < 20; i++) {
-            for (Object task : new ArrayList<Object>(World.getTaskScheduler().getTasks())) {
-                TickTask tick = (TickTask)task;
-                if (tick.isActive()) tick.tick();
-            }
+        check(pelting.getIntervalTicks() == 9,
+                "Five-second throw interval must round up to nine game ticks");
+        // Exercise the scheduled action: first shot is immediate, then ticks 9 and 18.
+        for (int elapsed = 0; elapsed <= 24; elapsed++) {
+            advanceEventTicks(1);
+            int shots = Math.min(3, 1 + elapsed / 9);
+            check(player.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - shots,
+                    "Automatic pelting threw early or late at elapsed tick " + elapsed);
         }
         check(player.getEquipmentManager().getContainer().getItemAmount(10501) == 0, "Pelt did not consume three balls");
         GroundItem shards = GroundItemManager.findVisibleItem(player, 10506, targetTile);
