@@ -22,6 +22,7 @@ import com.rs2.model.quest.QuestHook;
 import com.rs2.model.task.TickTask;
 import com.rs2.model.skill.woodcutting.WoodcuttingHandler;
 import com.rs2.util.GameUtil;
+import com.rs2.util.path.PathFinder;
 import com.rs2.util.path.WalkingCollisionMap;
 import com.rs2.util.path.ProjectileCollisionMap;
 
@@ -44,6 +45,7 @@ public final class GublinchChristmasEvent extends QuestHook {
     private static final int SNOWBALL_IMPACT_TICK = 3;
     // Round the requested five-second interval up to whole 600 ms game ticks.
     private static final int PELT_INTERVAL_TICKS = 9;
+    private static final int PELT_RANGE = 6;
     // Original Gublinch snowball-making sequence in the revision 443 cache.
     private static final int MAKE_SNOWBALL_ANIMATION = 5067;
     // Sequence 5067 lasts 150 client frames (3 seconds): five 600 ms server ticks.
@@ -359,16 +361,71 @@ public final class GublinchChristmasEvent extends QuestHook {
 
     public static void startPelting(Player player, Npc npc) {
         final int sequence = player.nextActionSequence();
-        World.scheduleTickTask(new TickTask(PELT_INTERVAL_TICKS, true) {
+        // Pelt owns its approach queue; generic NPC following walks to melee range.
+        com.rs2.model.EntityTargetMovement.clearMovementTarget(player);
+        player.getMovementQueue().clear();
+        World.scheduleTickTask(new TickTask(1, true) {
+            private int cooldown;
             @Override public void execute() {
-                if (!player.isCurrentActionSequence(sequence) || npc.isDead() || !isGublinch(npc.getNpcId())
-                        || npc.getIndex() < 0 || World.getNpcs()[npc.getIndex()] != npc
+                if (!player.isCurrentActionSequence(sequence) || !npc.isActive() || npc.isDead()
+                        || !isGublinch(npc.getNpcId()) || npc.getIndex() < 0
+                        || World.getNpcs()[npc.getIndex()] != npc
                         || player.getPosition().getPlane() != npc.getPosition().getPlane()
-                        || GameUtil.getDistance(player.getPosition(), npc.getPosition()) > 6
-                        || !GameUtil.hasClearPath(player.getPosition(), npc.getPosition(), true)) { stop(); return; }
+                        || !started(player) || isComplete(player)
+                        || npc.getOwnerPlayer() != null && npc.getOwnerPlayer() != player) {
+                    stop();
+                    return;
+                }
+                if (cooldown > 0) cooldown--;
+                if (player.getEquipmentManager().getItemIdAtSlot(3) != SNOWBALL) {
+                    player.packetSender.sendGameMessage("You must wield snowballs to pelt the gublinch.");
+                    stop();
+                    return;
+                }
+                if (!canPeltFrom(player.getPosition(), npc.getPosition())) {
+                    approachPeltRange(player, npc);
+                    return;
+                }
+                // Remove excess approach steps before running can carry us closer.
+                player.getMovementQueue().clear();
+                player.getUpdateState().setFaceEntity(npc.getEncodedIndex());
+                if (cooldown > 0) return;
                 if (!pelt(player, npc)) stop();
+                else cooldown = PELT_INTERVAL_TICKS;
+            }
+
+            @Override public void stop() {
+                super.stop();
+                // A later walk/click owns its own queue and must not be cancelled.
+                if (player.isCurrentActionSequence(sequence)) {
+                    player.getMovementQueue().clear();
+                    if (player.getInteractionTarget() == npc) player.setInteractionTarget(null);
+                }
             }
         });
+    }
+
+    private static boolean canPeltFrom(Position from, Position target) {
+        return from.getPlane() == target.getPlane()
+                && GameUtil.getDistance(from, target) > 0
+                && GameUtil.getDistance(from, target) <= PELT_RANGE
+                && GameUtil.hasClearPath(from, target, true);
+    }
+
+    private static void approachPeltRange(Player player, Npc npc) {
+        player.getMovementQueue().clear();
+        if (!PathFinder.findPathToAdjacent(player, npc.getPosition().getX(), npc.getPosition().getY(),
+                Math.max(1, npc.getSize()), Math.max(1, npc.getSize()), true)) return;
+        // Keep the collision-aware route only as far as its first clear throwing tile.
+        // Trimming the queue also prevents a running second step from overshooting.
+        boolean reached = false;
+        java.util.Iterator steps = player.getMovementQueue().getSteps().iterator();
+        while (steps.hasNext()) {
+            Position step = (Position) steps.next();
+            if (reached) steps.remove();
+            else reached = canPeltFrom(new Position(step.getX(), step.getY(),
+                    player.getPosition().getPlane()), npc.getPosition());
+        }
     }
 
     /** Returns true while the same target needs another snowball, including after a miss. */
