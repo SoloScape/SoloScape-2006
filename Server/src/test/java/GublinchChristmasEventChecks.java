@@ -749,8 +749,8 @@ public final class GublinchChristmasEventChecks {
                             "Throw animation and hand effect must share a 200 ms delay");
                     int startCycle = (packet[13] & 255) << 8 | packet[14] & 255;
                     int endCycle = (packet[15] & 255) << 8 | packet[16] & 255;
-                    check(startCycle == 60 && endCycle == 90,
-                            "Snowball must wait until 1,200 ms to launch and arrive at 1,800 ms at every range");
+                    check(startCycle == 65 && endCycle == 90,
+                            "Snowball must wait until 1,300 ms to launch and arrive at 1,800 ms at every range");
                     check(com.rs2.model.combat.ProjectileTiming.STANDARD.getStartDelay() == 44,
                             "Snowball timing changed other projectiles");
                     advanceEventTicks(2);
