@@ -749,8 +749,11 @@ public final class GublinchChristmasEventChecks {
                 check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
                         "Misses caused a premature shard drop");
             } else {
-                check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
-                        "Three successful hits with intervening misses did not defeat the Gublinch");
+                check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                        "Fatal hit must remove the Gublinch before showing shards");
+                advanceEventTicks(1);
+                check(GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
+                        "Shards did not appear one tick after removal");
             }
             check(thrower.getUpdateState().getAnimationId() == -1
                             && thrower.getUpdateState().getGraphicId() == -1,
@@ -857,8 +860,8 @@ public final class GublinchChristmasEventChecks {
                         check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
                                 "Gublinch did not react when the snowball arrived");
                     } else {
-                        check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
-                                "Final impact did not remove the Gublinch and drop shards");
+                        check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                                "Final impact must remove the Gublinch before its drop appears");
                     }
                     check(thrower.getUpdateState().getAnimationId() == -1
                                     && thrower.getUpdateState().getGraphicId() == -1,
@@ -876,6 +879,20 @@ public final class GublinchChristmasEventChecks {
                 input.readFully(update);
                 check((update[0] & 255) == 1 && (update[1] & 0xe0) == 0xe0,
                         "Final hit did not serialize immediate NPC removal");
+                check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                        "Shards appeared before the NPC removal update was delivered");
+                // Even if the removed instance moves, loot stays on its death tile.
+                target.moveTo(new Position(tile.getX() + 2, tile.getY(), 0));
+                advanceEventTicks(1);
+                GroundItem drop = GroundItemManager.findVisibleItem(thrower, 10506, tile);
+                check(drop != null && drop.getItem().getAmount() == 1,
+                        "Private shard did not appear on the death tile the following tick");
+                check(GroundItemManager.findVisibleItem(observer, 10506, tile) == null,
+                        "Delayed shard leaked to a different player");
+                advanceEventTicks(1);
+                check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == drop
+                                && drop.getItem().getAmount() == 1,
+                        "Delayed drop task created duplicate shards");
             } finally {
                 World.getPlayers()[4] = null;
             }
