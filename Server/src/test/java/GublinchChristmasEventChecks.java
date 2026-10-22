@@ -313,12 +313,58 @@ public final class GublinchChristmasEventChecks {
         GublinchChristmasEvent.operateHat(player);
         check(player.getUpdateState().getAnimationId() == 5059, "Hat operation animation missing");
         checkHatEquipmentOperation();
+        checkSnowballsAgainstNormalNpc();
         checkRewardBranches(other);
         checkPeltVisuals();
         checkGublinchRespawns();
         checkSnowballAccuracy();
         System.out.println("Gublinch Christmas checks passed: dungeon population, roaming, respawns, routing, terrain, snowballs, pelting, private shards, cages, rescue, rewards, reclaim and persistence.");
         System.exit(0);
+    }
+
+    private static void checkSnowballsAgainstNormalNpc() throws Exception {
+        Player attacker = player(9);
+        Npc target = new Npc(1);
+        target.moveTo(new Position(2919, 3175, 0));
+        target.setSpawnPosition(target.getPosition().copy());
+        World.registerNpc(target);
+        try {
+            check("Attack".equalsIgnoreCase(target.getDefinition().getAction(1)),
+                    "Normal NPC attack fixture changed");
+            attacker.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 6));
+            normalNpcAttack(attacker, target);
+            check(attacker.getEquipmentManager().getItemIdAtSlot(3) != 10501,
+                    "Normal NPC attack retained equipped snowballs");
+            check(attacker.getInventoryManager().getItemAmount(10501) == 6,
+                    "Normal NPC attack consumed or lost snowballs");
+            check(attacker.getCombatTarget() == target && attacker.getAttackRange() == 1,
+                    "Normal NPC attack did not continue with unarmed combat");
+            check(attacker.getUpdateState().getAnimationId() != 5063
+                            && attacker.getUpdateState().getGraphicId() != 860,
+                    "Normal NPC attack started a snowball throw");
+            com.rs2.model.combat.CombatManager.stopCombat(attacker);
+
+            // No safe inventory destination: retain the entire stack and refuse combat.
+            attacker.getInventoryManager().getContainer().clear();
+            for (int slot = 0; slot < 28; slot++)
+                attacker.getInventoryManager().getContainer().setItem(slot, new ItemStack(590, 1));
+            attacker.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 6));
+            normalNpcAttack(attacker, target);
+            check(attacker.getEquipmentManager().getContainer().getItemAmount(10501) == 6
+                            && attacker.getInventoryManager().getItemAmount(10501) == 0,
+                    "Full inventory lost equipped snowballs");
+            check(attacker.getCombatTarget() == null, "Full inventory allowed snowball combat");
+        } finally {
+            com.rs2.model.combat.CombatManager.stopCombat(attacker);
+            World.unregisterNpc(target);
+        }
+    }
+
+    private static void normalNpcAttack(Player player, Npc target) {
+        ByteBuffer payload = ByteBuffer.allocate(2);
+        payload.putShort((short)target.getIndex()).flip();
+        new com.rs2.net.packet.handler.NpcInteractionPacketHandler().handle(player,
+                new IncomingPacket(ClientPackets.NPC_OPTION_2, 2, PacketBuffer.wrapReader(payload)));
     }
 
     private static void checkHatEquipmentOperation() throws Exception {
