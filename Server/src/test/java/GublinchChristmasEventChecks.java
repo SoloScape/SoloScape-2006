@@ -146,8 +146,8 @@ public final class GublinchChristmasEventChecks {
                     check(npc.getFacingDirection() == 3, "Shanty Claws must face south");
                 }
                 if (npc.getNpcId() >= 5046 && npc.getNpcId() <= 5048) {
-                    int expectedX = npc.getNpcId() == 5046 ? 2906 : 2905;
-                    int expectedY = npc.getNpcId() == 5048 ? 3174 : 3177;
+                    int expectedX = npc.getNpcId() == 5046 ? 2904 : npc.getNpcId() == 5047 ? 2907 : 2906;
+                    int expectedY = npc.getNpcId() == 5046 ? 3178 : npc.getNpcId() == 5047 ? 3174 : 3172;
                     check(npc.getSpawnPosition().equals(new Position(expectedX, expectedY, 0)),
                             "Rescued child has the wrong spawn: " + npc.getNpcId());
                     check(npc.getMovementMode() == NpcMovementMode.ROAMING,
