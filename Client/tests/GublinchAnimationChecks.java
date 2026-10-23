@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import jagex.io.Buffer;
 
-/** Renders actual skinned child poses from the original cache for choreography review. */
+/** Checks the frozen Gublinch and native crumble sequence against the original cache. */
 public final class GublinchAnimationChecks {
     public static void main(String[] args) throws Exception {
         boolean preview = args.length > 0 && args[0].equals("--preview");
@@ -44,15 +44,19 @@ public final class GublinchAnimationChecks {
             };
             Class39_Sub5_Sub12 poses = new Class39_Sub5_Sub12(frameFiles, skeletonFiles, 1404, false);
             Map<Integer, byte[]> sequences = cache.readFiles(2, 12);
-            int[] candidates = new int[]{5070, 5071, 5072, 5073};
+            int[] candidates = new int[]{5072};
             for (int id : candidates) {
                 Class39_Sub5_Sub11 sequence = new Class39_Sub5_Sub11();
                 sequence.method698(new Buffer(sequences.get(id)), 0);
+                int cycles = 0;
+                for (int duration : sequence.anIntArray1831) cycles += duration;
+                if (sequence.anIntArray1833.length != 48 || cycles != 144)
+                    throw new AssertionError("Crumble timing changed: expected 48 frames over 144 cycles");
                 for (int frame : sequence.anIntArray1833) {
                     byte[] bytes = frames.get(frame & 65535);
                     if (frame >>> 16 != 1404 || bytes == null
                             || (((bytes[0] & 255) << 8) | (bytes[1] & 255)) != 1259)
-                        throw new AssertionError("Child emote skeleton mismatch");
+                        throw new AssertionError("Gublinch crumble skeleton mismatch");
                     Model pose = base.method567(true);
                     pose.method557(poses, frame & 65535);
 
@@ -65,7 +69,7 @@ public final class GublinchAnimationChecks {
                 g.setColor(Color.BLACK); g.drawString("Sequence " + id, 8, 16);
                 for (int sample = 0; sample < sequence.anIntArray1833.length; sample++) {
                     int frame = sequence.anIntArray1833[sample];
-                    if (frame >>> 16 != 1404) throw new AssertionError("Wrong child frame group");
+                    if (frame >>> 16 != 1404) throw new AssertionError("Wrong Gublinch frame group");
                     Model pose = base.method567(true);
                     pose.method557(poses, frame & 65535);
                     draw(g, pose, (sample % 7) * 120 + 60, (sample / 7) * 170 + 150);
@@ -79,24 +83,7 @@ public final class GublinchAnimationChecks {
             }
           }
         }
-        System.out.println("Gublinch animation cache checks passed: original frozen model and all candidate frames.");
-    }
-
-    private static void verifyProportions(Model base, Model pose) {
-        int baseMinY = Integer.MAX_VALUE, baseMaxY = Integer.MIN_VALUE;
-        for (int i = 0; i < base.anInt2367; i++) {
-            baseMinY = Math.min(baseMinY, base.anIntArray2356[i]);
-            baseMaxY = Math.max(baseMaxY, base.anIntArray2356[i]);
-        }
-        int limit = (baseMaxY - baseMinY) * 5 / 2;
-        for (int[] coordinates : new int[][]{pose.anIntArray2376, pose.anIntArray2356, pose.anIntArray2359}) {
-            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
-            for (int i = 0; i < pose.anInt2367; i++) {
-                min = Math.min(min, coordinates[i]);
-                max = Math.max(max, coordinates[i]);
-            }
-            if (max - min > limit) throw new AssertionError("Child emote stretched the mesh");
-        }
+        System.out.println("Gublinch animation cache checks passed: original frozen model and all 48 crumble frames (144 client cycles).");
     }
 
     private static void draw(Graphics2D g, Model pose, int ox, int oy) {
