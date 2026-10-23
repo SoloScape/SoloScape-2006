@@ -81,12 +81,22 @@ public final class GublinchChristmasEvent extends QuestHook {
     // Both cave loops, including the northern furnace chamber. Keep spawn
     // anchors on walkable floor; normal NPC pathfinding clips their wandering.
     private static final int[][] GUBLINCH_SPAWNS = {
-        {3164, 5324}, {3162, 5327}, {3164, 5330}, {3163, 5333},
-        {3145, 5326}, {3147, 5333}, {3152, 5343}, {3146, 5358},
-        {3153, 5367}, {3166, 5359}, {3163, 5344}, {3173, 5351},
-        {3183, 5367}, {3187, 5356}, {3190, 5343}, {3184, 5332}
-    };
-    private static final int[][] CAGES = {
+        {3184, 5340},
+        {3191, 5325},
+        {3147, 5328},
+        {3153, 5341},
+        {3164, 5341},
+        {3147, 5355},
+        {3161, 5359},
+        {3171, 5353},
+        {3187, 5353},
+        {3189, 5366},
+        {3177, 5365},
+        {3191, 5334},
+        {3148, 5321},
+        {3149, 5366},
+        {3171, 5338}
+    };    private static final int[][] CAGES = {
         {2907, 3183}, {2907, 3184}, {2907, 3185},
         {2904, 3188}, {2904, 3189}, {2904, 3190}, {2904, 3191},
         {2907, 3188}, {2907, 3190}, {2907, 3189}
