@@ -696,7 +696,9 @@ public final class GublinchChristmasEventChecks {
             if (spawn.getX() > 3180) east++;
             if (spawn.getY() >= 5355) north++;
         }
-        check(anchors.size() == 16, "Expected sixteen dungeon Gublinch, got " + anchors.size());
+        Set<String> expectedAnchors = new HashSet<String>(java.util.Arrays.asList(
+                "3184,5340", "3191,5325", "3147,5328", "3153,5341", "3164,5341", "3147,5355", "3161,5359", "3171,5353", "3187,5353", "3189,5366", "3177,5365", "3191,5334", "3148,5321", "3149,5366", "3171,5338"));
+        check(anchors.equals(expectedAnchors), "Gublinch spawns differ from the supplied fifteen anchors: " + anchors);
         check(west >= 4 && east >= 4 && north >= 4, "Gublinch do not cover both loops and the northern chamber");
     }
 
