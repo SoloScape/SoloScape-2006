@@ -12,9 +12,11 @@ import jagex.io.Buffer;
 /** Renders actual skinned child poses from the original cache for choreography review. */
 public final class ChildAnimationChecks {
     public static void main(String[] args) throws Exception {
+        boolean preview = args.length > 0 && args[0].equals("--preview");
         try (Js5CacheStore cache = new Js5CacheStore(new File("cache"))) {
+          for (int childId : new int[]{5046, 5047, 5048}) {
             NpcDefinition child = new NpcDefinition();
-            child.decode(new Buffer(cache.readFiles(2, 9).get(5046)));
+            child.decode(new Buffer(cache.readFiles(2, 9).get(childId)));
             Model[] parts = new Model[child.anIntArray1885.length];
             for (int i = 0; i < parts.length; i++)
                 parts[i] = new Model(cache.readFiles(7, child.anIntArray1885[i]).get(0));
@@ -42,11 +44,20 @@ public final class ChildAnimationChecks {
             };
             Class39_Sub5_Sub12 poses = new Class39_Sub5_Sub12(frameFiles, skeletonFiles, 432, false);
             Map<Integer, byte[]> sequences = cache.readFiles(2, 12);
-            int[] candidates = {197, 199, 2691, 2842, 2943, 3193, 3803, 3836, 3853, 3854,
-                    3862, 4331, 4536, 4579, 4580, 4582, 4583, 4585, 5002, 5018};
+            int[] candidates = preview ? new int[]{197, 2842, 3854, 5018} : new int[]{5018, 2842};
             for (int id : candidates) {
                 Class39_Sub5_Sub11 sequence = new Class39_Sub5_Sub11();
                 sequence.method698(new Buffer(sequences.get(id)), 0);
+                for (int frame : sequence.anIntArray1833) {
+                    byte[] bytes = frames.get(frame & 65535);
+                    if (frame >>> 16 != 432 || bytes == null
+                            || (((bytes[0] & 255) << 8) | (bytes[1] & 255)) != 319)
+                        throw new AssertionError("Child emote skeleton mismatch");
+                    Model pose = base.method567(true);
+                    pose.method557(poses, frame & 65535);
+                    verifyProportions(base, pose);
+                }
+                if (!preview) continue;
                 BufferedImage strip = new BufferedImage(840, 170, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = strip.createGraphics();
                 g.setColor(Color.WHITE); g.fillRect(0, 0, 840, 170);
@@ -61,8 +72,27 @@ public final class ChildAnimationChecks {
                 g.dispose();
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                 ImageIO.write(strip, "png", bytes);
-                System.out.println("CHILD_POSE_" + id + "=" + Base64.getEncoder().encodeToString(bytes.toByteArray()));
+                System.out.println("CHILD_" + childId + "_POSE_" + id + "=" + Base64.getEncoder().encodeToString(bytes.toByteArray()));
             }
+          }
+        }
+        System.out.println("Child animation mesh checks passed: all three models, every dance/cheer frame, compatible skeleton and bounded proportions.");
+    }
+
+    private static void verifyProportions(Model base, Model pose) {
+        int baseMinY = Integer.MAX_VALUE, baseMaxY = Integer.MIN_VALUE;
+        for (int i = 0; i < base.anInt2367; i++) {
+            baseMinY = Math.min(baseMinY, base.anIntArray2356[i]);
+            baseMaxY = Math.max(baseMaxY, base.anIntArray2356[i]);
+        }
+        int limit = (baseMaxY - baseMinY) * 5 / 2;
+        for (int[] coordinates : new int[][]{pose.anIntArray2376, pose.anIntArray2356, pose.anIntArray2359}) {
+            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
+            for (int i = 0; i < pose.anInt2367; i++) {
+                min = Math.min(min, coordinates[i]);
+                max = Math.max(max, coordinates[i]);
+            }
+            if (max - min > limit) throw new AssertionError("Child emote stretched the mesh");
         }
     }
 
