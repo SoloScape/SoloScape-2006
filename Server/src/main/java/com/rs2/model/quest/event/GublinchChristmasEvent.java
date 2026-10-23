@@ -96,7 +96,8 @@ public final class GublinchChristmasEvent extends QuestHook {
         {3148, 5321},
         {3149, 5366},
         {3171, 5338}
-    };    private static final int[][] CAGES = {
+    };
+    private static final int[][] CAGES = {
         {2907, 3183}, {2907, 3184}, {2907, 3185},
         {2904, 3188}, {2904, 3189}, {2904, 3190}, {2904, 3191},
         {2907, 3188}, {2907, 3190}, {2907, 3189}
