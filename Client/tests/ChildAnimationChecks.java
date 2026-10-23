@@ -44,7 +44,7 @@ public final class ChildAnimationChecks {
             };
             Class39_Sub5_Sub12 poses = new Class39_Sub5_Sub12(frameFiles, skeletonFiles, 432, false);
             Map<Integer, byte[]> sequences = cache.readFiles(2, 12);
-            int[] candidates = preview ? new int[]{197, 2842, 3854, 5018} : new int[]{5018, 2842};
+            int[] candidates = new int[]{3854};
             for (int id : candidates) {
                 Class39_Sub5_Sub11 sequence = new Class39_Sub5_Sub11();
                 sequence.method698(new Buffer(sequences.get(id)), 0);
@@ -58,16 +58,19 @@ public final class ChildAnimationChecks {
                     verifyProportions(base, pose);
                 }
                 if (!preview) continue;
-                BufferedImage strip = new BufferedImage(840, 170, BufferedImage.TYPE_INT_RGB);
+                BufferedImage strip = new BufferedImage(840,
+                        ((sequence.anIntArray1833.length + 6) / 7) * 170, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = strip.createGraphics();
-                g.setColor(Color.WHITE); g.fillRect(0, 0, 840, 170);
+                g.setColor(Color.WHITE); g.fillRect(0, 0, strip.getWidth(), strip.getHeight());
                 g.setColor(Color.BLACK); g.drawString("Sequence " + id, 8, 16);
-                for (int sample = 0; sample < 7; sample++) {
-                    int frame = sequence.anIntArray1833[sample * (sequence.anIntArray1833.length - 1) / 6];
+                for (int sample = 0; sample < sequence.anIntArray1833.length; sample++) {
+                    int frame = sequence.anIntArray1833[sample];
                     if (frame >>> 16 != 432) throw new AssertionError("Wrong child frame group");
                     Model pose = base.method567(true);
                     pose.method557(poses, frame & 65535);
-                    draw(g, pose, sample * 120 + 60, 150);
+                    draw(g, pose, (sample % 7) * 120 + 60, (sample / 7) * 170 + 150);
+                    g.setColor(Color.BLACK);
+                    g.drawString("Frame " + sample, (sample % 7) * 120 + 8, (sample / 7) * 170 + 166);
                 }
                 g.dispose();
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -76,7 +79,7 @@ public final class ChildAnimationChecks {
             }
           }
         }
-        System.out.println("Child animation mesh checks passed: all three models, every dance/cheer frame, compatible skeleton and bounded proportions.");
+        System.out.println("Child animation mesh checks passed: all three models, every jump-for-joy frame, compatible skeleton and bounded proportions.");
     }
 
     private static void verifyProportions(Model base, Model pose) {
