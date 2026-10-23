@@ -318,6 +318,7 @@ public final class GublinchChristmasEventChecks {
         GublinchChristmasEvent.operateHat(player);
         check(player.getUpdateState().getAnimationId() == 5059, "Hat operation animation missing");
         checkHatEquipmentOperation();
+        checkChristmasExamines();
         checkSnowballsAgainstNormalNpc();
         checkRewardBranches(other);
         checkPeltVisuals();
@@ -463,6 +464,46 @@ public final class GublinchChristmasEventChecks {
         payload.putShort((short)target.getIndex()).flip();
         new com.rs2.net.packet.handler.NpcInteractionPacketHandler().handle(player,
                 new IncomingPacket(ClientPackets.NPC_OPTION_2, 2, PacketBuffer.wrapReader(payload)));
+    }
+
+    private static void checkChristmasExamines() throws Exception {
+        int[] ids = {828, 5017, 5018, 5019};
+        String[] expected = {
+            "A sea shanty-singing werewolf wearing a Santa Claus robe.",
+            "A sweaty gublinch.",
+            "A chilled, smelly gublinch.",
+            "A freezing cold gublinch."
+        };
+        Player viewer = player(12);
+        try (ServerSocketChannel listener = ServerSocketChannel.open()) {
+            listener.bind(new InetSocketAddress("127.0.0.1", 0));
+            try (SocketChannel sender = SocketChannel.open(listener.getLocalAddress());
+                 SocketChannel receiver = listener.accept()) {
+                receiver.socket().setSoTimeout(3000);
+                Field socket = Player.class.getDeclaredField("socketChannel");
+                socket.setAccessible(true);
+                socket.set(viewer, sender);
+                viewer.setOutboundCipher(new IsaacCipher(new int[4]));
+                IsaacCipher decoder = new IsaacCipher(new int[4]);
+                DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
+                for (int index = 0; index < ids.length; index++) {
+                    check(NpcDefinition.forId(ids[index]).getDescription().equals(expected[index]),
+                            "Incorrect event NPC examine description: " + ids[index]);
+                    ByteBuffer payload = ByteBuffer.allocate(2);
+                    payload.putShort((short)ids[index]).flip();
+                    new com.rs2.net.packet.handler.NpcInteractionPacketHandler().handle(viewer,
+                            new IncomingPacket(ClientPackets.NPC_EXAMINE, 2, PacketBuffer.wrapReader(payload)));
+                    check(((input.readUnsignedByte() - decoder.nextInt()) & 255) == 157,
+                            "NPC Examine did not return a game message");
+                    byte[] message = new byte[input.readUnsignedByte()];
+                    input.readFully(message);
+                    check(message[message.length - 1] == 0
+                                    && new String(message, 0, message.length - 1, "ISO-8859-1")
+                                            .equals(expected[index]),
+                            "NPC Examine returned the wrong text: " + ids[index]);
+                }
+            }
+        }
     }
 
     private static void checkHatEquipmentOperation() throws Exception {
