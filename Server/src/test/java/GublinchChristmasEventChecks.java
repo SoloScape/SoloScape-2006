@@ -467,12 +467,23 @@ public final class GublinchChristmasEventChecks {
     }
 
     private static void checkChristmasExamines() throws Exception {
-        int[] ids = {828, 5017, 5018, 5019};
+        int[] ids = {828, 5017, 5018, 5019, 19030, 19031, 19033, 19034, 19035,
+                19036, 19037, 19038, 19040, 20100};
         String[] expected = {
             "A sea shanty-singing werewolf wearing a Santa Claus robe.",
             "A sweaty gublinch.",
             "A chilled, smelly gublinch.",
-            "A freezing cold gublinch."
+            "A freezing cold gublinch.",
+            "A large pile of snow.",
+            "A large pile of snow.",
+            "A large pile of snow.",
+            "A large pile of snow.",
+            "A large pile of snow.",
+            "A strong metal cage.",
+            "A strong cage; it has a gublinch in it.",
+            "A pretty wintumber tree.",
+            "It leads back up to the surface.",
+            "These childerkins have been childernapped by the gublinch."
         };
         Player viewer = player(12);
         try (ServerSocketChannel listener = ServerSocketChannel.open()) {
@@ -487,20 +498,28 @@ public final class GublinchChristmasEventChecks {
                 IsaacCipher decoder = new IsaacCipher(new int[4]);
                 DataInputStream input = new DataInputStream(receiver.socket().getInputStream());
                 for (int index = 0; index < ids.length; index++) {
-                    check(NpcDefinition.forId(ids[index]).getDescription().equals(expected[index]),
-                            "Incorrect event NPC examine description: " + ids[index]);
+                    boolean object = index >= 4;
+                    String description = object
+                            ? com.rs2.model.objects.ObjectDefinition.forId(ids[index]).getDescription()
+                            : NpcDefinition.forId(ids[index]).getDescription();
+                    check(description.equals(expected[index]), "Incorrect event examine: " + ids[index]);
                     ByteBuffer payload = ByteBuffer.allocate(2);
+                    if (object) payload.order(java.nio.ByteOrder.LITTLE_ENDIAN);
                     payload.putShort((short)ids[index]).flip();
-                    new com.rs2.net.packet.handler.NpcInteractionPacketHandler().handle(viewer,
-                            new IncomingPacket(ClientPackets.NPC_EXAMINE, 2, PacketBuffer.wrapReader(payload)));
+                    if (object)
+                        new com.rs2.net.packet.handler.ObjectInteractionPacketHandler().handle(viewer,
+                                new IncomingPacket(ClientPackets.OBJECT_EXAMINE, 2, PacketBuffer.wrapReader(payload)));
+                    else
+                        new com.rs2.net.packet.handler.NpcInteractionPacketHandler().handle(viewer,
+                                new IncomingPacket(ClientPackets.NPC_EXAMINE, 2, PacketBuffer.wrapReader(payload)));
                     check(((input.readUnsignedByte() - decoder.nextInt()) & 255) == 157,
-                            "NPC Examine did not return a game message");
+                            "Examine did not return a game message");
                     byte[] message = new byte[input.readUnsignedByte()];
                     input.readFully(message);
                     check(message[message.length - 1] == 0
                                     && new String(message, 0, message.length - 1, "ISO-8859-1")
                                             .equals(expected[index]),
-                            "NPC Examine returned the wrong text: " + ids[index]);
+                            "Examine returned the wrong text: " + ids[index]);
                 }
             }
         }
