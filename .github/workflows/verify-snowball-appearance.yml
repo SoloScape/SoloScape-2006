@@ -29,12 +29,15 @@ jobs:
           mkdir -p /tmp/snowball-classes data/characters
           find src/main/java ../Client/src -name '*.java' > /tmp/snowball-sources.txt
           javac -encoding UTF-8 -cp 'lib/*' -d /tmp/snowball-classes @/tmp/snowball-sources.txt
-          javac -encoding UTF-8 -cp '/tmp/snowball-classes:lib/*' -d /tmp/snowball-classes src/test/java/ArmourAppearanceChecks.java src/test/java/GublinchChristmasEventChecks.java ../Client/tests/SnowballAppearanceChecks.java
+          javac -encoding UTF-8 -cp '/tmp/snowball-classes:lib/*' -d /tmp/snowball-classes src/test/java/ArmourAppearanceChecks.java src/test/java/GublinchChristmasEventChecks.java ../Client/tests/SnowballAppearanceChecks.java ../Client/tests/ChildAnimationChecks.java
       - name: Check actual appearance packets and native hand models
         working-directory: Server
         run: |
           java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' ArmourAppearanceChecks
           java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.SnowballAppearanceChecks
+      - name: Render original child animation candidates
+        working-directory: Server
+        run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.ChildAnimationChecks
       - name: Check Christmas event and pelting
         working-directory: Server
         run: timeout 180 java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' GublinchChristmasEventChecks
