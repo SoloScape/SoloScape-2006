@@ -9,6 +9,7 @@ on:
       - 'Server/src/test/java/ArmourAppearanceChecks.java'
       - 'Server/src/test/java/GublinchChristmasEventChecks.java'
       - 'Client/tests/SnowballAppearanceChecks.java'
+      - 'Client/tests/ChildAnimationChecks.java'
       - '.github/workflows/verify-snowball-appearance.yml'
   workflow_dispatch:
 permissions:
@@ -35,7 +36,7 @@ jobs:
         run: |
           java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' ArmourAppearanceChecks
           java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.SnowballAppearanceChecks
-      - name: Render original child animation candidates
+      - name: Check rescued child animation meshes
         working-directory: Server
         run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.ChildAnimationChecks
       - name: Check Christmas event and pelting
