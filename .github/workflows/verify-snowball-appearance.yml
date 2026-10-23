@@ -10,6 +10,8 @@ on:
       - 'Server/src/test/java/GublinchChristmasEventChecks.java'
       - 'Client/tests/SnowballAppearanceChecks.java'
       - 'Client/tests/ChildAnimationChecks.java'
+      - 'Client/tests/GublinchAnimationChecks.java'
+      - 'Server/src/main/java/com/rs2/model/quest/event/GublinchChristmasEvent.java'
       - '.github/workflows/verify-snowball-appearance.yml'
   workflow_dispatch:
 permissions:
@@ -39,9 +41,9 @@ jobs:
       - name: Check rescued child animation meshes
         working-directory: Server
         run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.ChildAnimationChecks
-      - name: Preview original Gublinch animations
+      - name: Check native Gublinch crumble animation
         working-directory: Server
-        run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.GublinchAnimationChecks --preview
+        run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.GublinchAnimationChecks
       - name: Check Christmas event and pelting
         working-directory: Server
         run: timeout 180 java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' GublinchChristmasEventChecks
