@@ -38,7 +38,7 @@ jobs:
           java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.SnowballAppearanceChecks
       - name: Check rescued child animation meshes
         working-directory: Server
-        run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.ChildAnimationChecks --preview
+        run: java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' unpackaged.ChildAnimationChecks
       - name: Check Christmas event and pelting
         working-directory: Server
         run: timeout 180 java -Djava.awt.headless=true -cp '/tmp/snowball-classes:lib/*' GublinchChristmasEventChecks
