@@ -236,7 +236,7 @@ public final class GublinchChristmasEventChecks {
         check(pelting.getIntervalTicks() == 1,
                 "Pelting pursuit must check movement every tick");
         // Exercise the scheduled action: first shot is immediate, then ticks 9 and 18.
-        for (int elapsed = 0; elapsed <= 24; elapsed++) {
+        for (int elapsed = 0; elapsed <= 28; elapsed++) {
             advanceEventTicks(1);
             int shots = Math.min(3, 1 + elapsed / 9);
             check(player.getEquipmentManager().getContainer().getItemAmount(10501) == 3 - shots,
@@ -785,6 +785,9 @@ public final class GublinchChristmasEventChecks {
             check(!GublinchChristmasEvent.pelt(thrower, npc), "Third successful shot did not finish pelting");
             check(npc.isActive(), "Third throw removed the target before impact");
             advanceEventTicks(3);
+            check(npc.isActive() && npc.getUpdateState().getAnimationId() == 5072,
+                    "Third impact did not start the native crumble");
+            advanceEventTicks(5);
             check(World.getNpcs()[index] != npc, "Frozen Gublinch was not removed");
             check(!npc.isActive(), "Removed Gublinch remains visible in local NPC lists");
         }
@@ -872,16 +875,20 @@ public final class GublinchChristmasEventChecks {
                     check(input.available() == 0, "Outcome effect appeared before arrival");
                     advanceEventTicks(1);
                     readSnowballOutcome(input, decoder, hit ? 862 : 858);
-                    check(target.getUpdateState().getAnimationId() == previousAnimation,
-                            "Snowball outcome introduced an unverified NPC reaction animation");
+                    check(target.getUpdateState().getAnimationId()
+                                    == (successfulHits == 3 ? 5072 : previousAnimation),
+                            "Snowball outcome used the wrong NPC reaction animation");
                     if (successfulHits < 3) {
                         check(target.isActive() && target.getNpcId() == 5017 + successfulHits,
                                 "Miss advanced or reset the Gublinch freeze stage");
                         check(GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
                                 "Misses caused a premature shard drop");
                     } else {
+                        check(target.isActive() && target.getUpdateState().getAnimationId() == 5072,
+                                "Fatal hit must play the native crumble");
+                        advanceEventTicks(5);
                         check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
-                                "Fatal hit must remove the Gublinch before showing shards");
+                                "Crumble must finish and remove the NPC before showing shards");
                         advanceEventTicks(1);
                         check(GroundItemManager.findVisibleItem(thrower, 10506, tile) != null,
                                 "Shards did not appear one tick after removal");
@@ -1018,8 +1025,24 @@ public final class GublinchChristmasEventChecks {
                         check(target.isActive() && target.getNpcId() == 5017 + Math.min(hit + 1, 2),
                                 "Gublinch did not react when the snowball arrived");
                     } else {
-                        check(!target.isActive() && GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
-                                "Final impact must remove the Gublinch before its drop appears");
+                        check(target.isActive() && target.getNpcId() == 5019
+                                        && target.getUpdateState().getAnimationId() == 5072,
+                                "Final impact must crumble the frozen mesh before removal");
+                        check(target.getMovementMode() == com.rs2.model.npc.NpcMovementMode.STATIONARY
+                                        && target.getMovementQueue().getSteps().size() <= 1,
+                                "Crumbling Gublinch must stop wandering");
+                        thrower.getEquipmentManager().getContainer().setItem(3, new ItemStack(10501, 1));
+                        check(!GublinchChristmasEvent.pelt(thrower, target)
+                                        && thrower.getEquipmentManager().getContainer().getItemAmount(10501) == 1,
+                                "Crumbling target accepted another throw");
+                        check(input.available() == 0, "Crumbling target emitted another projectile");
+                        for (int tick = 1; tick <= 4; tick++) {
+                            advanceEventTicks(1);
+                            check(target.isActive()
+                                            && GroundItemManager.findVisibleItem(thrower, 10506, tile) == null,
+                                    "NPC or shards changed before the crumble completed");
+                        }
+                        advanceEventTicks(1);
                     }
                     check(thrower.getUpdateState().getAnimationId() == -1
                                     && thrower.getUpdateState().getGraphicId() == -1,
