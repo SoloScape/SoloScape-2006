@@ -533,6 +533,10 @@ public final class GublinchChristmasEvent extends QuestHook {
                 npc.getAttributes().remove(GUBLINCH_FLIGHT_ATTRIBUTE);
                 if (!npc.isActive() || npc.isDead() || targetIndex < 0
                         || World.getNpcs()[targetIndex] != npc || !isGublinch(npc.getNpcId())) return;
+                // A world effect remains visible even when the fatal hit removes the NPC.
+                player.packetSender.sendStillGraphicToNearbyPlayers(hit ? 862 : 858,
+                        npc.getPosition().getX(), npc.getPosition().getY(),
+                        npc.getPosition().getPlane(), 0);
                 if (hit) {
                     applySnowballImpact(player, npc, hits);
                 } else {
