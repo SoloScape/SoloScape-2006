@@ -99,6 +99,9 @@ public final class InterfaceBridge {
         mappings.put(1743, 307);  // cooking quantity chatbox
         mappings.put(8866, 459); // legacy two-product spinning interface
         mappings.put(8880, 459); // legacy three-product spinning interface
+        mappings.put(20120, 304); // three-item knife-on-logs chatbox
+        mappings.put(20121, 303); // two-item knife-on-logs chatbox
+        mappings.put(20122, 309); // one-item knife-on-logs chatbox
         mappings.put(679, 324);  // tanning (legacy fallback)
         mappings.put(14670, 324); // tanning
         mappings.put(8134, 275);  // quest detail page
@@ -193,21 +196,22 @@ public final class InterfaceBridge {
         put(mappings, 13718, 307, 4);  // Cook X
         put(mappings, 13719, 307, 5);  // Cook 5
         put(mappings, 13720, 307, 6);  // Cook 1
-        // Production models and captions for the three upper make-item slots.
-        // Synthetic legacy IDs keep these outbound updates independent of the
-        // spinning buttons, while sharing the native revision-443 widget.
-        put(mappings, 20100, 459, 101); // left product item model
-        put(mappings, 20101, 459, 89);  // middle product item model
-        put(mappings, 20102, 459, 108); // right product item model
-        put(mappings, 20103, 459, 102); // left product name
-        put(mappings, 20104, 459, 90);  // middle product name
-        put(mappings, 20105, 459, 109); // right product name
-        put(mappings, 20106, 459, 96);  // left choice root
-        put(mappings, 20107, 459, 91);  // middle choice root
-        put(mappings, 20108, 459, 103); // right choice root
-        put(mappings, 20109, 459, 110); // unused lower middle choice
-        put(mappings, 20110, 459, 117); // unused lower left choice
-        put(mappings, 20111, 459, 88);  // production title
+        // Native revision-443 make-item chatboxes: one, two or three items.
+        // Keep 8880/8866 on group 459 for spinning; fletching alone uses
+        // these virtual legacy roots with showChatboxInterface().
+        // Their child 2+ model slots and Make-X actions come from the cache.
+        put(mappings, 20200, 304, 2);  // three-item first model
+        put(mappings, 20201, 304, 3);  // three-item second model
+        put(mappings, 20202, 304, 4);  // three-item third model
+        put(mappings, 20203, 304, 18); // synthetic item name, first
+        put(mappings, 20204, 304, 19); // synthetic item name, second
+        put(mappings, 20205, 304, 20); // synthetic item name, third
+        put(mappings, 20206, 303, 2);  // two-item first model
+        put(mappings, 20207, 303, 3);  // two-item second model
+        put(mappings, 20208, 303, 13); // synthetic name, first
+        put(mappings, 20209, 303, 14); // synthetic name, second
+        put(mappings, 20210, 309, 2);  // one-item model
+        put(mappings, 20211, 309, 8);  // synthetic name
         // Cache-backed group 459: 92-95 flax, 97-100 wool, 104-107 magic roots.
         // Each four-button group is ordered Make X, Make 10, Make 5, Make 1.
         put(mappings, 8890, 459, 92);  // flax X
