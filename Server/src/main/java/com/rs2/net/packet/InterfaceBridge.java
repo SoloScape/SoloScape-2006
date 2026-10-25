@@ -193,6 +193,21 @@ public final class InterfaceBridge {
         put(mappings, 13718, 307, 4);  // Cook X
         put(mappings, 13719, 307, 5);  // Cook 5
         put(mappings, 13720, 307, 6);  // Cook 1
+        // Production models and captions for the three upper make-item slots.
+        // Synthetic legacy IDs keep these outbound updates independent of the
+        // spinning buttons, while sharing the native revision-443 widget.
+        put(mappings, 20100, 459, 101); // left product item model
+        put(mappings, 20101, 459, 89);  // middle product item model
+        put(mappings, 20102, 459, 108); // right product item model
+        put(mappings, 20103, 459, 102); // left product name
+        put(mappings, 20104, 459, 90);  // middle product name
+        put(mappings, 20105, 459, 109); // right product name
+        put(mappings, 20106, 459, 96);  // left choice root
+        put(mappings, 20107, 459, 91);  // middle choice root
+        put(mappings, 20108, 459, 103); // right choice root
+        put(mappings, 20109, 459, 110); // unused lower middle choice
+        put(mappings, 20110, 459, 117); // unused lower left choice
+        put(mappings, 20111, 459, 88);  // production title
         // Cache-backed group 459: 92-95 flax, 97-100 wool, 104-107 magic roots.
         // Each four-button group is ordered Make X, Make 10, Make 5, Make 1.
         put(mappings, 8890, 459, 92);  // flax X
