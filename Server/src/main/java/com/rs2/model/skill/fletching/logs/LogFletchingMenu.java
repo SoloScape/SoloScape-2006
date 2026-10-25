@@ -4,12 +4,17 @@ import com.rs2.ServerSettings;
 import com.rs2.model.player.Player;
 
 /**
- * Revision 443 log cutting uses the native five-product make-item interface
- * (group 459). The upper three slots show real item models with their names,
- * and each slot already has native Make X/10/5/1 menu actions.
+ * Knife-on-logs uses native revision-443 chatbox make-item widgets.
+ * Group 304 has three products, 303 has two, and 309 has one. Their native
+ * overlapping action controls provide per-product Make X / 10 / 5 / 1.
  */
 public final class LogFletchingMenu {
-    private static final int ROOT = 8880; // native group 459
+    // Virtual legacy roots bridged to native chatbox groups. Legacy 8880
+    // remains mapped to 459 for the spinning-wheel's full-screen interface.
+    private static final int THREE_ROOT = 20120; // 304
+    private static final int TWO_ROOT = 20121;   // 303
+    private static final int ONE_ROOT = 20122;   // 309
+
     private static final String[] ACTIONS = {
         "normalCutting", "oakCutting", "acheyCutting", "willowCutting",
         "mapleCutting", "yewCutting", "magicCutting"
@@ -24,14 +29,14 @@ public final class LogFletchingMenu {
         {52, 50, 48}, {54, 56}, {4825}, {60, 58}, {64, 62}, {68, 66}, {72, 70}
     };
 
-    // The left, middle and right product positions of native group 459.
-    // All other children, including the original four-option context menus,
-    // remain cache-backed. Synthetic legacy IDs are bridged in InterfaceBridge.
-    private static final int[] SLOT_MODELS = {20100, 20101, 20102}; // 459:101,89,108
-    private static final int[] SLOT_LABELS = {20103, 20104, 20105}; // 459:102,90,109
-    private static final int[] SLOT_ROOTS = {20106, 20107, 20108}; // 459:96,91,103
-    private static final int[] EXTRA_ROOTS = {20109, 20110}; // bottom two native choices
-    private static final int TITLE = 20111; // 459:88
+    // These map to the stock item models and synthetic name captions
+    // appended by JSocket.configureFletchingChatbox().
+    private static final int[][] MODELS = {
+        {}, {20210}, {20206, 20207}, {20200, 20201, 20202}
+    };
+    private static final int[][] LABELS = {
+        {}, {20211}, {20208, 20209}, {20203, 20204, 20205}
+    };
 
     private LogFletchingMenu() {
     }
@@ -43,6 +48,14 @@ public final class LogFletchingMenu {
         return -1;
     }
 
+    private static int rootFor(int count) {
+        return count == 3 ? THREE_ROOT : count == 2 ? TWO_ROOT : ONE_ROOT;
+    }
+
+    private static int nativeGroupFor(int count) {
+        return count == 3 ? 304 : count == 2 ? 303 : 309;
+    }
+
     public static boolean open(Player player, String action) {
         int index = actionIndex(action);
         if (ServerSettings.clientBuild != 443 || index == -1) return false;
@@ -50,81 +63,72 @@ public final class LogFletchingMenu {
         player.setSelectedInterfaceId(-1);
         player.setInterfaceAction(ACTIONS[index]);
 
-        player.packetSender.sendInterfaceText("What would you like to make?", TITLE);
-        for (int slot = 0; slot < SLOT_MODELS.length; slot++) {
-            boolean shown = slot < PRODUCT_IDS[index].length;
-            player.packetSender.setInterfaceHiddenFlag(shown ? 0 : 1, SLOT_ROOTS[slot]);
-            player.packetSender.setInterfaceHiddenFlag(shown ? 0 : 1, SLOT_MODELS[slot]);
-            player.packetSender.setInterfaceHiddenFlag(shown ? 0 : 1, SLOT_LABELS[slot]);
-            if (shown) {
-                player.packetSender.sendInterfaceModel(SLOT_MODELS[slot], 180, PRODUCT_IDS[index][slot]);
-                player.packetSender.sendInterfaceText(PRODUCTS[index][slot], SLOT_LABELS[slot]);
-            }
+        int count = PRODUCTS[index].length;
+        player.packetSender.showChatboxInterface(rootFor(count));
+        for (int slot = 0; slot < count; slot++) {
+            player.packetSender.sendInterfaceModel(MODELS[count][slot], 180,
+                    PRODUCT_IDS[index][slot]);
+            player.packetSender.sendInterfaceText(PRODUCTS[index][slot], LABELS[count][slot]);
         }
-        for (int root : EXTRA_ROOTS) {
-            player.packetSender.setInterfaceHiddenFlag(1, root);
-        }
-        player.packetSender.showInterface(ROOT);
         return true;
     }
 
     /**
-     * Group 459 is also the spinning-wheel interface. Reset its fields before
-     * returning to spinning so fletching does not change the other skill's UI.
+     * The spinning-wheel still uses the unrelated full-screen 459 group.
+     * Fletching never changes that group's item models or labels.
      */
     public static void restoreSpinningInterface(Player player) {
         if (ServerSettings.clientBuild != 443) return;
         player.setSelectedInterfaceId(-1);
         player.setInterfaceAction("spinning");
-        for (int root : SLOT_ROOTS) player.packetSender.setInterfaceHiddenFlag(0, root);
-        for (int root : EXTRA_ROOTS) player.packetSender.setInterfaceHiddenFlag(0, root);
-        for (int model : SLOT_MODELS) player.packetSender.setInterfaceHiddenFlag(0, model);
-        for (int label : SLOT_LABELS) player.packetSender.setInterfaceHiddenFlag(0, label);
-        player.packetSender.sendInterfaceText("What would you like to spin?", TITLE);
-        player.packetSender.sendInterfaceModel(SLOT_MODELS[0], 180, 1737);
-        player.packetSender.sendInterfaceModel(SLOT_MODELS[1], 180, 1779);
-        player.packetSender.sendInterfaceModel(SLOT_MODELS[2], 180, 6051);
-        player.packetSender.sendInterfaceText("Wool", SLOT_LABELS[0]);
-        player.packetSender.sendInterfaceText("Flax", SLOT_LABELS[1]);
-        player.packetSender.sendInterfaceText("Magic roots", SLOT_LABELS[2]);
-        player.packetSender.showInterface(ROOT);
+        player.packetSender.showInterface(8880);
     }
 
     /**
-     * Native child actions map to 8886-8889 (left), 8890-8893 (middle),
-     * 8894-8897 (right); within each the order is X, 10, 5, 1.
+     * Action-type-6 widgets in these native chatboxes send WIDGET_SELECT,
+     * not the ordinary interface-button packet. Children are laid out in
+     * four per product in order: Make X, Make 10, Make 5, Make 1.
      */
-    public static boolean handleButton(Player player, int button) {
+    public static boolean handleNativeWidget(Player player, int packedWidgetId) {
         int index = actionIndex(player.interfaceAction);
-        if (ServerSettings.clientBuild != 443 || index == -1
-                || player.getOpenInterfaceId() != ROOT || button < 8886 || button > 8897) {
+        if (ServerSettings.clientBuild != 443 || index == -1) return false;
+        int count = PRODUCTS[index].length;
+        int group = packedWidgetId >>> 16;
+        if (group != nativeGroupFor(count)
+                || player.getOpenInterfaceId() != rootFor(count)) {
             return false;
         }
-        int slot = (button - 8886) / 4;
-        if (slot >= PRODUCTS[index].length || player.isActionLocked()) return true;
-        int kind = (button - 8886) % 4;
+
+        int firstChild = count == 3 ? 5 : count == 2 ? 4 : 3;
+        int offset = (packedWidgetId & 0xffff) - firstChild;
+        if (offset < 0 || offset >= count * 4) return false;
+        if (player.isActionLocked()) return true;
+        int product = offset / 4;
+        int kind = offset % 4;
         if (kind == 0) {
-            player.packetSender.sendEnterInputPrompt(button);
+            // Encode the chosen product in the pending input ID. Keep IDs
+            // distinct from the unrelated spinning-wheel button state.
+            player.packetSender.sendEnterInputPrompt(8886 + product * 4);
         } else {
-            make(player, index, slot, new int[]{0, 10, 5, 1}[kind]);
+            make(player, index, product, new int[]{0, 10, 5, 1}[kind]);
         }
         return true;
     }
 
-    /** The entered quantity belongs to the pending Make-X item, never another slot. */
     public static boolean handleAmount(Player player, int button, int amount) {
         int index = actionIndex(player.interfaceAction);
         if (ServerSettings.clientBuild != 443 || index == -1
                 || button < 8886 || button > 8897 || (button - 8886) % 4 != 0) {
             return false;
         }
-        player.setSelectedInterfaceId(-1);
-        int slot = (button - 8886) / 4;
-        if (player.getOpenInterfaceId() != ROOT || slot >= PRODUCTS[index].length
+        int count = PRODUCTS[index].length;
+        player.setSelectedInterfaceId(-1); // Reject replayed Make-X submissions.
+        int product = (button - 8886) / 4;
+        if (player.getOpenInterfaceId() != rootFor(count) || product >= count
                 || player.isActionLocked() || amount <= 0) {
             return true;
         }
-        make(player, index, slot, amount);
+        make(player, index, product, amount);
         return true;
     }
 
