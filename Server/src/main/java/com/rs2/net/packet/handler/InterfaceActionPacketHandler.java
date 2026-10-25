@@ -483,6 +483,13 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 return;
             }
         }
+        // Fletching shares native group 459 with spinning. Route each item's
+        // Make X/10/5/1 action before the generic spinning dispatcher.
+        if (legacyButtonId != InterfaceBridge.UNMAPPED
+                && (operation == -1 || parameter == 0)
+                && com.rs2.model.skill.fletching.logs.LogFletchingMenu.handleButton(player, legacyButtonId)) {
+            return;
+        }
         if (legacyButtonId != InterfaceBridge.UNMAPPED
                 && legacyButtonId != 3214 && legacyButtonId != 1688
                 && (operation == -1 || parameter == 0)) {
