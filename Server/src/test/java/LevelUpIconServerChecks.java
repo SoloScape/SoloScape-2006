@@ -26,6 +26,13 @@ public final class LevelUpIconServerChecks {
                 && InterfaceBridge.translate(361) == ((211 << 16) | 1),
                 "Level-up statement text mapping was changed");
 
+        // Verify the actual heading generated for each skill, not just the
+        // packet target. The client font maps @blu@ to #0000FF, whereas the
+        // former @dbl@ tag was only #000080.
+        java.lang.reflect.Method titleBuilder =
+                SkillManager.class.getDeclaredMethod("levelUpTitle", int.class);
+        titleBuilder.setAccessible(true);
+
         Player player = new Player(null);
         player.isBot = true;
         for (int i = 0; i < spriteWidgets.length; i++) {
@@ -34,6 +41,10 @@ public final class LevelUpIconServerChecks {
                     SkillManager.SKILL_NAMES[i] + " has no native sprite");
             require(sprite.width == 25 && sprite.height == 25,
                     SkillManager.SKILL_NAMES[i] + " is not a 25x25 native skill icon");
+            String title = (String) titleBuilder.invoke(null, i);
+            require(title.equals("@blu@Congratulations, you just advanced a "
+                            + SkillManager.SKILL_NAMES[i] + " level!"),
+                    SkillManager.SKILL_NAMES[i] + " level-up heading is not bright blue");
             player.getSkillManager().showLevelUpInterface(i);
             require(player.getOpenInterfaceId() == 19580,
                     SkillManager.SKILL_NAMES[i] + " did not open the dedicated level-up chatbox");
@@ -42,7 +53,7 @@ public final class LevelUpIconServerChecks {
         require(player.getOpenInterfaceId() == 359,
                 "Level-up UI prevented ordinary statements");
         System.out.println("Level-up server checks passed for all "
-                + spriteWidgets.length + " skills and native 443 chatbox mapping.");
+                + spriteWidgets.length + " skills bright-blue headings and native 443 chatbox mapping.");
     }
 
     private static void require(boolean condition, String message) {
