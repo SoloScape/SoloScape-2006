@@ -99,6 +99,43 @@ public final class LogFletchingChecks {
             }
         }
 
+        // The two-item Oak menu and the single-item Achey menu use distinct
+        // native widgets. Their Make-X requests must select the right recipe.
+        for (int log : new int[]{1521, 2862}) {
+            int slots = log == 1521 ? 2 : 1;
+            for (int slot = 0; slot < slots; slot++) {
+                Player xPlayer = newPlayer(log, 9);
+                useKnife(xPlayer, false);
+                requireNativeMenu(xPlayer, log);
+                click(xPlayer, slot, 0); // Native Make X, including 309:4.
+                require(xPlayer.getSelectedInterfaceId() == 8886 + slot * 4,
+                        "Make-X did not select " + log + " recipe " + slot);
+                enterAmount(xPlayer, 6);
+                require(xPlayer.getActiveCycleEvent() instanceof LogFletchingTask,
+                        "Make-X did not start for " + log + " recipe " + slot);
+                for (int ticks = 0; ticks < 45; ticks++) {
+                    if (xPlayer.getActiveCycleEvent() == null) break;
+                    tick(xPlayer);
+                }
+                int item = log == 2862 ? 4825 : slot == 0 ? 54 : 56;
+                require(xPlayer.getInventoryManager().getItemAmount(item) == 6,
+                        "Make-X produced wrong count on " + log + " recipe " + slot);
+            }
+        }
+        // Group 309 has Make All at child 3; do not mistake it for Make X.
+        Player allPlayer = newPlayer(2862, 3);
+        useKnife(allPlayer, false);
+        int allPacked = (309 << 16) | 3;
+        ByteBuffer allBytes = ByteBuffer.allocate(6).putShort((short)0).putInt(allPacked);
+        allBytes.flip();
+        new InterfaceActionPacketHandler().handle(allPlayer,
+                new IncomingPacket(ClientPackets.WIDGET_SELECT, 6,
+                        PacketBuffer.wrapReader(allBytes)));
+        require(allPlayer.getSelectedInterfaceId() == -1,
+                "Make All incorrectly opened an amount prompt");
+        require(allPlayer.getActiveCycleEvent() instanceof LogFletchingTask,
+                "Achey Make All failed to begin");
+
         Player player = newPlayer(1511, 2);
         useKnife(player, false);
         click(player, 1, 3); // Shortbow needs Fletching 5.
@@ -161,7 +198,7 @@ public final class LogFletchingChecks {
         require(!LogFletchingMenu.open(player, "normalCutting"), "Legacy build intercepted");
 
         System.out.println("Log fletching checks passed: 443 chatbox item models/labels, every recipe, "
-                + "per-product Make X/10/5/1, guards and spinning isolation.");
+                + "per-product Make X/10/5/1, single-item Make All, guards and spinning isolation.");
     }
 
     private static Player newPlayer(int log, int count) {
@@ -205,7 +242,9 @@ public final class LogFletchingChecks {
                 : player.getOpenInterfaceId() == 20121 ? 2 : 1;
         int group = count == 3 ? 304 : count == 2 ? 303 : 309;
         int first = count == 3 ? 5 : count == 2 ? 4 : 3;
-        int packed = group << 16 | first + product * 4 + kind;
+        // Native 309 has Make All first and Make X second.
+        int packed = group << 16 | first + product * 4 + kind
+                + (count == 1 && kind == 0 ? 1 : 0);
         ByteBuffer bytes = ByteBuffer.allocate(6).putShort((short)0).putInt(packed);
         bytes.flip();
         new InterfaceActionPacketHandler().handle(player,
