@@ -1191,6 +1191,7 @@ public final class PacketSender {
 
     public final PacketSender showInterface(int interfaceId) {
         this.clearFletchingCaptions(interfaceId);
+        this.clearLevelUpIcon(interfaceId);
         this.player.setOpenInterfaceId(interfaceId);
         if (this.player.isBot) {
             return this;
@@ -1355,8 +1356,20 @@ public final class PacketSender {
         }
     }
 
+    // The level-up chatbox shares native group 211 with ordinary two-line
+    // statements. Clear its icon before leaving, so no unrelated dialogue
+    // can inherit the previously displayed skill graphic.
+    private void clearLevelUpIcon(int nextInterfaceId) {
+        if (ServerSettings.clientBuild == 443
+                && this.player.getOpenInterfaceId() == 19580
+                && nextInterfaceId != 19580) {
+            this.sendInterfaceText("", 19581);
+        }
+    }
+
     public final PacketSender closeInterfaces() {
         this.clearFletchingCaptions(0);
+        this.clearLevelUpIcon(0);
         this.player.setOpenInterfaceId(0);
         this.player.setInventoryOverlayInterfaceId(0);
         this.player.activeBookItemId = 0;
@@ -1698,6 +1711,7 @@ public final class PacketSender {
 
     public final PacketSender showChatboxInterface(int interfaceId) {
         this.clearFletchingCaptions(interfaceId);
+        this.clearLevelUpIcon(interfaceId);
         this.player.setOpenInterfaceId(interfaceId);
         if (this.player.isBot) {
             return this;
