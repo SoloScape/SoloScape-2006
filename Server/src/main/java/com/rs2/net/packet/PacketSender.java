@@ -1190,6 +1190,7 @@ public final class PacketSender {
     }
 
     public final PacketSender showInterface(int interfaceId) {
+        this.clearFletchingCaptions(interfaceId);
         this.player.setOpenInterfaceId(interfaceId);
         if (this.player.isBot) {
             return this;
@@ -1327,7 +1328,35 @@ public final class PacketSender {
         return this;
     }
 
+    /**
+     * Native make-item chatboxes are reused for other production skills.
+     * Remove fletching-only synthetic name captions whenever that menu closes
+     * so a later crafting chatbox cannot display stale bow/shaft names.
+     */
+    private void clearFletchingCaptions(int nextInterfaceId) {
+        if (ServerSettings.clientBuild != 443) return;
+        int current = this.player.getOpenInterfaceId();
+        if (current == nextInterfaceId) return;
+        int start, count;
+        if (current == 20120) {
+            start = 20203;
+            count = 3;
+        } else if (current == 20121) {
+            start = 20208;
+            count = 2;
+        } else if (current == 20122) {
+            start = 20211;
+            count = 1;
+        } else {
+            return;
+        }
+        for (int i = 0; i < count; i++) {
+            this.sendInterfaceText("", start + i);
+        }
+    }
+
     public final PacketSender closeInterfaces() {
+        this.clearFletchingCaptions(0);
         this.player.setOpenInterfaceId(0);
         this.player.setInventoryOverlayInterfaceId(0);
         this.player.activeBookItemId = 0;
@@ -1668,6 +1697,7 @@ public final class PacketSender {
     }
 
     public final PacketSender showChatboxInterface(int interfaceId) {
+        this.clearFletchingCaptions(interfaceId);
         this.player.setOpenInterfaceId(interfaceId);
         if (this.player.isBot) {
             return this;
