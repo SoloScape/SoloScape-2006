@@ -760,6 +760,10 @@ public class JSocket implements Runnable {
      * margin. The icon uses exactly the same sprite as native Skills tab 320.
      * All ordinary statement widgets and the Continue action stay untouched.
      */
+    // Group 211's text widgets are shared with ordinary statements, so keep
+    // their native widths and restore them as soon as level-up closes.
+    private static final int[] levelUpTextWidths = new int[2];
+
     private static void configureLevelUpChatbox() {
         Widget[] group = Class62_Sub1.widgets[211];
         if (group == null || group.length < 3 || group[0] == null) {
@@ -783,15 +787,22 @@ public class JSocket implements Runnable {
             group[3] = selector;
         }
         if (group[4] == null) {
+            for (int i = 0; i < levelUpTextWidths.length; i++) {
+                levelUpTextWidths[i] = group[i].quadWidth;
+            }
             Widget icon = new Widget();
             icon.anInt2084 = (211 << 16) | 4;
             icon.anInt2050 = -1;
-            icon.aBoolean2013 = group[0].aBoolean2013;
+            // Original level-up graphics are roughly 60 pixels tall. The
+            // Skills-tab sprites are just 25px, so the old-format renderer
+            // would draw them tiny even if quadWidth were changed. Use the
+            // existing new-format sprite scaling branch (method687) instead.
+            icon.aBoolean2013 = true;
             icon.type = 5;
-            icon.anInt2090 = icon.anInt2091 = 32;
-            icon.anInt2024 = icon.anInt2021 = 32;
-            icon.quadWidth = 25;
-            icon.quadHeight = 25;
+            icon.anInt2090 = icon.anInt2091 = 6;
+            icon.anInt2024 = icon.anInt2021 = 16;
+            icon.quadWidth = 64;
+            icon.quadHeight = 64;
             icon.anInt2093 = icon.anInt2034 = -1;
             icon.anInt2089 = 0;
             icon.anInt2049 = icon.anInt1998 = 0;
@@ -813,6 +824,13 @@ public class JSocket implements Runnable {
         Widget icon = levelUp[4];
         icon.aBoolean2055 = true; // Also clears the icon on ordinary statements.
         if (skillName == null) {
+            for (int i = 0; i < levelUpTextWidths.length; i++) {
+                Widget line = levelUp[i];
+                if (line != null) {
+                    line.anInt2091 = line.anInt2090;
+                    line.quadWidth = levelUpTextWidths[i];
+                }
+            }
             Class14.aBoolean245 = true;
             return;
         }
@@ -844,6 +862,16 @@ public class JSocket implements Runnable {
                     icon.aBoolean2038 = source.aBoolean2038;
                     icon.anInt2030 = source.anInt2030;
                     icon.aBoolean2055 = false;
+                    // Shift the blue heading and level line clear of the
+                    // 64px icon. Native dialogue text bounds are restored by
+                    // the empty selector when this level-up closes.
+                    for (int lineIndex = 0; lineIndex < levelUpTextWidths.length; lineIndex++) {
+                        Widget line = levelUp[lineIndex];
+                        if (line != null) {
+                            line.anInt2091 = 76;
+                            line.quadWidth = 400;
+                        }
+                    }
                 }
             }
             break;
