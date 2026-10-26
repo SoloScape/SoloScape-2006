@@ -1029,6 +1029,11 @@ public class Bzip2Block {
                     }
                     class39_sub5_sub17.aClass3_2029 = class3;
                 }
+                // Hidden 211:3 selector controls the icon in the adjacent
+                // passive 211:4 sprite. It is never printed in the chatbox.
+                if (i_97_ == ((211 << 16) | 3)) {
+                    JSocket.updateLevelUpSkillIcon(class3);
+                }
                 if ((i_97_ >>> 16) == 214) {
                     JSocket.updateTutorialChatScroll();
                     Class14.aBoolean245 = true;
