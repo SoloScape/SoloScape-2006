@@ -876,6 +876,17 @@ public class JSocket implements Runnable {
             }
             break;
         }
+        // The server clears this selector by sending an empty JString, not
+        // null. Restore ordinary statement geometry after that packet.
+        if (icon.aBoolean2055) {
+            for (int i = 0; i < levelUpTextWidths.length; i++) {
+                Widget line = levelUp[i];
+                if (line != null) {
+                    line.anInt2091 = line.anInt2090;
+                    line.quadWidth = levelUpTextWidths[i];
+                }
+            }
+        }
         Class14.aBoolean245 = true;
     }
 
