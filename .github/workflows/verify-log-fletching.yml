@@ -13,6 +13,8 @@ on:
       - 'Client/src/jagex/io/JSocket.java'
       - 'Client/src/unpackaged/Bzip2Block.java'
       - 'Client/tests/LevelUpIconChecks.java'
+      - 'Client/tests/FletchingMakeXInputChecks.java'
+      - 'Client/src/unpackaged/Bzip2Block.java'
       - '.github/workflows/verify-log-fletching.yml'
   workflow_dispatch:
 jobs:
@@ -40,6 +42,7 @@ jobs:
           mkdir -p fletching-client-classes
           find src -name '*.java' > /tmp/fletching-client-sources.txt
           javac -encoding UTF-8 -d fletching-client-classes @/tmp/fletching-client-sources.txt
-          javac -encoding UTF-8 -cp fletching-client-classes -d fletching-client-classes tests/FletchingChatboxWidgetChecks.java tests/LevelUpIconChecks.java
+          javac -encoding UTF-8 -cp fletching-client-classes -d fletching-client-classes tests/FletchingChatboxWidgetChecks.java tests/LevelUpIconChecks.java tests/FletchingMakeXInputChecks.java
           java -cp fletching-client-classes unpackaged.FletchingChatboxWidgetChecks
           java -cp fletching-client-classes unpackaged.LevelUpIconChecks
+          java -cp fletching-client-classes unpackaged.FletchingMakeXInputChecks
