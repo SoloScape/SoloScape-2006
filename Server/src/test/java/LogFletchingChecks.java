@@ -79,7 +79,7 @@ public final class LogFletchingChecks {
             for (int product = 0; product < 3; product++) {
                 Player player = newPlayer(1511, 12);
                 useKnife(player, false);
-                requireNativeMenu(player, recipe[0]);
+                requireNativeMenu(player, 1511);
                 click(player, product, kind);
                 int count = new int[]{7, 10, 5, 1}[kind];
                 if (kind == 0) {
