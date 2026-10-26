@@ -412,6 +412,12 @@ public final class SkillManager {
         this.refreshSkill(experience);
     }
 
+    /** Every skill level-up heading uses the client's bright-blue @blu@ tag. */
+    private static String levelUpTitle(int skillId) {
+        return "@blu@Congratulations, you just advanced a "
+                + SKILL_NAMES[skillId] + " level!";
+    }
+
     public final void showLevelUpInterface(int interfaceId) {
         Object value;
         if (this.player.deferLevelUpInterfaces) {
@@ -455,8 +461,7 @@ public final class SkillManager {
         int[][] nArrayArray2 = nArrayArray;
         if (ServerSettings.clientBuild == 443) {
             player.packetSender.sendInterfaceText(
-                    "@dbl@Congratulations, you just advanced a "
-                            + SKILL_NAMES[interfaceId] + " level!",
+                    levelUpTitle(interfaceId),
                     360);
             player.packetSender.sendInterfaceText(
                     "Your " + SKILL_NAMES[interfaceId] + " level is now "
@@ -468,8 +473,7 @@ public final class SkillManager {
             player.packetSender.sendInterfaceText(SKILL_NAMES[interfaceId], 19581);
         } else {
             player.packetSender.sendInterfaceText(
-                    "@dbl@Congratulations, you just advanced a "
-                            + SKILL_NAMES[interfaceId] + " level!",
+                    levelUpTitle(interfaceId),
                     nArrayArray2[interfaceId][1]);
             player.packetSender.sendInterfaceText(
                     "Your " + SKILL_NAMES[interfaceId] + " level is now "
