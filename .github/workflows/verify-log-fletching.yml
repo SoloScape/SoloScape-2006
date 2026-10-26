@@ -27,3 +27,11 @@ jobs:
           javac -encoding UTF-8 -cp 'fletching-test-classes:lib/*' -d fletching-test-classes src/test/java/LogFletchingChecks.java src/test/java/SpinningInterfaceChecks.java
           java -cp 'fletching-test-classes:lib/*' LogFletchingChecks
           java -cp 'fletching-test-classes:lib/*' SpinningInterfaceChecks
+      - name: Compile client and verify fletching chatbox captions
+        working-directory: Client
+        run: |
+          mkdir -p fletching-client-classes
+          find src -name '*.java' > /tmp/fletching-client-sources.txt
+          javac -encoding UTF-8 -d fletching-client-classes @/tmp/fletching-client-sources.txt
+          javac -encoding UTF-8 -cp fletching-client-classes -d fletching-client-classes tests/FletchingChatboxWidgetChecks.java
+          java -cp fletching-client-classes unpackaged.FletchingChatboxWidgetChecks
