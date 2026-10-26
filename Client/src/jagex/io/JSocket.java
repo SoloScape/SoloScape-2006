@@ -695,6 +695,65 @@ public class JSocket implements Runnable {
         Class14.aBoolean245 = true;
     }
 
+    /**
+     * Native 443 production chatboxes (303, 304, 309) already contain actual
+     * item models and per-item Make X/10/5/1 actions. They lack a dedicated
+     * visible product-name line. Add passive captions below each item model,
+     * inside the 96px-tall chatbox clip, without replacing the native actions.
+     *
+     * The server targets only these synthetic children when fletching.
+     */
+    private static void configureFletchingChatbox(int parent) {
+        int count = parent == 304 ? 3 : parent == 303 ? 2 : parent == 309 ? 1 : 0;
+        if (count == 0) {
+            return;
+        }
+        Widget[] group = Class62_Sub1.widgets[parent];
+        int titleChild = parent == 304 ? 17 : parent == 303 ? 12 : 7;
+        int firstCaption = titleChild + 1;
+        if (group == null || group.length <= titleChild || group[titleChild] == null) {
+            return;
+        }
+        if (group.length < firstCaption + count) {
+            Widget[] expanded = new Widget[firstCaption + count];
+            System.arraycopy(group, 0, expanded, 0, group.length);
+            Class62_Sub1.widgets[parent] = group = expanded;
+        }
+
+        Widget title = group[titleChild];
+        for (int i = 0; i < count; i++) {
+            if (group[firstCaption + i] != null) {
+                continue;
+            }
+            Widget label = new Widget();
+            label.anInt2084 = (parent << 16) | firstCaption + i;
+            label.anInt2050 = -1;
+            label.aBoolean2013 = title.aBoolean2013;
+            label.type = 4;
+            label.anInt2078 = title.anInt2078;
+            // Native group 304's three slots occupy equal 160px columns;
+            // group 303 uses two 240px columns, and 309 one full-width slot.
+            int left = parent == 304 ? i * 160 : parent == 303 ? i * 240 : 0;
+            int width = parent == 304 ? 160 : parent == 303 ? 240 : 479;
+            label.anInt2090 = label.anInt2091 = left;
+            label.anInt2024 = label.anInt2021 = 78;
+            label.quadWidth = width;
+            label.quadHeight = 16;
+            label.anInt2105 = title.anInt2105;
+            label.anInt2032 = 1;
+            label.anInt1996 = title.anInt1996;
+            label.anInt2036 = title.anInt2036;
+            label.aBoolean2059 = title.aBoolean2059;
+            label.activeQuadColor = label.inactiveQuadColor = 0x402800;
+            label.aClass3_2029 = Class39_Sub5_Sub9.createJstring("");
+            label.aClass3_2048 = Class39_Sub5_Sub9.createJstring("");
+            label.anInt2089 = 0;
+            label.anInt2049 = label.anInt1998 = 0;
+            group[firstCaption + i] = label;
+        }
+        Class14.aBoolean245 = true;
+    }
+
     public static boolean loadWidget(int parent) {
         if (unpackaged.ChristmasEventSnow.loadOverlayWidget(parent)) return true;
         if (unpackaged.GrandExchangeWidgets.load(parent)) return true;
@@ -708,6 +767,8 @@ public class JSocket implements Runnable {
                 configureTutorialChatbox();
             } else if (parent == 307) {
                 configureCookingChatbox();
+            } else if (parent == 303 || parent == 304 || parent == 309) {
+                configureFletchingChatbox(parent);
             } else if (parent == 137) {
                 configureWorldTeleportButtons();
             } else {
@@ -746,6 +807,8 @@ public class JSocket implements Runnable {
             configureTutorialChatbox();
         } else if (parent == 307) {
             configureCookingChatbox();
+        } else if (parent == 303 || parent == 304 || parent == 309) {
+            configureFletchingChatbox(parent);
         } else if (parent == 137) {
             configureWorldTeleportButtons();
         } else {
