@@ -33,6 +33,8 @@ public final class LevelUpIconChecks {
             statement[child].anInt2084 = (211 << 16) | child;
             statement[child].anInt2050 = -1;
             statement[child].type = 4;
+            statement[child].anInt2090 = statement[child].anInt2091 = 21;
+            statement[child].quadWidth = child == 1 ? 442 : 441;
         }
         Class62_Sub1.widgets[211] = statement;
         Class39_Sub5_Sub4.widgetsLoaded[211] = true;
@@ -62,13 +64,21 @@ public final class LevelUpIconChecks {
         require(icon.type == 5 && icon.aBoolean2055, "Icon must initially be hidden");
         require(icon.anInt2050 == -1 && icon.anInt2089 == 0,
                 "Level-up icon must be a passive chatbox child");
-        require(icon.quadWidth == 25 && icon.quadHeight == 25
+        require(icon.quadWidth == 64 && icon.quadHeight == 64
+                && icon.anInt2091 == 6 && icon.anInt2021 == 16
                 && icon.anInt2021 >= 0 && icon.anInt2021 + icon.quadHeight <= 96,
-                "Level-up icon does not fit native 443 chatbox clip");
+                "Scaled level-up icon does not fit native 443 chatbox clip");
+        require(icon.aBoolean2013 && icon.anInt1997 == -1 && icon.anInt2051 == 0,
+                "Large skill icon does not use the built-in scaled-sprite renderer");
 
         for (int i = 0; i < NAMES.length; i++) {
             sendSkillPacket(NAMES[i]);
             require(!icon.aBoolean2055, NAMES[i] + " level-up icon is missing");
+            require(chatbox[0].anInt2091 == 76 && chatbox[0].quadWidth == 400
+                    && chatbox[1].anInt2091 == 76 && chatbox[1].quadWidth == 400,
+                    NAMES[i] + " has wrong level-up text geometry");
+            require(icon.anInt2091 + icon.quadWidth <= chatbox[0].anInt2091,
+                    NAMES[i] + " icon overlaps congratulations heading");
             require(icon.anInt2093 == 1000 + i, NAMES[i] + " has wrong skill icon");
             require(selector.aBoolean2055, "Hidden selector became visible");
             require(chatbox[0] == statement[0] && chatbox[1] == statement[1]
@@ -76,11 +86,14 @@ public final class LevelUpIconChecks {
         }
         sendSkillPacket("");
         require(icon.aBoolean2055, "Ordinary two-line dialogue retained old level-up icon");
+        require(chatbox[0].anInt2091 == 21 && chatbox[0].quadWidth == 441
+                && chatbox[1].anInt2091 == 21 && chatbox[1].quadWidth == 442,
+                "Ordinary statements retained shifted level-up text geometry");
         require(JSocket.loadWidget(211), "Level-up chatbox cannot reopen");
         require(Class62_Sub1.widgets[211][4] == icon,
                 "Reloading chatbox replaced the skill icon");
         System.out.println("Level-up icon checks passed for all " + NAMES.length
-                + " server skills, native sprite selection and dialogue cleanup.");
+                + " server skills, scaled 64px native sprites and dialogue cleanup.");
     }
 
     private static void sendSkillPacket(String value) throws Exception {
