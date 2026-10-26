@@ -271,6 +271,12 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                     return;
                 }
             }
+            // Native fletching selection widgets are action-type-6 controls.
+            // Each of the 1/2/3-item chatbox groups has four actions per item.
+            if (com.rs2.model.skill.fletching.logs.LogFletchingMenu.handleNativeWidget(
+                    player, packedWidgetId)) {
+                return;
+            }
             // Native 443 dialogue controls use WIDGET_SELECT rather than the
             // ordinary interface-action packet. Continue buttons and option
             // choices must both be routed into the legacy dialogue state machine
@@ -482,13 +488,6 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                 MagicSpellAction.castSelfSpell(player, spell);
                 return;
             }
-        }
-        // Fletching shares native group 459 with spinning. Route each item's
-        // Make X/10/5/1 action before the generic spinning dispatcher.
-        if (legacyButtonId != InterfaceBridge.UNMAPPED
-                && (operation == -1 || parameter == 0)
-                && com.rs2.model.skill.fletching.logs.LogFletchingMenu.handleButton(player, legacyButtonId)) {
-            return;
         }
         if (legacyButtonId != InterfaceBridge.UNMAPPED
                 && legacyButtonId != 3214 && legacyButtonId != 1688
