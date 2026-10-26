@@ -754,6 +754,103 @@ public class JSocket implements Runnable {
         Class14.aBoolean245 = true;
     }
 
+    /**
+     * Group 211 is the stock two-line statement chatbox, but has no icon.
+     * Append a passive skill selector and a 25x25 sprite in its unused left
+     * margin. The icon uses exactly the same sprite as native Skills tab 320.
+     * All ordinary statement widgets and the Continue action stay untouched.
+     */
+    private static void configureLevelUpChatbox() {
+        Widget[] group = Class62_Sub1.widgets[211];
+        if (group == null || group.length < 3 || group[0] == null) {
+            return;
+        }
+        if (group.length < 5) {
+            Widget[] expanded = new Widget[5];
+            System.arraycopy(group, 0, expanded, 0, group.length);
+            Class62_Sub1.widgets[211] = group = expanded;
+        }
+        if (group[3] == null) {
+            Widget selector = new Widget();
+            selector.anInt2084 = (211 << 16) | 3;
+            selector.anInt2050 = -1;
+            selector.type = 4;
+            selector.anInt2089 = 0;
+            selector.anInt2049 = selector.anInt1998 = 0;
+            selector.aBoolean2055 = true; // Server-only control, never painted.
+            selector.aClass3_2029 = Class39_Sub5_Sub9.createJstring("");
+            selector.aClass3_2048 = Class39_Sub5_Sub9.createJstring("");
+            group[3] = selector;
+        }
+        if (group[4] == null) {
+            Widget icon = new Widget();
+            icon.anInt2084 = (211 << 16) | 4;
+            icon.anInt2050 = -1;
+            icon.aBoolean2013 = group[0].aBoolean2013;
+            icon.type = 5;
+            icon.anInt2090 = icon.anInt2091 = 32;
+            icon.anInt2024 = icon.anInt2021 = 32;
+            icon.quadWidth = 25;
+            icon.quadHeight = 25;
+            icon.anInt2093 = icon.anInt2034 = -1;
+            icon.anInt2089 = 0;
+            icon.anInt2049 = icon.anInt1998 = 0;
+            icon.aBoolean2055 = true; // Hidden on ordinary statements.
+            group[4] = icon;
+        }
+    }
+
+    /**
+     * Skill order is SkillManager.SKILL_NAMES (0..21). IDs below are the
+     * matching original sprite widgets in revision-443 Skills tab group 320,
+     * not inferred sprite archive numbers or external image assets.
+     */
+    public static void updateLevelUpSkillIcon(jagex.utils.JString skillName) {
+        Widget[] levelUp = Class62_Sub1.widgets[211];
+        if (levelUp == null || levelUp.length < 5 || levelUp[4] == null) {
+            return;
+        }
+        Widget icon = levelUp[4];
+        icon.aBoolean2055 = true; // Also clears the icon on ordinary statements.
+        if (skillName == null) {
+            Class14.aBoolean245 = true;
+            return;
+        }
+
+        String[] skillNames = {
+            "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer",
+            "Magic", "Cooking", "Woodcutting", "Fletching", "Fishing",
+            "Firemaking", "Crafting", "Smithing", "Mining", "Herblore",
+            "Agility", "Thieving", "Slayer", "Farming", "Runecrafting",
+            "Construction"
+        };
+        int[] skillSprites = {
+            48, 54, 51, 49, 57, 60, 63, 59, 65, 64, 56,
+            62, 61, 53, 50, 55, 52, 58, 110, 115, 105, 45
+        };
+        for (int i = 0; i < skillNames.length; i++) {
+            if (!skillName.method97(Class39_Sub5_Sub9.createJstring(skillNames[i]), -66)) {
+                continue;
+            }
+            if (loadWidget(320) && Class62_Sub1.widgets[320] != null) {
+                Widget source = Class62_Sub1.widgets[320][skillSprites[i]];
+                if (source != null && source.type == 5
+                        && (source.anInt2093 >= 0 || source.runtimeSprite != null)) {
+                    icon.anInt2093 = icon.anInt2034 = source.anInt2093;
+                    icon.runtimeSprite = source.runtimeSprite;
+                    icon.anInt2022 = source.anInt2022;
+                    icon.anInt2003 = source.anInt2003;
+                    icon.aBoolean2107 = source.aBoolean2107;
+                    icon.aBoolean2038 = source.aBoolean2038;
+                    icon.anInt2030 = source.anInt2030;
+                    icon.aBoolean2055 = false;
+                }
+            }
+            break;
+        }
+        Class14.aBoolean245 = true;
+    }
+
     public static boolean loadWidget(int parent) {
         if (unpackaged.ChristmasEventSnow.loadOverlayWidget(parent)) return true;
         if (unpackaged.GrandExchangeWidgets.load(parent)) return true;
@@ -765,6 +862,8 @@ public class JSocket implements Runnable {
         if (Class39_Sub5_Sub4.widgetsLoaded[parent]) {
             if (parent == 214) {
                 configureTutorialChatbox();
+            } else if (parent == 211) {
+                configureLevelUpChatbox();
             } else if (parent == 307) {
                 configureCookingChatbox();
             } else if (parent == 303 || parent == 304 || parent == 309) {
@@ -805,6 +904,8 @@ public class JSocket implements Runnable {
         }
         if (parent == 214) {
             configureTutorialChatbox();
+        } else if (parent == 211) {
+            configureLevelUpChatbox();
         } else if (parent == 307) {
             configureCookingChatbox();
         } else if (parent == 303 || parent == 304 || parent == 309) {
