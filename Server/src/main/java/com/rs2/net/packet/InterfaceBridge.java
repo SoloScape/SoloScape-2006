@@ -78,6 +78,7 @@ public final class InterfaceBridge {
         mappings.put(2492, 234);  // five-option dialogue
         mappings.put(356, 210);   // statement, one line
         mappings.put(359, 211);   // statement, two lines
+        mappings.put(19580, 211); // dedicated 443 level-up chatbox (native two-line statement)
         mappings.put(363, 212);   // statement, three lines
         mappings.put(368, 213);   // statement, four lines
         mappings.put(374, 214);   // statement, five lines
@@ -487,6 +488,7 @@ public final class InterfaceBridge {
         // Plain statement chatboxes used by Tutorial Island setup/finish prompts.
         put(mappings, 357, 210, 0);
         putRange(mappings, 360, 211, 0, 2);
+        put(mappings, 19581, 211, 3); // hidden skill name, selects native 320 skill sprite
         putRange(mappings, 364, 212, 0, 3);
         putRange(mappings, 369, 213, 0, 4);
         putRange(mappings, 375, 214, 0, 5);
