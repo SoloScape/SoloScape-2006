@@ -99,15 +99,32 @@ public final class LogFletchingMenu {
             return false;
         }
 
-        int firstChild = count == 3 ? 5 : count == 2 ? 4 : 3;
-        int offset = (packedWidgetId & 0xffff) - firstChild;
+        int child = packedWidgetId & 0xffff;
+        if (count == 1) {
+            // Native 309 differs from 303/304: Make All, Make X, Make 5,
+            // Make 1 (rather than X, 10, 5, 1).
+            if (child < 3 || child > 6) return false;
+            if (player.isActionLocked()) return true;
+            if (child == 3) {
+                make(player, index, 0, player.getInventoryManager().getItemAmount(2862));
+            } else if (child == 4) {
+                player.packetSender.sendEnterInputPrompt(8886);
+            } else {
+                make(player, index, 0, child == 5 ? 5 : 1);
+            }
+            return true;
+        }
+
+        int firstChild = count == 3 ? 5 : 4;
+        int offset = child - firstChild;
         if (offset < 0 || offset >= count * 4) return false;
         if (player.isActionLocked()) return true;
         int product = offset / 4;
         int kind = offset % 4;
         if (kind == 0) {
-            // Encode the chosen product in the pending input ID. Keep IDs
-            // distinct from the unrelated spinning-wheel button state.
+            // Set the pending product before the client's native numeric
+            // input request. The paired 443 client opens the input immediately
+            // on this Make X click; opcode 32 remains as a server fallback.
             player.packetSender.sendEnterInputPrompt(8886 + product * 4);
         } else {
             make(player, index, product, new int[]{0, 10, 5, 1}[kind]);
