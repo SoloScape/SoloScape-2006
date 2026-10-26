@@ -14,10 +14,6 @@ import java.nio.ByteBuffer;
 
 /** Knife-on-logs must open 443 model choices with per-item Make X/10/5/1. */
 public final class LogFletchingChecks {
-    private static final int[] MODELS = {101, 89, 108};
-    private static final int[] LABELS = {102, 90, 109};
-    private static final int[] ROOTS = {96, 91, 103};
-
     public static void main(String[] args) throws Exception {
         ServerSettings.clientBuild = 443;
         ServerSettings.membershipRequirementMode = 0;
@@ -25,22 +21,33 @@ public final class LogFletchingChecks {
         ItemDefinition.loadDefinitions();
         Interfaces.load();
 
-        require(InterfaceBridge.translateGroup(8880) == 459, "Wrong native production group");
-        require(Interfaces.group(459).size() == 127, "Production widget changed");
-        for (int i = 0; i < 3; i++) {
-            require(Interfaces.forId(459, MODELS[i]).type == 6, "Product item model missing");
-            require(Interfaces.forId(459, LABELS[i]).type == 4, "Product label missing");
-            require(Interfaces.forId(459, ROOTS[i]).type == 0, "Make-X choice root missing");
-            require(InterfaceBridge.translate(20100 + i) == (459 << 16 | MODELS[i]),
-                    "Wrong product model bridge");
-            require(InterfaceBridge.translate(20103 + i) == (459 << 16 | LABELS[i]),
-                    "Wrong product label bridge");
-            for (int kind = 0; kind < 4; kind++) {
-                int legacy = 8886 + i * 4 + kind;
-                int packed = InterfaceBridge.translate(legacy);
-                require((packed >>> 16) == 459, "Native make action not mapped");
-                require(Interfaces.forPackedId(packed).actionType == 1,
-                        "Make-X/10/5/1 not an interactive native widget");
+        // Historic 377 interface 8880 is a chatbox, but native 443 group 459
+        // is full-screen spinning. Fletching needs the stock 303/304/309
+        // one/two/three-product chatboxes, each with four native Make options.
+        require(InterfaceBridge.translateGroup(8880) == 459, "Spinning route changed");
+        int[][] layouts = {
+            {20122, 309, 1, 3, 20210, 20211},
+            {20121, 303, 2, 4, 20206, 20208},
+            {20120, 304, 3, 5, 20200, 20203}
+        };
+        for (int[] layout : layouts) {
+            int root = layout[0], group = layout[1], count = layout[2],
+                    firstAction = layout[3], firstModel = layout[4], firstName = layout[5];
+            require(InterfaceBridge.translateGroup(root) == group, "Wrong native chatbox group");
+            for (int slot = 0; slot < count; slot++) {
+                int childModel = 2 + slot;
+                int title = count == 3 ? 17 : count == 2 ? 12 : 7;
+                int childName = title + 1 + slot;
+                require(Interfaces.forId(group, childModel).type == 6, "Fletching model missing");
+                require(InterfaceBridge.translate(firstModel + slot) == (group << 16 | childModel),
+                        "Wrong item model mapping");
+                require(InterfaceBridge.translate(firstName + slot) == (group << 16 | childName),
+                        "Wrong item caption mapping");
+                for (int kind = 0; kind < 4; kind++) {
+                    int child = firstAction + slot * 4 + kind;
+                    require(Interfaces.forId(group, child).actionType == 6,
+                            "Native Make X/10/5/1 chatbox action missing");
+                }
             }
         }
 
@@ -54,7 +61,7 @@ public final class LogFletchingChecks {
             for (boolean reverse : new boolean[]{false, true}) {
                 Player player = newPlayer(recipe[0], 3);
                 useKnife(player, reverse);
-                requireNativeMenu(player);
+                requireNativeMenu(player, recipe[0]);
                 double xp = player.getSkillManager().getExperience()[9];
                 click(player, recipe[1], 3); // Make 1, for every product
                 require(player.getActiveCycleEvent() instanceof LogFletchingTask, "No fletching task");
@@ -72,7 +79,7 @@ public final class LogFletchingChecks {
             for (int product = 0; product < 3; product++) {
                 Player player = newPlayer(1511, 12);
                 useKnife(player, false);
-                requireNativeMenu(player);
+                requireNativeMenu(player, recipe[0]);
                 click(player, product, kind);
                 int count = new int[]{7, 10, 5, 1}[kind];
                 if (kind == 0) {
@@ -145,15 +152,15 @@ public final class LogFletchingChecks {
         LogFletchingMenu.restoreSpinningInterface(player);
         require(player.getOpenInterfaceId() == 8880 && "spinning".equals(player.interfaceAction),
                 "Spinning screen was not restored");
-        require(!LogFletchingMenu.handleButton(player, 8889),
+        require(!LogFletchingMenu.handleNativeWidget(player, 304 << 16 | 8),
                 "Spinning Make 1 intercepted by fletching");
         player.setInterfaceAction("unrelated");
-        require(!LogFletchingMenu.handleButton(player, 8889),
+        require(!LogFletchingMenu.handleNativeWidget(player, 304 << 16 | 8),
                 "Unrelated production action intercepted");
         ServerSettings.clientBuild = 377;
         require(!LogFletchingMenu.open(player, "normalCutting"), "Legacy build intercepted");
 
-        System.out.println("Log fletching checks passed: 443 item models/labels, every recipe, "
+        System.out.println("Log fletching checks passed: 443 chatbox item models/labels, every recipe, "
                 + "per-product Make X/10/5/1, guards and spinning isolation.");
     }
 
@@ -184,20 +191,25 @@ public final class LogFletchingChecks {
                 new IncomingPacket(ClientPackets.ITEM_ON_ITEM, 16, PacketBuffer.wrapReader(bytes)));
     }
 
-    private static void requireNativeMenu(Player player) {
-        require(player.getOpenInterfaceId() == 8880, "Knife did not open native item-model menu");
-        require(InterfaceBridge.translateGroup(player.getOpenInterfaceId()) == 459,
-                "Menu did not map to native 459");
+    private static void requireNativeMenu(Player player, int log) {
+        int count = log == 1511 ? 3 : log == 2862 ? 1 : 2;
+        int root = count == 3 ? 20120 : count == 2 ? 20121 : 20122;
+        int group = count == 3 ? 304 : count == 2 ? 303 : 309;
+        require(player.getOpenInterfaceId() == root,
+                "Knife did not open native make-item chatbox for log " + log);
+        require(InterfaceBridge.translateGroup(root) == group, "Wrong native chatbox");
     }
 
     private static void click(Player player, int product, int kind) {
-        int legacyButton = 8886 + product * 4 + kind; // X/10/5/1
-        int packed = InterfaceBridge.translate(legacyButton);
-        require(packed != InterfaceBridge.UNMAPPED, "Unmapped quantity action");
-        ByteBuffer bytes = ByteBuffer.allocate(4).putInt(packed);
+        int count = player.getOpenInterfaceId() == 20120 ? 3
+                : player.getOpenInterfaceId() == 20121 ? 2 : 1;
+        int group = count == 3 ? 304 : count == 2 ? 303 : 309;
+        int first = count == 3 ? 5 : count == 2 ? 4 : 3;
+        int packed = group << 16 | first + product * 4 + kind;
+        ByteBuffer bytes = ByteBuffer.allocate(6).putShort((short)0).putInt(packed);
         bytes.flip();
         new InterfaceActionPacketHandler().handle(player,
-                new IncomingPacket(ClientPackets.INTERFACE_BUTTON, 4, PacketBuffer.wrapReader(bytes)));
+                new IncomingPacket(ClientPackets.WIDGET_SELECT, 6, PacketBuffer.wrapReader(bytes)));
     }
 
     private static void enterAmount(Player player, int amount) {
