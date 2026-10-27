@@ -388,15 +388,24 @@ public final class WebClientBridge {
             if (button == MouseEvent.BUTTON1) modifiers = InputEvent.BUTTON1_DOWN_MASK;
             if (button == MouseEvent.BUTTON2) modifiers = InputEvent.BUTTON2_DOWN_MASK;
             if (button == MouseEvent.BUTTON3) modifiers = InputEvent.BUTTON3_DOWN_MASK | InputEvent.META_MASK;
-            int canvasX = clamp(x, 0, WIDTH - 1);
-            int canvasY = clamp(y, 0, HEIGHT - 1);
-            if (canvas instanceof Canvas_Sub1) {
+            // Unlike a real pointer exit, clamping (-1,-1) to (0,0) makes
+            // RuneScape think the cursor jumped to the corner of the game.
+            boolean exited = id == MouseEvent.MOUSE_EXITED;
+            int canvasX = exited ? -1 : clamp(x, 0, WIDTH - 1);
+            int canvasY = exited ? -1 : clamp(y, 0, HEIGHT - 1);
+            if (!exited && canvas instanceof Canvas_Sub1) {
                 canvasX = ((Canvas_Sub1) canvas).toCanvasX(canvasX);
                 canvasY = ((Canvas_Sub1) canvas).toCanvasY(canvasY);
             }
+            // Drag/move/exit events have no changed button according to AWT;
+            // the held button is carried in modifiersEx instead.
+            int eventButton = (id == MouseEvent.MOUSE_MOVED ||
+                    id == MouseEvent.MOUSE_DRAGGED || exited)
+                    ? MouseEvent.NOBUTTON : button;
             MouseEvent event = new MouseEvent(canvas, id, when, modifiers,
                     canvasX, canvasY, 1,
-                    button == MouseEvent.BUTTON3, button);
+                    button == MouseEvent.BUTTON3 && id == MouseEvent.MOUSE_RELEASED,
+                    eventButton);
             canvas.dispatchEvent(event);
         });
     }
@@ -429,12 +438,16 @@ public final class WebClientBridge {
         int type = payload[0] & 0xFF;
         if (type == 1 && payload.length >= 5) {
             mouse(MouseEvent.MOUSE_MOVED, MouseEvent.NOBUTTON, u16(payload, 1), u16(payload, 3));
-        } else if ((type == 2 || type == 3) && payload.length >= 6) {
+        } else if (type == 6 && payload.length == 1) {
+            mouse(MouseEvent.MOUSE_EXITED, MouseEvent.NOBUTTON, -1, -1);
+        } else if ((type == 2 || type == 3 || type == 7) && payload.length >= 6) {
             int button = payload[1] & 0xFF;
+            if (button < MouseEvent.BUTTON1 || button > MouseEvent.BUTTON3) return;
             int x = u16(payload, 2);
             int y = u16(payload, 4);
-            mouse(type == 2 ? MouseEvent.MOUSE_PRESSED : MouseEvent.MOUSE_RELEASED,
-                    button, x, y);
+            int eventId = type == 2 ? MouseEvent.MOUSE_PRESSED
+                    : type == 3 ? MouseEvent.MOUSE_RELEASED : MouseEvent.MOUSE_DRAGGED;
+            mouse(eventId, button, x, y);
         } else if ((type == 4 || type == 5) && payload.length >= 5) {
             int code = u16(payload, 1);
             int character = u16(payload, 3);
