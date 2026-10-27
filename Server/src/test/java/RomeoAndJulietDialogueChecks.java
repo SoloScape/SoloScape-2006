@@ -25,23 +25,22 @@ public final class RomeoAndJulietDialogueChecks {
         InterfaceDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
-        for (int id = 3318; id <= 3327; id++) {
-            if (NpcDefinition.isDefined(id)) {
-                System.out.println("revision443 NPC " + id + ": " + NpcDefinition.forId(id).getName());
-            }
-        }
-        for (int npcId : new int[] {5039, 5040}) {
-            String name = NpcDefinition.isDefined(npcId) ? NpcDefinition.forId(npcId).getName() : "(not defined)";
-            System.out.println("2006 supporting NPC " + npcId + ": " + name);
-        }
-        for (int npcId = 0; npcId < com.rs2.model.World.getNpcDefinitions().length; npcId++) {
-            NpcDefinition npc = com.rs2.model.World.getNpcDefinitions()[npcId];
-            if (npc != null && npc.getName() != null
-                    && (npc.getName().toLowerCase().contains("phillipa")
-                      || npc.getName().toLowerCase().contains("draul"))) {
-                System.out.println("Detected 443 quest NPC " + npcId + ": " + npc.getName());
-            }
-        }
+        require("Draul Leptoc".equalsIgnoreCase(
+                NpcDefinition.forId(RomeoJulietSupportingNpcs.DRAUL).getName()),
+                "Draul's revision-443 model is not mapped");
+        require("Phillipa".equalsIgnoreCase(
+                NpcDefinition.forId(RomeoJulietSupportingNpcs.PHILLIPA).getName()),
+                "Phillipa's revision-443 model is not mapped");
+        RomeoJulietSupportingNpcs.spawnMissingNpcs();
+        com.rs2.model.npc.Npc draul = com.rs2.model.npc.Npc.findByDefinitionId(RomeoJulietSupportingNpcs.DRAUL);
+        com.rs2.model.npc.Npc phillipa = com.rs2.model.npc.Npc.findByDefinitionId(RomeoJulietSupportingNpcs.PHILLIPA);
+        require(draul != null && draul.getPosition().getPlane() == 0,
+                "Draul did not spawn on the mansion's ground floor");
+        require(phillipa != null && phillipa.getPosition().getPlane() == 1,
+                "Phillipa did not spawn upstairs near Juliet");
+        RomeoJulietSupportingNpcs.spawnMissingNpcs();
+        require(com.rs2.model.npc.Npc.findByDefinitionId(RomeoJulietSupportingNpcs.PHILLIPA) == phillipa,
+                "Repeated spawn registration must not duplicate Phillipa");
 
         // Both NPCs must respond at every stage, not just when they advance the quest.
         for (int stage = 0; stage <= 8; stage++) {
