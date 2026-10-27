@@ -65,6 +65,8 @@ public final class WebClientBridge {
         return thread;
     });
     private static final AtomicInteger AUDIO_PENDING = new AtomicInteger();
+    // Extra 3D camera distance for browser pinch zoom; never affects normal Java client.
+    private static final AtomicInteger CAMERA_DISTANCE_OFFSET = new AtomicInteger();
 
     private static volatile boolean enabled;
     private static volatile Path webRoot;
@@ -81,6 +83,18 @@ public final class WebClientBridge {
 
     static boolean isEnabled() {
         return enabled;
+    }
+
+    static int cameraDistanceOffset() {
+        return enabled ? CAMERA_DISTANCE_OFFSET.get() : 0;
+    }
+
+    // Positive steps zoom out, negative steps zoom in. Bounds keep the scene usable.
+    static void adjustCameraZoom(int steps) {
+        if (!enabled) return;
+        final int amount = clamp(steps, -10, 10) * 70;
+        CAMERA_DISTANCE_OFFSET.updateAndGet(
+                old -> clamp(old + amount, -550, 850));
     }
 
     private static boolean hasAudioListeners() {
@@ -494,6 +508,10 @@ public final class WebClientBridge {
             mouse(MouseEvent.MOUSE_MOVED, MouseEvent.NOBUTTON, u16(payload, 1), u16(payload, 3));
         } else if (type == 6 && payload.length == 1) {
             mouse(MouseEvent.MOUSE_EXITED, MouseEvent.NOBUTTON, -1, -1);
+        } else if (type == 9 && payload.length == 2) {
+            // Browser pinch packet, signed wheel-like steps. Unlike AWT wheel
+            // events this changes camera distance, not inventory scrollbar state.
+            adjustCameraZoom(payload[1]);
         } else if ((type == 2 || type == 3 || type == 7) && payload.length >= 6) {
             int button = payload[1] & 0xFF;
             if (button < MouseEvent.BUTTON1 || button > MouseEvent.BUTTON3) return;
