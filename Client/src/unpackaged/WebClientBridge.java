@@ -64,6 +64,10 @@ public final class WebClientBridge {
     private static volatile long lastFrameNanos;
     private static volatile int actualPort = -1;
     private static volatile boolean frameAvailable;
+    // Only the original runescape.exe wrapper opts into shutdown after browser exit.
+    private static final boolean EXIT_ON_LAST_CLIENT =
+            Boolean.getBoolean("web.bridge.exitOnLastClient");
+    private static final AtomicBoolean EXIT_CHECK_PENDING = new AtomicBoolean(false);
 
     private WebClientBridge() {
     }
@@ -99,7 +103,10 @@ public final class WebClientBridge {
 
     private static ServerSocket bind(int requestedPort) throws IOException {
         BindException last = null;
-        for (int port = requestedPort; port <= requestedPort + 20; port++) {
+        // Launchers use a fixed URL; don't silently start on a different port.
+        int lastPort = Boolean.getBoolean("web.bridge.strictPort")
+                ? requestedPort : requestedPort + 20;
+        for (int port = requestedPort; port <= lastPort; port++) {
             ServerSocket socket = new ServerSocket();
             socket.setReuseAddress(true);
             try {
@@ -277,7 +284,29 @@ public final class WebClientBridge {
         } finally {
             CLIENTS.remove(session);
             session.close();
+            maybeExitAfterLastClient();
         }
+    }
+
+    private static void maybeExitAfterLastClient() {
+        if (!EXIT_ON_LAST_CLIENT || !CLIENTS.isEmpty()
+                || !EXIT_CHECK_PENDING.compareAndSet(false, true)) return;
+        Thread checker = new Thread(() -> {
+            try {
+                // A short grace period permits a transient IE WebSocket reconnect.
+                Thread.sleep(1500L);
+                if (CLIENTS.isEmpty()) {
+                    System.out.println("[webclient] Original client disconnected; exiting Java renderer.");
+                    System.exit(0);
+                }
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            } finally {
+                EXIT_CHECK_PENDING.set(false);
+            }
+        }, "webclient-original-close");
+        checker.setDaemon(true);
+        checker.start();
     }
 
     /** Called from JImage.draw for every native client blit. */
