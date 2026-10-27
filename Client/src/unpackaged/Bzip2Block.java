@@ -199,6 +199,7 @@ public class Bzip2Block {
     public static boolean readFrame() {
         // HotSwap does not rerun Client's static packet-size initialization.
         Client.incomingSizes[18] = 3;
+        Client.incomingSizes[254] = 4; // FPS latency pong: echoed 32-bit ping ID
         if (Class37.gameSocket == null) {
             return false;
         }
@@ -241,6 +242,11 @@ public class Bzip2Block {
             FileLoader.anInt1283 = Class63.anInt1117;
             Class39_Sub5_Sub11.anInt1827 = 0;
             Class63.anInt1117 = Class4.frameId;
+            if (Class4.frameId == 254) {
+                FpsDebugOverlay.onPingReply(Class39_Sub5_Sub11.gameBuffer.getDword());
+                Class4.frameId = -1;
+                return true;
+            }
             if (Class4.frameId == 178 || Class4.frameId == 160 || Class4.frameId == 146
                     || Class4.frameId == 32 || Class4.frameId == 51) {
                 GrandExchangeWidgets.cancelSearch();
