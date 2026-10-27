@@ -32,6 +32,10 @@ public final class GublinchChristmasEvent extends QuestHook {
     public static final int SHANTY_CLAWS = 828;
     public static final int SNOWBALL = 10501;
     private static final int GUBLINCH_HITS_TO_DEFEAT = 3;
+    private static final String GUBLINCH_CRUMBLING_ATTRIBUTE = "christmasGublinchCrumbling";
+    // Revision 443 sequence 5072: 48 frames, 144 client cycles (2.88 seconds).
+    private static final int GUBLINCH_CRUMBLE_ANIMATION = 5072;
+    private static final int GUBLINCH_CRUMBLE_TICKS = 5;
     private static final int[] SNOWBALL_RANGED_LEVELS = {1, 10, 20, 30, 40, 50, 60, 69, 70};
     // Hit chances in basis points: 10,000 is 100%.
     private static final int[] SNOWBALL_HIT_CHANCES = {5900, 6442, 7044, 7646, 8248, 8850, 9452, 9994, 10000};
@@ -81,10 +85,21 @@ public final class GublinchChristmasEvent extends QuestHook {
     // Both cave loops, including the northern furnace chamber. Keep spawn
     // anchors on walkable floor; normal NPC pathfinding clips their wandering.
     private static final int[][] GUBLINCH_SPAWNS = {
-        {3164, 5324}, {3162, 5327}, {3164, 5330}, {3163, 5333},
-        {3145, 5326}, {3147, 5333}, {3152, 5343}, {3146, 5358},
-        {3153, 5367}, {3166, 5359}, {3163, 5344}, {3173, 5351},
-        {3183, 5367}, {3187, 5356}, {3190, 5343}, {3184, 5332}
+        {3184, 5340},
+        {3191, 5325},
+        {3147, 5328},
+        {3153, 5341},
+        {3164, 5341},
+        {3147, 5355},
+        {3161, 5359},
+        {3171, 5353},
+        {3187, 5353},
+        {3189, 5366},
+        {3177, 5365},
+        {3191, 5334},
+        {3148, 5321},
+        {3149, 5366},
+        {3171, 5338}
     };
     private static final int[][] CAGES = {
         {2907, 3183}, {2907, 3184}, {2907, 3185},
@@ -128,9 +143,9 @@ public final class GublinchChristmasEvent extends QuestHook {
         // (3161,5363), Jill at (3163,5363), and Jack at (3165,5363), plus the logs
         // and furnace. Separate dungeon NPCs duplicate those original children.
         removeDungeonChildCopies();
-        spawnOnce(5046, 2906, 3177);
-        spawnOnce(5047, 2905, 3177);
-        spawnOnce(5048, 2905, 3174);
+        spawnOnce(5046, 2904, 3178);
+        spawnOnce(5047, 2907, 3174);
+        spawnOnce(5048, 2906, 3172);
         for (Npc npc : World.getNpcs()) {
             if (npc == null || npc.getOriginalNpcId() < 5046 || npc.getOriginalNpcId() > 5048) continue;
             Position spawn = npc.getSpawnPosition();
@@ -415,6 +430,7 @@ public final class GublinchChristmasEvent extends QuestHook {
             private int cooldown;
             @Override public void execute() {
                 if (!player.isCurrentActionSequence(sequence) || !npc.isActive() || npc.isDead()
+                        || npc.getAttributes().containsKey(GUBLINCH_CRUMBLING_ATTRIBUTE)
                         || !isGublinch(npc.getNpcId()) || npc.getIndex() < 0
                         || World.getNpcs()[npc.getIndex()] != npc
                         || player.getPosition().getPlane() != npc.getPosition().getPlane()
@@ -486,6 +502,7 @@ public final class GublinchChristmasEvent extends QuestHook {
             return false;
         }
         if (isComplete(player) || !isGublinch(npc.getNpcId()) || npc.isDead()
+                || npc.getAttributes().containsKey(GUBLINCH_CRUMBLING_ATTRIBUTE)
                 || npc.getIndex() < 0 || World.getNpcs()[npc.getIndex()] != npc) return false;
         // One outstanding projectile per target prevents overlapping hits or extra ammo use.
         if (Boolean.TRUE.equals(npc.getAttributes().get(GUBLINCH_FLIGHT_ATTRIBUTE))) return true;
@@ -522,6 +539,10 @@ public final class GublinchChristmasEvent extends QuestHook {
                 npc.getAttributes().remove(GUBLINCH_FLIGHT_ATTRIBUTE);
                 if (!npc.isActive() || npc.isDead() || targetIndex < 0
                         || World.getNpcs()[targetIndex] != npc || !isGublinch(npc.getNpcId())) return;
+                // A world effect remains visible even when the fatal hit removes the NPC.
+                player.packetSender.sendStillGraphicToNearbyPlayers(hit ? 862 : 858,
+                        npc.getPosition().getX(), npc.getPosition().getY(),
+                        npc.getPosition().getPlane(), 0);
                 if (hit) {
                     applySnowballImpact(player, npc, hits);
                 } else {
@@ -572,17 +593,25 @@ public final class GublinchChristmasEvent extends QuestHook {
         }
         final Position dropTile = npc.getPosition().copy();
         Position spawn = npc.getSpawnPosition().copy();
-        // Local NPC lists retain references after unregistering. Mark this
-        // instance inactive so the next update sends its removal immediately.
-        npc.setActive(false);
-        World.unregisterNpc(npc);
-        // NPC removals are serialized at the end of this tick. A ground-item
-        // create is sent immediately, so wait until the next tick to show shards.
-        World.scheduleTickTask(new TickTask(1, false) {
+        // Keep the frozen mesh visible while its native sequence breaks it into shards.
+        // This state rejects further throws without using the normal combat death pipeline.
+        npc.getAttributes().put(GUBLINCH_CRUMBLING_ATTRIBUTE, Boolean.TRUE);
+        npc.getMovementQueue().clear();
+        npc.setMovementMode(NpcMovementMode.STATIONARY);
+        npc.getUpdateState().setAnimation(GUBLINCH_CRUMBLE_ANIMATION);
+        World.scheduleTickTask(new TickTask(GUBLINCH_CRUMBLE_TICKS, false) {
             @Override public void execute() {
                 stop();
-                GroundItemManager.getInstance().spawn(
-                        new GroundItem(new ItemStack(SHARDS, 1), dropTile, false, player));
+                npc.setActive(false);
+                World.unregisterNpc(npc);
+                // Deliver the NPC removal update before creating the collectible item.
+                World.scheduleTickTask(new TickTask(1, false) {
+                    @Override public void execute() {
+                        stop();
+                        GroundItemManager.getInstance().spawn(
+                                new GroundItem(new ItemStack(SHARDS, 1), dropTile, false, player));
+                    }
+                });
             }
         });
         // The throw has completed at impact; stop following the defeated target.
