@@ -24,6 +24,8 @@ public final class FpsDebugOverlay {
     private static int latencySampleCursor;
     private static long lastGameTickNanos;
     private static long longestTickGapNanos;
+    private static long clientBufferWaitNanos = -1L;
+    private static int serverQueuedBytes = -1;
 
     private FpsDebugOverlay() {
     }
@@ -41,6 +43,8 @@ public final class FpsDebugOverlay {
         latencySampleCursor = 0;
         lastGameTickNanos = 0L;
         longestTickGapNanos = 0L;
+        clientBufferWaitNanos = -1L;
+        serverQueuedBytes = -1;
     }
 
     /** Called on the game tick before the outgoing packet buffer is flushed. */
@@ -69,25 +73,43 @@ public final class FpsDebugOverlay {
         lastSentNanos = now;
         pendingSinceNanos = now;
         longestTickGapNanos = 0L;
+        clientBufferWaitNanos = -1L;
+        serverQueuedBytes = -1;
         FrameBuffer.outgoingGameBuffer.putFrame(PING_OPCODE);
         FrameBuffer.outgoingGameBuffer.putDword(pendingPingId);
     }
 
+    /**
+     * The packet was passed to JSocket's asynchronous writer.
+     * This is NOT a timestamp for actual bytes hitting the network.
+     */
+    public static void onOutboundBuffered() {
+        if (pendingSinceNanos != 0L && clientBufferWaitNanos < 0L) {
+            clientBufferWaitNanos = Math.max(0L, System.nanoTime() - pendingSinceNanos);
+        }
+    }
+
     /** A reply is accepted only for the current in-flight request. */
-    public static void onPingReply(int pingId) {
+    public static void onPingReply(int pingId, int queuedBytes) {
         if (!OndemandRequest.aBoolean1718 || pendingSinceNanos == 0L
                 || pingId != pendingPingId) {
             return;
         }
         long duration = System.nanoTime() - pendingSinceNanos;
+        serverQueuedBytes = Math.max(0, queuedBytes);
         if (duration >= 0L) {
             latencyMillis = (int) Math.min(Integer.MAX_VALUE,
                     (duration + 500_000L) / 1_000_000L);
             addLatencySample(latencyMillis);
             if (latencyMillis >= SPIKE_THRESHOLD_MILLIS) {
                 long longestTickGapMillis = (longestTickGapNanos + 500_000L) / 1_000_000L;
+                long clientBufferedMs = clientBufferWaitNanos < 0L ? -1L
+                        : (clientBufferWaitNanos + 500_000L) / 1_000_000L;
                 System.out.println("[::fps] RTT spike: " + latencyMillis
-                        + " ms; longest client game-tick gap during probe: "
+                        + " ms; client buffer wait: "
+                        + (clientBufferedMs < 0L ? "unknown" : clientBufferedMs + " ms")
+                        + "; server queued outbound: " + serverQueuedBytes
+                        + " bytes; longest client game-tick gap: "
                         + longestTickGapMillis + " ms");
             }
         }
@@ -131,11 +153,13 @@ public final class FpsDebugOverlay {
 
     static String[] formatLines(int fps, int typicalPingMs, int latestPingMs,
             long used, long allocated, long maximum) {
+        // Keep all four diagnostics inside the 512px game viewport.
+        // The median is shown by default; raw samples remain visible as "last".
         String pingText = typicalPingMs < 0 ? "N/A"
-                : typicalPingMs + " ms median RTT"
+                : typicalPingMs + "ms"
                         + (latestPingMs == typicalPingMs ? ""
-                                : latestPingMs < 0 ? " (last timed out)"
-                                : " (last " + latestPingMs + " ms)");
+                                : latestPingMs < 0 ? " (timeout)"
+                                : " (last " + latestPingMs + ")");
         return new String[] {
                 "Framerate: " + fps + " FPS",
                 "Latency: " + pingText,
