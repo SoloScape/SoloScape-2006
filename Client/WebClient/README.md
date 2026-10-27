@@ -94,6 +94,9 @@ the unencrypted HTTP/WebSocket bridge directly to the Internet.
 - Long press (about 0.45 sec) = right click / context menu.
 - Drag = normal left-button drag.
 - The small keyboard button opens the iPhone keyboard; characters are sent through the Java client's existing key handler.
+- Tap the 3D world to walk or interact; the browser primes world hover before clicking so the native scene picking works.
+- Drag a finger within the 3D world (including after holding it still) to rotate/tilt the camera, matching the native middle-mouse drag.
+- A stationary long press opens the RuneScape right-click menu; inventory and chat drags continue using the left mouse button.
 - Landscape orientation is recommended because the native client framebuffer is 765x503.
 
 ## Current transport
