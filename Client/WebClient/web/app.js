@@ -7,6 +7,7 @@
   const ctx = canvas.getContext('2d', { alpha: false });
   const status = document.getElementById('status');
   const keyboardButton = document.getElementById('keyboard');
+  const soundButton = document.getElementById('sound');
   const softInput = document.getElementById('softInput');
   const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/client`;
 
@@ -17,6 +18,10 @@
   let pointer = null;
   let lastMoveSent = 0;
   let mouseInside = false;
+  let audioContext = null;
+  let audioEnabled = false;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const nextAudioTime = { 1: 0, 2: 0 };
   let lastReportedX = -1;
   let lastReportedY = -1;
 
@@ -25,12 +30,89 @@
     status.classList.toggle('hidden', hide);
   }
 
+  function subscribeAudio() {
+    if (socket && socket.readyState === WebSocket.OPEN && audioEnabled) {
+      socket.send(new Uint8Array([8, 1]));
+    }
+  }
+
+  function playAudio(payload) {
+    if (!audioEnabled || !audioContext || audioContext.state !== 'running') return;
+    const data = new DataView(payload);
+    if (data.byteLength < 7 || data.getUint8(0) !== 65) return;
+    const stream = data.getUint8(1);
+    const channels = data.getUint8(2);
+    const rate = data.getUint16(3, false);
+    if ((stream !== 1 && stream !== 2) || (channels !== 1 && channels !== 2)
+        || rate < 8000 || rate > 48000 || (data.byteLength - 5) % (channels * 2)) return;
+    const frames = (data.byteLength - 5) / (channels * 2);
+    if (frames === 0) return;
+    const buffer = audioContext.createBuffer(channels, frames, rate);
+    for (let channel = 0; channel < channels; channel++) {
+      const samples = buffer.getChannelData(channel);
+      for (let i = 0; i < frames; i++) {
+        samples[i] = data.getInt16(5 + (i * channels + channel) * 2, true) / 32768;
+      }
+    }
+
+    const now = audioContext.currentTime;
+    // Never build up seconds of delay if a phone or Wi-Fi connection stalls.
+    if (nextAudioTime[stream] > now + 0.35) return;
+    const when = Math.max(now + 0.065, nextAudioTime[stream]);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start(when);
+    nextAudioTime[stream] = when + buffer.duration;
+  }
+
+  if (!AudioContextClass) {
+    soundButton.textContent = 'Audio unavailable';
+    soundButton.disabled = true;
+  } else {
+    soundButton.addEventListener('click', async () => {
+      if (audioEnabled) {
+        audioEnabled = false;
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(new Uint8Array([8, 0]));
+        }
+        await audioContext.suspend();
+        nextAudioTime[1] = nextAudioTime[2] = 0;
+        soundButton.textContent = 'Enable sound';
+        return;
+      }
+      try {
+        if (!audioContext) audioContext = new AudioContextClass();
+        await audioContext.resume(); // iOS requires this call from a user gesture.
+        audioEnabled = audioContext.state === 'running';
+        if (!audioEnabled) return;
+        nextAudioTime[1] = nextAudioTime[2] = 0;
+        soundButton.textContent = 'Mute sound';
+        subscribeAudio();
+      } catch (error) {
+        console.warn('Browser audio could not start:', error);
+        soundButton.textContent = 'Tap to retry sound';
+      }
+    });
+  }
+
   function connect() {
     setStatus('Connecting to Java client…');
     socket = new WebSocket(wsUrl);
     socket.binaryType = 'arraybuffer';
-    socket.addEventListener('open', () => setStatus('Connected · waiting for Java client frame…'));
-    socket.addEventListener('message', (event) => queueFrame(event.data));
+    socket.addEventListener('open', () => {
+      setStatus('Connected · waiting for Java client frame…');
+      subscribeAudio();
+    });
+    socket.addEventListener('message', (event) => {
+      const data = event.data;
+      if (data instanceof ArrayBuffer && data.byteLength > 5
+          && new Uint8Array(data, 0, 1)[0] === 65) {
+        playAudio(data);
+      } else {
+        queueFrame(data);
+      }
+    });
     socket.addEventListener('close', () => {
       setStatus('Java client disconnected · reconnecting…');
       setTimeout(connect, 1000);
