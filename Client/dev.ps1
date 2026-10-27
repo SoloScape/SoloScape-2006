@@ -122,6 +122,7 @@ function Start-DevClient {
     $agentArgument = "-javaagent:$AgentJar=$ClassesDir;$RestartFlag"
     $cacheArgument = '-Dclient.cache="{0}"' -f $ServerCache
     $javaArgs = @(
+        "-Dsun.java2d.d3d=false",
         "-XX:ErrorFile=$errorLog",
         $cacheArgument,
         "-Dsoloscape.mcp.port=$McpPort",
