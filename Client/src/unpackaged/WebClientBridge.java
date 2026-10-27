@@ -91,6 +91,19 @@ public final class WebClientBridge {
             Thread server = new Thread(() -> acceptLoop(listener), "webclient-http");
             server.setDaemon(true);
             server.start();
+            if (Boolean.getBoolean("web.bridge.openBrowser")) {
+                Thread browser = new Thread(() -> {
+                    try {
+                        java.awt.Desktop.getDesktop().browse(java.net.URI.create(
+                                "http://127.0.0.1:" + actualPort + "/"));
+                    } catch (Exception exception) {
+                        System.err.println("[webclient] Could not open browser automatically: "
+                                + exception.getMessage());
+                    }
+                }, "webclient-open-browser");
+                browser.setDaemon(true);
+                browser.start();
+            }
             System.out.println("[webclient] Real Java client bridge enabled.");
             System.out.println("[webclient] Local: http://127.0.0.1:" + actualPort + "/");
             for (String address : lanAddresses()) {
