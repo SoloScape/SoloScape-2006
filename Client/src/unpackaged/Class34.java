@@ -705,6 +705,7 @@ public abstract class Class34 {
                                 }
                                 Class37.gameSocket.write((FrameBuffer.outgoingGameBuffer.payload),
                                         0, (FrameBuffer.outgoingGameBuffer.offset));
+                                FpsDebugOverlay.onOutboundBuffered();
                                 Class41.anInt780 = 0;
                                 FrameBuffer.outgoingGameBuffer.offset = 0;
                             } catch (java.io.IOException ioexception) {
