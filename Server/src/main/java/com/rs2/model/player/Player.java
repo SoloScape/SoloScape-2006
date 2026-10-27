@@ -533,6 +533,8 @@ extends Entity {
     public long lastPacketReceivedMillis;
     /** Last ::fps probe received on this connection; only the network thread writes it. */
     public long lastFpsPingReceivedNanos;
+    /** When the reactor last finished a game socket read on this player. */
+    public long lastGameSocketReadNanos;
     public long lastPlayerInputMillis;
     public int familyCrestGauntletItemId;
     public boolean logoutPacketSent;
