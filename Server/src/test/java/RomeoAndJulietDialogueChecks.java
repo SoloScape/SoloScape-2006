@@ -7,6 +7,7 @@ import com.rs2.model.npc.NpcDefinition;
 import com.rs2.model.player.Player;
 import com.rs2.model.quest.QuestDefinition;
 import com.rs2.model.quest.impl.RomeoAndJulietQuest;
+import com.rs2.model.quest.impl.RomeoJulietSupportingNpcs;
 
 /** Regression checks for issue #6. Run from Server with its libraries on the classpath. */
 public final class RomeoAndJulietDialogueChecks {
@@ -106,6 +107,72 @@ public final class RomeoAndJulietDialogueChecks {
             require(player.getQuestState(QUEST) == 4,
                     "Romeo stage 4 chat changed quest progress");
         }
+
+        // Juliet can start the quest, not just Romeo.
+        Player julietStart = player(0);
+        require(DialogueManager.startDialogue(julietStart, JULIET), "Juliet alternate opening");
+        require(DialogueManager.continueDialogue(julietStart, JULIET, 2, 0),
+                "Juliet alternate start choices");
+        require(DialogueManager.continueDialogue(julietStart, JULIET, 3, 1),
+                "Juliet alternate start acceptance");
+        require(julietStart.getQuestState(QUEST) == 2, "Juliet did not start the quest");
+        require(DialogueManager.continueDialogue(julietStart, JULIET, 1, 0),
+                "Juliet did not continue into her letter scene");
+
+        Player julietDecline = player(0);
+        DialogueManager.startDialogue(julietDecline, JULIET);
+        require(DialogueManager.continueDialogue(julietDecline, JULIET, 3, 2),
+                "Juliet refusal not handled");
+        require(julietDecline.getQuestState(QUEST) == 0,
+                "Refusing Juliet should not start the quest");
+
+        // The Apothecary's questions must work with no berries in inventory.
+        for (int option = 1; option <= 4; option++) {
+            Player player = player(6);
+            require(DialogueManager.startDialogue(player, 638),
+                    "Apothecary unavailable without berries");
+            require(player.getDialogueManager().getDialogueStep() == 7,
+                    "Apothecary did not route to berry question menu");
+            require(DialogueManager.continueDialogue(player, 638, 8, 0),
+                    "Apothecary question menu missing");
+            require(DialogueManager.continueDialogue(player, 638, 9, option),
+                    "Apothecary berry option " + option + " not handled");
+            if (option < 4) {
+                int next = option == 1 ? 10 : option == 2 ? 12 : 14;
+                require(player.getDialogueManager().getDialogueStep() == next - 1,
+                        "Apothecary berry option jumps to incorrect answer");
+                require(DialogueManager.continueDialogue(player, 638, next, 0),
+                        "Apothecary berry answer not implemented");
+                require(player.getDialogueManager().getDialogueStep() == 7,
+                        "Apothecary berry answer did not return to menu");
+            } else {
+                require(player.getDialogueManager().isDialogueInactive(),
+                        "Apothecary goodbye should exit");
+            }
+            require(player.getQuestState(QUEST) == 6,
+                    "Asking about Cadava berries advanced the quest");
+        }
+        Player potionInHand = player(7);
+        potionInHand.getInventoryManager().addItem(new ItemStack(POTION));
+        require(DialogueManager.startDialogue(potionInHand, 638),
+                "Apothecary unavailable when potion still owned");
+        require(potionInHand.getInventoryManager().containsItem(POTION),
+                "Repeat dialogue must not consume the potion");
+        require(DialogueManager.startDialogue(player(2), RomeoJulietSupportingNpcs.PHILLIPA),
+                "Phillipa introduction missing");
+        require(DialogueManager.startDialogue(player(7), RomeoJulietSupportingNpcs.DRAUL),
+                "Draul Leptoc introduction missing");
+
+        // Drinking a Cadava potion does not complete the quest.
+        Player drinkingPlayer = player(7);
+        drinkingPlayer.getInventoryManager().addItem(new ItemStack(POTION));
+        RomeoAndJulietQuest drinkScript = new RomeoAndJulietQuest(0);
+        require(drinkScript.handleInventoryItemFirstOption(drinkingPlayer, POTION, 0, 7),
+                "Drinking the potion was not handled");
+        require(!drinkingPlayer.getInventoryManager().containsItem(POTION),
+                "Potion was not consumed");
+        require(drinkingPlayer.getQuestState(QUEST) == 7,
+                "Drinking the potion advanced the quest");
 
         // Handing over Juliet's letter must keep Romeo available immediately.
         Player deliveringLetter = player(3);
