@@ -25,6 +25,10 @@ public final class RomeoAndJulietDialogueChecks {
         InterfaceDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
+        for (int npcId : new int[] {5039, 5040}) {
+            String name = NpcDefinition.isDefined(npcId) ? NpcDefinition.forId(npcId).getName() : "(not defined)";
+            System.out.println("2006 supporting NPC " + npcId + ": " + name);
+        }
 
         // Both NPCs must respond at every stage, not just when they advance the quest.
         for (int stage = 0; stage <= 8; stage++) {
