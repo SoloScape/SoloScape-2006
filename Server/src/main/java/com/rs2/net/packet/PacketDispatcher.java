@@ -285,9 +285,13 @@ public final class PacketDispatcher {
                 player.getSelectionKey().attach(null);
                 return;
             }
-            if (player.getConnectionState().compareTo(PlayerConnectionState.DISCONNECTING) < 0 && player.getSocketChannel().read(player.getInboundBuffer()) == -1) {
-                player.disconnect();
-                return;
+            if (player.getConnectionState().compareTo(PlayerConnectionState.DISCONNECTING) < 0) {
+                int readBytes = player.getSocketChannel().read(player.getInboundBuffer());
+                player.lastGameSocketReadNanos = System.nanoTime();
+                if (readBytes == -1) {
+                    player.disconnect();
+                    return;
+                }
             }
             player.getPacketReadTimer().reset();
             player.getInboundBuffer().flip();
