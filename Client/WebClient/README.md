@@ -32,6 +32,8 @@ Client\WebClient\Play-In-Browser-Or-Phone.bat
 
 This rebuilds and starts the real Java renderer with its native window hidden, then automatically opens the game in your default browser at `http://127.0.0.1:8081/`. The browser is a streamed view of the Java client, not a JavaScript reimplementation: the Java JAR must run locally to render frames and handle the RuneScape protocol.
 
+The browser displays the game at its original **765×503** pixel size on desktop, centred rather than stretched across the window. On smaller windows and phones, it scales down proportionally to fit while keeping clicks aligned with the game.
+
 The console prints the exact phone URL, for example:
 
 ```text
