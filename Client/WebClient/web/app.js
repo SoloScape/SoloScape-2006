@@ -29,6 +29,29 @@
   const VIEWPORT_WIDTH = 512;
   const VIEWPORT_HEIGHT = 334;
   let touchGeneration = 0;
+  const touches = new Map();
+  let pinch = null;
+  let pinchBlocked = false;
+  const PINCH_STEP_PIXELS = 22;
+
+  function pinchDistance() {
+    if (touches.size !== 2) return null;
+    const fingers = Array.from(touches.values());
+    // Only world-area pinches zoom the 3D camera; never zoom the inventory/UI.
+    if (!fingers[0].scene || !fingers[1].scene) return null;
+    return Math.hypot(fingers[0].clientX - fingers[1].clientX,
+                      fingers[0].clientY - fingers[1].clientY);
+  }
+
+  function stopPinchPointer(pointerId) {
+    touches.delete(pointerId);
+    if (!pinchBlocked) return false;
+    const distance = pinchDistance();
+    pinch = distance === null ? null : { distance };
+    if (touches.size === 0) pinchBlocked = false;
+    return true;
+  }
+
 
   function setStatus(text, hide = false) {
     status.textContent = text;
@@ -257,12 +280,12 @@
 
   canvas.addEventListener('pointerdown', (event) => {
     event.preventDefault();
-    if (pointer) return; // Ignore extra fingers and overlapping button presses.
     const point = gamePoint(event);
     if (!point.inside) return;
     canvas.setPointerCapture?.(event.pointerId);
 
     if (event.pointerType === 'mouse') {
+      if (pointer || pinchBlocked) return;
       const button = event.button === 2 ? 3 : event.button === 1 ? 2 : 1;
       mouseMove(point.x, point.y, true);
       mouseDown(button, point.x, point.y);
@@ -270,8 +293,32 @@
       return;
     }
 
-    // Establish a game hover immediately: 3D world actions are selected
-    // during rendering and cannot be resolved from a brand-new press alone.
+    if (pointer && pointer.type === 'mouse') return;
+    touches.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      scene: point.x < VIEWPORT_WIDTH && point.y < VIEWPORT_HEIGHT
+    });
+
+    if (touches.size >= 2) {
+      // The second finger cancels the first finger's pending tap or drag.
+      // Keep suppressing clicks until *all* fingers lift, including after
+      // one finger of a pinch is removed.
+      touchGeneration++;
+      if (pointer && pointer.down) {
+        mouseUp(pointer.dragButton, pointer.x, pointer.y);
+      }
+      pointer = null;
+      mouseLeave();
+      pinchBlocked = true;
+      const distance = pinchDistance();
+      pinch = distance === null ? null : { distance };
+      return;
+    }
+    if (pinchBlocked || pointer) return;
+
+    // Prime the world hover immediately; the native client picks world
+    // actions during rendering, so finger-up alone is too late for walking.
     touchGeneration++;
     mouseMove(point.x, point.y, true);
     pointer = {
@@ -282,7 +329,6 @@
       x: point.x,
       y: point.y,
       started: performance.now(),
-      // A scene swipe emulates the native middle mouse camera controls.
       dragButton: point.x < VIEWPORT_WIDTH && point.y < VIEWPORT_HEIGHT ? 2 : 1,
       dragging: false,
       down: false
@@ -290,6 +336,26 @@
   }, { passive: false });
 
   canvas.addEventListener('pointermove', (event) => {
+    if (event.pointerType !== 'mouse' && touches.has(event.pointerId)) {
+      const finger = touches.get(event.pointerId);
+      finger.clientX = event.clientX;
+      finger.clientY = event.clientY;
+      if (pinchBlocked) {
+        event.preventDefault();
+        const distance = pinchDistance();
+        if (pinch && distance !== null) {
+          // Two fingers apart = negative camera distance offset (zoom in).
+          // Two fingers together = positive offset (zoom out).
+          const steps = Math.max(-10, Math.min(10,
+              Math.trunc((distance - pinch.distance) / PINCH_STEP_PIXELS)));
+          if (steps !== 0) {
+            send([9, (-steps) & 255]);
+            pinch.distance += steps * PINCH_STEP_PIXELS;
+          }
+        }
+        return;
+      }
+    }
     const point = gamePoint(event);
     const active = pointer && pointer.id === event.pointerId;
     if (!active) {
@@ -329,6 +395,12 @@
   }, { passive: false });
 
   canvas.addEventListener('pointerup', (event) => {
+    if (event.pointerType !== 'mouse' && touches.has(event.pointerId)) {
+      if (stopPinchPointer(event.pointerId)) {
+        event.preventDefault();
+        return; // No walk/right-click after either finger of a pinch lifts.
+      }
+    }
     if (!pointer || pointer.id !== event.pointerId) return;
     event.preventDefault();
     const current = pointer;
@@ -370,6 +442,12 @@
   }, { passive: false });
 
   canvas.addEventListener('pointercancel', (event) => {
+    if (event.pointerType !== 'mouse' && touches.has(event.pointerId)) {
+      if (stopPinchPointer(event.pointerId)) {
+        touchGeneration++;
+        return;
+      }
+    }
     if (!pointer || pointer.id !== event.pointerId) return;
     const current = pointer;
     pointer = null;
@@ -378,13 +456,18 @@
     mouseLeave();
   });
 
-  canvas.addEventListener('pointerleave', () => mouseLeave());
+  canvas.addEventListener('pointerleave', () => {
+    if (!pinchBlocked) mouseLeave();
+  });
   window.addEventListener('blur', () => {
     if (pointer && pointer.down) {
       mouseUp(pointer.dragButton || pointer.button || 1, pointer.x, pointer.y);
     }
     pointer = null;
     touchGeneration++;
+    touches.clear();
+    pinch = null;
+    pinchBlocked = false;
     mouseLeave();
   });
 
