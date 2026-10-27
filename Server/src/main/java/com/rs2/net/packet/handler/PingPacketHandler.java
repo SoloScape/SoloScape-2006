@@ -16,9 +16,16 @@ public final class PingPacketHandler implements PacketHandler {
             return;
         }
         int pingId = packet.getReader().readInt();
-        PacketWriter reply = PacketBuffer.allocateWriter(5);
+        // A pending outbound buffer suggests the pong could wait behind
+        // larger gameplay updates, even though the handler itself is immediate.
+        int queuedBytes;
+        synchronized (player) {
+            queuedBytes = player.getOutboundBuffer().position();
+        }
+        PacketWriter reply = PacketBuffer.allocateWriter(9);
         reply.writeOpcode(player.getOutboundCipher(), PING_OPCODE);
         reply.writeInt(pingId);
+        reply.writeInt(queuedBytes);
         player.writePacketBuffer(reply.getBuffer());
     }
 }
