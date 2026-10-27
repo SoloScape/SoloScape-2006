@@ -78,6 +78,7 @@ public final class InterfaceBridge {
         mappings.put(2492, 234);  // five-option dialogue
         mappings.put(356, 210);   // statement, one line
         mappings.put(359, 211);   // statement, two lines
+        mappings.put(19580, 211); // dedicated 443 level-up chatbox (native two-line statement)
         mappings.put(363, 212);   // statement, three lines
         mappings.put(368, 213);   // statement, four lines
         mappings.put(374, 214);   // statement, five lines
@@ -99,6 +100,9 @@ public final class InterfaceBridge {
         mappings.put(1743, 307);  // cooking quantity chatbox
         mappings.put(8866, 459); // legacy two-product spinning interface
         mappings.put(8880, 459); // legacy three-product spinning interface
+        mappings.put(20120, 304); // three-item knife-on-logs chatbox
+        mappings.put(20121, 303); // two-item knife-on-logs chatbox
+        mappings.put(20122, 309); // one-item knife-on-logs chatbox
         mappings.put(679, 324);  // tanning (legacy fallback)
         mappings.put(14670, 324); // tanning
         mappings.put(8134, 275);  // quest detail page
@@ -193,6 +197,22 @@ public final class InterfaceBridge {
         put(mappings, 13718, 307, 4);  // Cook X
         put(mappings, 13719, 307, 5);  // Cook 5
         put(mappings, 13720, 307, 6);  // Cook 1
+        // Native revision-443 make-item chatboxes: one, two or three items.
+        // Keep 8880/8866 on group 459 for spinning; fletching alone uses
+        // these virtual legacy roots with showChatboxInterface().
+        // Their child 2+ model slots and Make-X actions come from the cache.
+        put(mappings, 20200, 304, 2);  // three-item first model
+        put(mappings, 20201, 304, 3);  // three-item second model
+        put(mappings, 20202, 304, 4);  // three-item third model
+        put(mappings, 20203, 304, 18); // synthetic item name, first
+        put(mappings, 20204, 304, 19); // synthetic item name, second
+        put(mappings, 20205, 304, 20); // synthetic item name, third
+        put(mappings, 20206, 303, 2);  // two-item first model
+        put(mappings, 20207, 303, 3);  // two-item second model
+        put(mappings, 20208, 303, 13); // synthetic name, first
+        put(mappings, 20209, 303, 14); // synthetic name, second
+        put(mappings, 20210, 309, 2);  // one-item model
+        put(mappings, 20211, 309, 8);  // synthetic name
         // Cache-backed group 459: 92-95 flax, 97-100 wool, 104-107 magic roots.
         // Each four-button group is ordered Make X, Make 10, Make 5, Make 1.
         put(mappings, 8890, 459, 92);  // flax X
@@ -468,6 +488,7 @@ public final class InterfaceBridge {
         // Plain statement chatboxes used by Tutorial Island setup/finish prompts.
         put(mappings, 357, 210, 0);
         putRange(mappings, 360, 211, 0, 2);
+        put(mappings, 19581, 211, 3); // hidden skill name, selects native 320 skill sprite
         putRange(mappings, 364, 212, 0, 3);
         putRange(mappings, 369, 213, 0, 4);
         putRange(mappings, 375, 214, 0, 5);

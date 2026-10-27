@@ -1008,6 +1008,9 @@ public class GameplayHelper {
     }
 
     public static void openProductionInterface(Player interfaceId, String interfaceId2) {
+        if (com.rs2.model.skill.fletching.logs.LogFletchingMenu.open(interfaceId, interfaceId2)) {
+            return;
+        }
         Object value;
         if (interfaceId2 == "potteryUnfired") {
             if (!ItemDefinition.isDefined(4438)) {
@@ -1031,7 +1034,7 @@ public class GameplayHelper {
             // Revision 443 uses the full-screen spinning widget (459), not
             // the unmapped legacy make-item chatboxes 8866/8880.
             if (ServerSettings.clientBuild == 443) {
-                ((Player)interfaceId).packetSender.showInterface(8880);
+                com.rs2.model.skill.fletching.logs.LogFletchingMenu.restoreSpinningInterface((Player)interfaceId);
                 return;
             }
             if (!ItemDefinition.isDefined(6051)) {
