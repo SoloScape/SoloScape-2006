@@ -72,7 +72,19 @@ extends QuestScript {
     }
 
     @Override
+    public final boolean handleInventoryItemFirstOption(Player player, int itemId, int slot, int questStage) {
+        if (itemId != 756 || questStage != 7) return false;
+        if (!player.getInventoryManager().removeItem(new ItemStack(756, 1))) return false;
+        player.getUpdateState().setAnimation(829);
+        player.getMovementLockTimer().setDelayTicks(5);
+        player.getDialogueManager().showOneLineStatement("You drink the Cadava potion and everything goes dark.");
+        World.getTaskScheduler().schedule(new CadavaPotionDrinkRecoveryTask(player));
+        return true;
+    }
+
+    @Override
     public final boolean handleNpcDialogue(Player npcId, int npcId2, int value2, int value32, int value42) {
+        if (RomeoJulietSupportingNpcs.handleDialogue(npcId, npcId2, value2, value32, value42)) return true;
         if (npcId2 == 639) {
             // Repeat conversations must remain available between quest hand-offs.
             // Step 1 is only reached on a fresh conversation; the original
@@ -432,13 +444,38 @@ extends QuestScript {
                     return true;
                 }
                 if (value2 == 7) {
-                    this.awardCompletionRewards((Player)npcId);
-                    ((Player)npcId).getDialogueManager().finishDialogue();
+                    // The March 2006 quest ends only after the crypt encounter.
+                    if (!npcId.cutsceneActive) {
+                        npcId.getDialogueManager().finishDialogue();
+                        new RomeoJulietCutscenes(npcId, RomeoJulietCutscenes.ROMEO_CRYPT).startCutscene();
+                    }
                     return true;
                 }
             }
         }
         if (npcId2 == 637) {
+            // Talking to Juliet is an alternate entry to the same quest.
+            if (value42 == 0) {
+                if (value2 == 1) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Oh, my poor Romeo! Father will never let us marry.", "Could you carry a message to him for me?", 591);
+                    return true;
+                }
+                if (value2 == 2) {
+                    npcId.getDialogueManager().showTwoOptions("Of course, I'll help you.", "Sorry, not right now.");
+                    return true;
+                }
+                if (value2 == 3) {
+                    if (value32 == 1) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("I'll deliver your message to Romeo.", 591);
+                        startQuest(npcId);
+                        npcId.getDialogueManager().setNextDialogueStep(1);
+                    } else {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Sorry, not right now.", 591);
+                        npcId.getDialogueManager().finishDialogue();
+                    }
+                    return true;
+                }
+            }
             // Juliet must be talkable both before and after each delivery.
             if (value2 == 1) {
                 if (value42 == 0) {
@@ -595,6 +632,9 @@ extends QuestScript {
                     ((Player)npcId).getInventoryManager().removeItem(new ItemStack(756, 1));
                     ((Player)npcId).setQuestState(this.getQuestId(), 8);
                     ((Player)npcId).getDialogueManager().finishDialogue();
+                    if (!npcId.cutsceneActive) {
+                        new RomeoJulietCutscenes(npcId, RomeoJulietCutscenes.JULIET_POTION).startCutscene();
+                    }
                     return true;
                 }
             }
@@ -696,6 +736,11 @@ extends QuestScript {
                 }
             }
             if (value42 == 6) {
+                if (value2 == 1 && !npcId.getInventoryManager().containsItem(753)) {
+                    npcId.getDialogueManager().showNpcOneLineDialogue("Have you found the Cadava berries yet?", 591);
+                    npcId.getDialogueManager().setNextDialogueStep(8);
+                    return true;
+                }
                 if (value2 == 8) {
                     ((Player)npcId).getDialogueManager().showFourOptions("What do these berries look like?", "Where can I get these berries?", "How are these berries dangerous?", "Ok, thanks.");
                     return true;
@@ -706,8 +751,37 @@ extends QuestScript {
                         ((Player)npcId).getDialogueManager().finishDialogue();
                         return true;
                     }
-                    ((Player)npcId).getDialogueManager().showOneLineStatement("This option is currently missing...");
-                    ((Player)npcId).getDialogueManager().setNextDialogueStep(8);
+                    if (value32 == 1) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("What do these berries look like?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(10);
+                        return true;
+                    }
+                    if (value32 == 2) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Where can I get these berries?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(12);
+                        return true;
+                    }
+                    if (value32 == 3) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Are these berries dangerous?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(14);
+                        return true;
+                    }
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value2 == 10) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("They are small, pinkish-purple berries.", "Make certain they are Cadava berries, not redberries.", 591);
+                    npcId.getDialogueManager().setNextDialogueStep(8);
+                    return true;
+                }
+                if (value2 == 12) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Look on the bushes south-east of Varrock,", "by the mine, not far from the stone circle.", 591);
+                    npcId.getDialogueManager().setNextDialogueStep(8);
+                    return true;
+                }
+                if (value2 == 14) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Very dangerous if swallowed untreated!", "Leave the brewing to an Apothecary.", 591);
+                    npcId.getDialogueManager().setNextDialogueStep(8);
                     return true;
                 }
                 if (((Player)npcId).getInventoryManager().containsItem(753)) {
@@ -735,6 +809,11 @@ extends QuestScript {
                 }
             }
             if (value42 == 7) {
+                if (value2 == 1 && npcId.ownsItem(756)) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Now, take that potion safely to Juliet.", "And whatever you do, don't drink it yourself!", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
                 if (value2 == 5) {
                     ((Player)npcId).getDialogueManager().finishDialogue();
                     Player player = npcId;
