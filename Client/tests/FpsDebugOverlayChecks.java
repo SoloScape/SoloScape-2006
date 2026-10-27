@@ -30,7 +30,7 @@ public final class FpsDebugOverlayChecks {
                 .equals("Latency: 583ms (last 579)"),
                 "Latency line should stay compact at high RTT values");
         FpsDebugOverlay.onOutboundBuffered(); // Safe when no ping is pending.
-        FpsDebugOverlay.onPingReply(123, 0); // Ignore unsolicited replies.
+        FpsDebugOverlay.onPingReply(123, 0, 0, 0); // Ignore unsolicited replies.
 
         FpsDebugOverlay.addLatencySample(20);
         FpsDebugOverlay.addLatencySample(22);
