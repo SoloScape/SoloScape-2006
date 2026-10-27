@@ -124,7 +124,7 @@ public final class ClientPackets {
                 || opcode == ADD_IGNORE || opcode == REMOVE_IGNORE) return 8;
         if (opcode == MOUSE_CLICK || opcode == CAMERA) return 4;
         if (opcode == FOCUS) return 1;
-        if (opcode == PING) return 4;
+        if (opcode == PING) return 12; // ping ID and client send wall-clock millis
         if (opcode == IDLE || opcode == KEEPALIVE || opcode == REGION_LOADED
                 || opcode == CLOSE_INTERFACE) return 0;
         if (opcode == WIDGET_ITEM_DRAG) return 9;
