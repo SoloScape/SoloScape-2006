@@ -1,6 +1,7 @@
 package com.rs2.net.packet.handler;
 
 import com.rs2.model.player.Player;
+import com.rs2.net.DedicatedReactor;
 import com.rs2.net.packet.IncomingPacket;
 import com.rs2.net.packet.PacketBuffer;
 import com.rs2.net.packet.PacketHandler;
@@ -32,7 +33,11 @@ public final class PingPacketHandler implements PacketHandler {
             queuedBytes = player.getOutboundBuffer().position();
         }
         int playerLockWaitMs = nanosToMillis(System.nanoTime() - waitingSince);
-        PacketWriter reply = PacketBuffer.allocateWriter(33);
+        int readToHandlerMs = player.lastGameSocketReadNanos == 0L ? -1
+                : nanosToMillis(Math.max(0L, receivedNanos - player.lastGameSocketReadNanos));
+        DedicatedReactor reactor = DedicatedReactor.getInstance();
+        int longestReadDispatchMs = reactor == null ? -1 : reactor.takeLongestReadDispatchMillis();
+        PacketWriter reply = PacketBuffer.allocateWriter(41);
         reply.writeOpcode(player.getOutboundCipher(), PING_OPCODE);
         reply.writeInt(pingId);
         reply.writeInt(queuedBytes);
@@ -42,6 +47,8 @@ public final class PingPacketHandler implements PacketHandler {
         // Both server stamps are from the same clock. The client only uses
         // cross-machine one-way estimates if it connects over loopback.
         reply.writeLong(System.currentTimeMillis());
+        reply.writeInt(readToHandlerMs);
+        reply.writeInt(longestReadDispatchMs);
         player.writePacketBuffer(reply.getBuffer());
     }
 
