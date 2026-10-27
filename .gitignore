@@ -10,3 +10,12 @@ Server/docs/combat-audio.md
 /Play-Client.bat
 /Start-Server.bat
 /qa-output
+
+# Generated artifacts from the Linux build and HotSwap launchers.
+/Client/build/
+/Server/build/
+/Server/dist/
+/Client/client.log
+/Client/client-hs-err.log
+/Client/client-web-hs-err.log
+/Server/discord-relay.properties
