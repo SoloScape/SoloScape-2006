@@ -89,6 +89,10 @@ public final class WebClientBridge {
         return enabled ? CAMERA_DISTANCE_OFFSET.get() : 0;
     }
 
+    static int cameraDistance(int normalDistance) {
+        return clamp(normalDistance + cameraDistanceOffset(), 450, 2600);
+    }
+
     // Positive steps zoom out, negative steps zoom in. Bounds keep the scene usable.
     static void adjustCameraZoom(int steps) {
         if (!enabled) return;
