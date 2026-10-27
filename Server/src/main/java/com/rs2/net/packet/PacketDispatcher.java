@@ -317,6 +317,9 @@ public final class PacketDispatcher {
                 if (player.getCurrentPacketOpcode() == -1) {
                     player.setCurrentPacketOpcode(player.getInboundBuffer().get() & 0xFF);
                     player.setCurrentPacketOpcode(player.getCurrentPacketOpcode() - player.getInboundCipher().nextInt() & 0xFF);
+                    if (player.getCurrentPacketOpcode() == ClientPackets.PING) {
+                        player.fpsPingFirstByteNanos = System.nanoTime();
+                    }
                 }
                 if (player.getCurrentPacketLength() == -1) {
                     player.setCurrentPacketLength(PacketDispatcher.getIncomingPacketLength(player.getCurrentPacketOpcode()));
