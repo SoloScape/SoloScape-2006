@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'Server/src/main/java/com/rs2/model/quest/impl/RomeoAndJulietQuest.java'
+      - 'Server/src/main/java/com/rs2/model/quest/impl/RomeoJulietCutscenes.java'
+      - 'Server/src/main/java/com/rs2/model/quest/impl/RomeoJulietSupportingNpcs.java'
+      - 'Server/src/main/java/com/rs2/model/quest/impl/CadavaPotionDrinkRecoveryTask.java'
+      - 'Server/src/main/java/com/rs2/Server.java'
       - 'Server/src/test/java/RomeoAndJulietDialogueChecks.java'
       - 'Server/src/test/java/NpcDialogueAudit.java'
       - '.github/workflows/verify-romeo-juliet.yml'
