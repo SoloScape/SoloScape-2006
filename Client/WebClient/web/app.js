@@ -16,6 +16,7 @@
   let queuedFrame = null;
   let pointer = null;
   let lastMoveSent = 0;
+  let mouseInside = false;
 
   function setStatus(text, hide = false) {
     status.textContent = text;
@@ -95,18 +96,39 @@
   function gamePoint(event) {
     const rect = canvas.getBoundingClientRect();
     const scale = Math.min(rect.width / WIDTH, rect.height / HEIGHT);
+    if (!(scale > 0)) return { x: 0, y: 0, inside: false };
     const drawnWidth = WIDTH * scale;
     const drawnHeight = HEIGHT * scale;
     const left = rect.left + (rect.width - drawnWidth) / 2;
     const top = rect.top + (rect.height - drawnHeight) / 2;
     return {
       x: Math.max(0, Math.min(WIDTH - 1, (event.clientX - left) / scale)),
-      y: Math.max(0, Math.min(HEIGHT - 1, (event.clientY - top) / scale))
+      y: Math.max(0, Math.min(HEIGHT - 1, (event.clientY - top) / scale)),
+      inside: event.clientX >= left && event.clientX < left + drawnWidth &&
+              event.clientY >= top && event.clientY < top + drawnHeight
     };
   }
 
-  function mouseMove(x, y) {
+  function mouseMove(x, y, force = false) {
+    const now = performance.now();
+    if (!force && mouseInside && now - lastMoveSent < 16) return;
     send([1, ...u16(x), ...u16(y)]);
+    mouseInside = true;
+    lastMoveSent = now;
+  }
+
+  function mouseDrag(button, x, y, force = false) {
+    const now = performance.now();
+    if (!force && now - lastMoveSent < 16) return;
+    send([7, button, ...u16(x), ...u16(y)]);
+    mouseInside = true;
+    lastMoveSent = now;
+  }
+
+  function mouseLeave() {
+    if (!mouseInside) return;
+    send([6]); // Native MOUSE_EXITED: don't clamp an off-canvas pointer to the minimap.
+    mouseInside = false;
   }
 
   function mouseDown(button, x, y) {
@@ -118,24 +140,29 @@
   }
 
   function click(button, x, y) {
-    mouseMove(x, y);
+    mouseMove(x, y, true);
     mouseDown(button, x, y);
-    setTimeout(() => mouseUp(button, x, y), 18);
+    // Give the 50 Hz game loop time to observe a tap before clearing button-down.
+    setTimeout(() => mouseUp(button, x, y), 40);
   }
 
   canvas.addEventListener('pointerdown', (event) => {
     event.preventDefault();
+    if (pointer) return; // Ignore extra fingers and overlapping button presses.
     const point = gamePoint(event);
+    if (!point.inside) return;
     canvas.setPointerCapture?.(event.pointerId);
-    mouseMove(point.x, point.y);
 
     if (event.pointerType === 'mouse') {
       const button = event.button === 2 ? 3 : event.button === 1 ? 2 : 1;
+      mouseMove(point.x, point.y, true);
       mouseDown(button, point.x, point.y);
       pointer = { id: event.pointerId, type: 'mouse', button, x: point.x, y: point.y, down: true };
       return;
     }
 
+    // Touch and pen gestures do not press the game mouse until the gesture is
+    // known: a tap clicks on release; a swipe starts a held left-button drag.
     pointer = {
       id: event.pointerId,
       type: 'touch',
@@ -150,24 +177,42 @@
   }, { passive: false });
 
   canvas.addEventListener('pointermove', (event) => {
-    if (!pointer || pointer.id !== event.pointerId) return;
-    event.preventDefault();
     const point = gamePoint(event);
+    const active = pointer && pointer.id === event.pointerId;
+    if (!active) {
+      // Mouse hover is essential: RuneScape uses these coordinates to close
+      // right-click menus when the cursor moves outside them.
+      if (event.pointerType === 'mouse') {
+        if (point.inside) mouseMove(point.x, point.y);
+        else mouseLeave();
+      }
+      return;
+    }
+
+    event.preventDefault();
+    if (!point.inside) {
+      mouseLeave();
+      return;
+    }
+
     pointer.x = point.x;
     pointer.y = point.y;
-    const now = performance.now();
-    if (now - lastMoveSent > 20) {
-      mouseMove(point.x, point.y);
-      lastMoveSent = now;
+    if (pointer.type === 'mouse') {
+      if (pointer.down) mouseDrag(pointer.button, point.x, point.y);
+      else mouseMove(point.x, point.y);
+      return;
     }
-    if (pointer.type === 'touch' && !pointer.dragging) {
+
+    if (!pointer.dragging) {
       const distance = Math.hypot(point.x - pointer.startX, point.y - pointer.startY);
       if (distance > 7) {
         pointer.dragging = true;
         pointer.down = true;
+        mouseMove(pointer.startX, pointer.startY, true);
         mouseDown(1, pointer.startX, pointer.startY);
       }
     }
+    if (pointer.dragging) mouseDrag(1, point.x, point.y);
   }, { passive: false });
 
   canvas.addEventListener('pointerup', (event) => {
@@ -178,17 +223,32 @@
     const point = gamePoint(event);
 
     if (current.type === 'mouse') {
-      if (current.down) mouseUp(current.button, point.x, point.y);
+      if (point.inside) {
+        mouseDrag(current.button, point.x, point.y, true);
+      } else {
+        mouseLeave();
+      }
+      if (current.down) mouseUp(current.button, point.inside ? point.x : current.x,
+                                point.inside ? point.y : current.y);
       return;
     }
 
     if (current.dragging) {
-      mouseUp(1, point.x, point.y);
+      if (point.inside) mouseDrag(1, point.x, point.y, true);
+      if (current.down) mouseUp(1, point.inside ? point.x : current.x,
+                               point.inside ? point.y : current.y);
+      if (!point.inside) mouseLeave();
       return;
     }
 
+    // Cancel a touch that ended outside the game instead of clicking a
+    // clamped edge coordinate (which can accidentally click the minimap).
+    if (!point.inside) {
+      mouseLeave();
+      return;
+    }
     const held = performance.now() - current.started;
-    click(held >= 450 ? 3 : 1, point.x, point.y);
+    click(held >= 450 ? 3 : 1, current.startX, current.startY);
   }, { passive: false });
 
   canvas.addEventListener('pointercancel', (event) => {
@@ -196,13 +256,22 @@
     const current = pointer;
     pointer = null;
     if (current.down) mouseUp(current.button || 1, current.x, current.y);
+    mouseLeave();
   });
 
-  canvas.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-    const point = gamePoint(event);
-    click(3, point.x, point.y);
+  canvas.addEventListener('pointerleave', () => mouseLeave());
+  window.addEventListener('blur', () => {
+    if (pointer && pointer.down) {
+      mouseUp(pointer.button || 1, pointer.x, pointer.y);
+    }
+    pointer = null;
+    mouseLeave();
   });
+
+  // Native browser right-click and mobile long-press menus must be suppressed,
+  // but the pointer/touch handlers above have ALREADY sent the RuneScape click.
+  // Sending one here too opens a second menu and can trigger unwanted actions.
+  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
   function sendKey(type, code, character = 0) {
     send([type, ...u16(code), ...u16(character)]);
