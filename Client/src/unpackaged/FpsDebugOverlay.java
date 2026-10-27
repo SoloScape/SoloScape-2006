@@ -26,6 +26,8 @@ public final class FpsDebugOverlay {
     private static long longestTickGapNanos;
     private static long clientBufferWaitNanos = -1L;
     private static int serverQueuedBytes = -1;
+    private static volatile long socketTransmittedNanos;
+    private static volatile int socketTransmittedPingId;
 
     private FpsDebugOverlay() {
     }
@@ -45,6 +47,8 @@ public final class FpsDebugOverlay {
         longestTickGapNanos = 0L;
         clientBufferWaitNanos = -1L;
         serverQueuedBytes = -1;
+        socketTransmittedNanos = 0L;
+        socketTransmittedPingId = 0;
     }
 
     /** Called on the game tick before the outgoing packet buffer is flushed. */
@@ -75,6 +79,8 @@ public final class FpsDebugOverlay {
         longestTickGapNanos = 0L;
         clientBufferWaitNanos = -1L;
         serverQueuedBytes = -1;
+        socketTransmittedNanos = 0L;
+        socketTransmittedPingId = 0;
         FrameBuffer.outgoingGameBuffer.putFrame(PING_OPCODE);
         FrameBuffer.outgoingGameBuffer.putDword(pendingPingId);
     }
@@ -86,11 +92,23 @@ public final class FpsDebugOverlay {
     public static void onOutboundBuffered() {
         if (pendingSinceNanos != 0L && clientBufferWaitNanos < 0L) {
             clientBufferWaitNanos = Math.max(0L, System.nanoTime() - pendingSinceNanos);
+            if (Class37.gameSocket != null) {
+                Class37.gameSocket.markFpsProbe(pendingPingId);
+            }
+        }
+    }
+
+    /** The socket writer reports when the kernel accepted the probe bytes. */
+    public static void onSocketTransmitted(int pingId, long transmittedNanos) {
+        if (pingId == pendingPingId && pendingSinceNanos != 0L) {
+            socketTransmittedNanos = transmittedNanos;
+            socketTransmittedPingId = pingId;
         }
     }
 
     /** A reply is accepted only for the current in-flight request. */
-    public static void onPingReply(int pingId, int queuedBytes) {
+    public static void onPingReply(int pingId, int queuedBytes,
+            int serverLockWaitMs, int serverReceiveGapMs) {
         if (!OndemandRequest.aBoolean1718 || pendingSinceNanos == 0L
                 || pingId != pendingPingId) {
             return;
@@ -105,10 +123,22 @@ public final class FpsDebugOverlay {
                 long longestTickGapMillis = (longestTickGapNanos + 500_000L) / 1_000_000L;
                 long clientBufferedMs = clientBufferWaitNanos < 0L ? -1L
                         : (clientBufferWaitNanos + 500_000L) / 1_000_000L;
+                long writerDelayMs = socketTransmittedPingId != pingId
+                        ? -1L : (Math.max(0L, socketTransmittedNanos - pendingSinceNanos)
+                                + 500_000L) / 1_000_000L;
+                long afterSocketWriteMs = socketTransmittedPingId != pingId
+                        ? -1L : (Math.max(0L, System.nanoTime() - socketTransmittedNanos)
+                                + 500_000L) / 1_000_000L;
                 System.out.println("[::fps] RTT spike: " + latencyMillis
-                        + " ms; client buffer wait: "
+                        + " ms; socket writer delay: "
+                        + (writerDelayMs < 0 ? "unknown" : writerDelayMs + " ms")
+                        + "; after socket write: "
+                        + (afterSocketWriteMs < 0 ? "unknown" : afterSocketWriteMs + " ms")
+                        + "; client buffer wait: "
                         + (clientBufferedMs < 0L ? "unknown" : clientBufferedMs + " ms")
-                        + "; server queued outbound: " + serverQueuedBytes
+                        + "; server lock wait: " + serverLockWaitMs
+                        + " ms; server receive interval: " + serverReceiveGapMs
+                        + " ms; server queued outbound: " + serverQueuedBytes
                         + " bytes; longest client game-tick gap: "
                         + longestTickGapMillis + " ms");
             }
