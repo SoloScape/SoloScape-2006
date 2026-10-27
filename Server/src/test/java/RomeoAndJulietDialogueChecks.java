@@ -29,6 +29,14 @@ public final class RomeoAndJulietDialogueChecks {
             String name = NpcDefinition.isDefined(npcId) ? NpcDefinition.forId(npcId).getName() : "(not defined)";
             System.out.println("2006 supporting NPC " + npcId + ": " + name);
         }
+        for (int npcId = 0; npcId < com.rs2.model.World.getNpcDefinitions().length; npcId++) {
+            NpcDefinition npc = com.rs2.model.World.getNpcDefinitions()[npcId];
+            if (npc != null && npc.getName() != null
+                    && (npc.getName().toLowerCase().contains("phillipa")
+                      || npc.getName().toLowerCase().contains("draul"))) {
+                System.out.println("Detected 443 quest NPC " + npcId + ": " + npc.getName());
+            }
+        }
 
         // Both NPCs must respond at every stage, not just when they advance the quest.
         for (int stage = 0; stage <= 8; stage++) {
