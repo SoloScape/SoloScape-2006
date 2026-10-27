@@ -15,15 +15,22 @@ public final class FpsDebugOverlayChecks {
                 48L * 1024 * 1024, 96L * 1024 * 1024, 256L * 1024 * 1024);
         require(lines.length == 4, "Expected four diagnostics");
         require(lines[0].equals("Framerate: 60 FPS"), "Wrong framerate");
-        require(lines[1].equals("Latency: 42 ms median RTT (last 499 ms)"),
+        require(lines[1].equals("Latency: 42ms (last 499)"),
                 "Raw RTT spikes must stay visible beside the median");
         require(lines[2].equals("RAM usage: 48 MB"), "Wrong used heap");
         require(lines[3].equals("Memory: 96 / 256 MB"), "Wrong committed/max heap");
         require(FpsDebugOverlay.formatLines(0, -1, -1, 0, 0, -1)[1]
                 .equals("Latency: N/A"), "Unavailable latency must not be fabricated");
         require(FpsDebugOverlay.formatLines(0, 42, -1, 0, 0, -1)[1]
-                .equals("Latency: 42 ms median RTT (last timed out)"),
+                .equals("Latency: 42ms (timeout)"),
                 "Timed-out ping should not be printed as negative latency");
+
+        require(FpsDebugOverlay.formatLines(60, 583, 579,
+                77L * 1024 * 1024, 243L * 1024 * 1024, 3596L * 1024 * 1024)[1]
+                .equals("Latency: 583ms (last 579)"),
+                "Latency line should stay compact at high RTT values");
+        FpsDebugOverlay.onOutboundBuffered(); // Safe when no ping is pending.
+        FpsDebugOverlay.onPingReply(123, 0); // Ignore unsolicited replies.
 
         FpsDebugOverlay.addLatencySample(20);
         FpsDebugOverlay.addLatencySample(22);
