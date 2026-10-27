@@ -13,6 +13,9 @@ public final class DedicatedReactor
 extends Thread {
     private static DedicatedReactor instance;
     private final Selector selector;
+    // A slow handler blocks the entire selector, delaying unrelated pings.
+    private final java.util.concurrent.atomic.AtomicLong longestReadDispatchNanos =
+            new java.util.concurrent.atomic.AtomicLong();
 
     public DedicatedReactor(Selector selector) {
         this.selector = selector;
@@ -49,7 +52,13 @@ extends Thread {
 
                     Player player = (Player)selectionKey.attachment();
                     if (selectionKey.isReadable()) {
-                        PacketDispatcher.processIncoming(player);
+                        long dispatchStart = System.nanoTime();
+                        try {
+                            PacketDispatcher.processIncoming(player);
+                        } finally {
+                            long spent = Math.max(0L, System.nanoTime() - dispatchStart);
+                            longestReadDispatchNanos.accumulateAndGet(spent, Math::max);
+                        }
                     }
                     if (selectionKey.isValid() && selectionKey.isWritable()) {
                         PacketDispatcher.flushOutgoing(player);
@@ -66,6 +75,15 @@ extends Thread {
                 break;
             }
         }
+    }
+
+    /**
+     * Snapshot the slowest recent socket-read/packet-dispatch operation.
+     * Called by the ping handler on the same selector thread.
+     */
+    public int takeLongestReadDispatchMillis() {
+        long nanos = longestReadDispatchNanos.getAndSet(0L);
+        return (int) Math.min(Integer.MAX_VALUE, (nanos + 500_000L) / 1_000_000L);
     }
 
     public final Selector getSelector() {
