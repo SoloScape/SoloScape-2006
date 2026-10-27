@@ -16,16 +16,30 @@ public final class PingPacketHandler implements PacketHandler {
             return;
         }
         int pingId = packet.getReader().readInt();
-        // A pending outbound buffer suggests the pong could wait behind
-        // larger gameplay updates, even though the handler itself is immediate.
+        long receivedNanos = System.nanoTime();
+        long previousNanos = player.lastFpsPingReceivedNanos;
+        player.lastFpsPingReceivedNanos = receivedNanos;
+        int receiveGapMs = previousNanos == 0L ? -1
+                : nanosToMillis(Math.max(0L, receivedNanos - previousNanos));
+
+        // Include the time waiting for the player lock: a zero outbound queue
+        // by itself cannot rule out server-side lock contention.
+        long waitingSince = System.nanoTime();
         int queuedBytes;
         synchronized (player) {
             queuedBytes = player.getOutboundBuffer().position();
         }
-        PacketWriter reply = PacketBuffer.allocateWriter(9);
+        int playerLockWaitMs = nanosToMillis(System.nanoTime() - waitingSince);
+        PacketWriter reply = PacketBuffer.allocateWriter(17);
         reply.writeOpcode(player.getOutboundCipher(), PING_OPCODE);
         reply.writeInt(pingId);
         reply.writeInt(queuedBytes);
+        reply.writeInt(playerLockWaitMs);
+        reply.writeInt(receiveGapMs);
         player.writePacketBuffer(reply.getBuffer());
+    }
+
+    private static int nanosToMillis(long nanos) {
+        return (int) Math.min(Integer.MAX_VALUE, (nanos + 500_000L) / 1_000_000L);
     }
 }
