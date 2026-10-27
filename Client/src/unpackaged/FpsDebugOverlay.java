@@ -28,6 +28,7 @@ public final class FpsDebugOverlay {
     private static int serverQueuedBytes = -1;
     private static volatile long socketTransmittedNanos;
     private static volatile int socketTransmittedPingId;
+    private static long pendingClientEpochMillis;
 
     private FpsDebugOverlay() {
     }
@@ -49,6 +50,7 @@ public final class FpsDebugOverlay {
         serverQueuedBytes = -1;
         socketTransmittedNanos = 0L;
         socketTransmittedPingId = 0;
+        pendingClientEpochMillis = 0L;
     }
 
     /** Called on the game tick before the outgoing packet buffer is flushed. */
@@ -81,8 +83,10 @@ public final class FpsDebugOverlay {
         serverQueuedBytes = -1;
         socketTransmittedNanos = 0L;
         socketTransmittedPingId = 0;
+        pendingClientEpochMillis = System.currentTimeMillis();
         FrameBuffer.outgoingGameBuffer.putFrame(PING_OPCODE);
         FrameBuffer.outgoingGameBuffer.putDword(pendingPingId);
+        FrameBuffer.outgoingGameBuffer.putQword(pendingClientEpochMillis);
     }
 
     /**
@@ -108,12 +112,14 @@ public final class FpsDebugOverlay {
 
     /** A reply is accepted only for the current in-flight request. */
     public static void onPingReply(int pingId, int queuedBytes,
-            int serverLockWaitMs, int serverReceiveGapMs) {
+            int serverLockWaitMs, int serverReceiveGapMs,
+            long serverReceivedMillis, long serverRepliedMillis) {
         if (!OndemandRequest.aBoolean1718 || pendingSinceNanos == 0L
                 || pingId != pendingPingId) {
             return;
         }
         long duration = System.nanoTime() - pendingSinceNanos;
+        long receivedClientMillis = System.currentTimeMillis();
         serverQueuedBytes = Math.max(0, queuedBytes);
         if (duration >= 0L) {
             latencyMillis = (int) Math.min(Integer.MAX_VALUE,
@@ -129,8 +135,15 @@ public final class FpsDebugOverlay {
                 long afterSocketWriteMs = socketTransmittedPingId != pingId
                         ? -1L : (Math.max(0L, System.nanoTime() - socketTransmittedNanos)
                                 + 500_000L) / 1_000_000L;
+                boolean sameHost = Class37.gameSocket != null
+                        && Class37.gameSocket.socket != null
+                        && Class37.gameSocket.socket.getInetAddress().isLoopbackAddress();
+                String timingBreakdown = diagnosticTimings(sameHost,
+                        pendingClientEpochMillis, serverReceivedMillis,
+                        serverRepliedMillis, receivedClientMillis);
                 System.out.println("[::fps] RTT spike: " + latencyMillis
-                        + " ms; socket writer delay: "
+                        + " ms; " + timingBreakdown
+                        + "; socket writer delay: "
                         + (writerDelayMs < 0 ? "unknown" : writerDelayMs + " ms")
                         + "; after socket write: "
                         + (afterSocketWriteMs < 0 ? "unknown" : afterSocketWriteMs + " ms")
@@ -144,6 +157,27 @@ public final class FpsDebugOverlay {
             }
         }
         pendingSinceNanos = 0L;
+    }
+
+    /**
+     * Directional wall-clock timings are valid for loopback clients (one OS
+     * clock). Remote clients may have unsynchronized clocks: never present a
+     * made-up upstream/downstream split for those connections.
+     */
+    static String diagnosticTimings(boolean loopback, long clientSent, long serverReceived,
+            long serverReplied, long clientReceived) {
+        long serverProcessing = serverReplied - serverReceived;
+        if (serverProcessing < 0L) {
+            return "server processing: unavailable";
+        }
+        if (!loopback || clientSent <= 0L || serverReceived < clientSent
+                || clientReceived < serverReplied) {
+            return "server processing: " + serverProcessing
+                    + " ms; one-way timings: unavailable (clocks not shared)";
+        }
+        return "request to server: " + (serverReceived - clientSent)
+                + " ms; server processing: " + serverProcessing
+                + " ms; server reply to client: " + (clientReceived - serverReplied) + " ms";
     }
 
     static void addLatencySample(int milliseconds) {
