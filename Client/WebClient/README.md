@@ -30,7 +30,7 @@ Browser input is converted back to AWT mouse/key events and dispatched to the ex
 Client\WebClient\Play-In-Browser-Or-Phone.bat
 ```
 
-This rebuilds and starts the real `06-Client` with the bridge enabled.
+This rebuilds and starts the real Java renderer with its native window hidden, then automatically opens the game in your default browser at `http://127.0.0.1:8081/`. The browser is a streamed view of the Java client, not a JavaScript reimplementation: the Java JAR must run locally to render frames and handle the RuneScape protocol.
 
 The console prints the exact phone URL, for example:
 
@@ -38,7 +38,7 @@ The console prints the exact phone URL, for example:
 [webclient] Phone: http://192.168.0.129:8081/
 ```
 
-Keep both the command window and Java client window open.
+Keep the command window open while you use your browser or phone. Closing that window stops the Java renderer and its music; you do not need to keep a separate visible Java game window open.
 
 ## Original Windows EXE
 
@@ -51,12 +51,17 @@ Its game area stays at 765x503 pixels at 1:1 scale. The patched original EXE has
 a fixed window with resizing and maximize disabled. The game remains focusable
 for keyboard input without drawing a dotted focus outline.
 
-Start the game server and `Start-Original-Client.bat` before opening the EXE.
-The latter runs Java in the background with an off-screen utility window so
-rendering remains available without a second visible game window. Rebuild the
-client after pulling this change. Normal desktop/phone startup stays visible.
+Start the game server and run `Start-Original-Client.bat` before opening the EXE.
+This starts the Java renderer with an off-screen utility window, **attached to
+its command window**, so closing that console stops the renderer and music.
+After the original EXE has connected, closing its window also shuts down the
+renderer once its last browser/WebSocket connection closes (after a brief grace
+period). Leave the console open while using the EXE. If a bridge already owns
+port 8081, close its launcher first rather than silently starting another
+renderer on a different port. Rebuild the client after pulling this change.
+
 The game server on port 43594 does not serve the webpage on port 8081; the Java
-client bridge provides that page. Modern browsers keep using the existing view.
+client bridge provides that page. Modern browsers keep using the same stream.
 
 ## Phone controls
 
