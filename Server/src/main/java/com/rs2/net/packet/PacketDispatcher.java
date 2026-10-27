@@ -177,6 +177,7 @@ public final class PacketDispatcher {
         packetHandlers[119] = new ReportAbusePacketHandler();
         packetHandlers[66] = new CameraPacketHandler();
         packetHandlers[192] = new IdlePacketHandler();
+        packetHandlers[ClientPackets.PING] = new com.rs2.net.packet.handler.PingPacketHandler();
         // The client sends this one-byte acknowledgement when the flashing
         // sidebar tab is selected. Quest status refresh advances the tutorial
         // and installs the next step's hint.
