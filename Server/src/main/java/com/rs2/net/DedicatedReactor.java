@@ -13,6 +13,9 @@ public final class DedicatedReactor
 extends Thread {
     private static DedicatedReactor instance;
     private final Selector selector;
+    // Bound the sleep even when the selector provider misses a readable event.
+    // The main game cycle still runs independently every 600 ms.
+    private static final long MAX_SELECT_WAIT_MILLIS = 20L;
     // A slow handler blocks the entire selector, delaying unrelated pings.
     private final java.util.concurrent.atomic.AtomicLong longestReadDispatchNanos =
             new java.util.concurrent.atomic.AtomicLong();
@@ -33,7 +36,7 @@ extends Thread {
         Thread.currentThread().setName("DedicatedReactor");
         while (!Thread.currentThread().isInterrupted() && this.selector.isOpen()) {
             try {
-                this.selector.select();
+                this.selector.select(MAX_SELECT_WAIT_MILLIS);
                 if (Thread.currentThread().isInterrupted() || !this.selector.isOpen()) {
                     break;
                 }
