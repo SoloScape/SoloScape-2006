@@ -15,9 +15,9 @@ public final class FpsDebugOverlay {
     private static final int YELLOW = 0xFFFF00;
 
     private static long lastSentNanos;
-    private static long pendingSinceNanos;
+    private static volatile long pendingSinceNanos;
     private static int nextPingId;
-    private static int pendingPingId;
+    private static volatile int pendingPingId;
     private static int latencyMillis = -1;
     private static final int[] latencySamples = new int[SAMPLE_WINDOW];
     private static int latencySampleCount;
