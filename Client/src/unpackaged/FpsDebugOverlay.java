@@ -114,7 +114,8 @@ public final class FpsDebugOverlay {
     public static void onPingReply(int pingId, int queuedBytes,
             int serverLockWaitMs, int serverReceiveGapMs,
             long serverReceivedMillis, long serverRepliedMillis,
-            int serverReadToHandlerMs, int serverLongestDispatchMs) {
+            int serverReadToHandlerMs, int serverLongestDispatchMs,
+            int serverLongestReactorGapMs) {
         if (!OndemandRequest.aBoolean1718 || pendingSinceNanos == 0L
                 || pingId != pendingPingId) {
             return;
@@ -153,6 +154,7 @@ public final class FpsDebugOverlay {
                         + "; server lock wait: " + serverLockWaitMs
                         + " ms; ping assembly delay: " + serverReadToHandlerMs
                         + " ms; longest reactor read/dispatch: " + serverLongestDispatchMs
+                        + " ms; longest reactor loop gap: " + serverLongestReactorGapMs
                         + " ms; server receive interval: " + serverReceiveGapMs
                         + " ms; server queued outbound: " + serverQueuedBytes
                         + " bytes; longest client game-tick gap: "
