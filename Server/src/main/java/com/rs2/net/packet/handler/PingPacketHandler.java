@@ -12,10 +12,12 @@ public final class PingPacketHandler implements PacketHandler {
 
     @Override
     public void handle(Player player, IncomingPacket packet) {
-        if (packet.getLength() != 4 || player.isBot) {
+        if (packet.getLength() != 12 || player.isBot) {
             return;
         }
         int pingId = packet.getReader().readInt();
+        packet.getReader().readLong(); // Client epoch; echoed timing is derived on the client.
+        long receivedEpochMillis = System.currentTimeMillis();
         long receivedNanos = System.nanoTime();
         long previousNanos = player.lastFpsPingReceivedNanos;
         player.lastFpsPingReceivedNanos = receivedNanos;
@@ -30,12 +32,16 @@ public final class PingPacketHandler implements PacketHandler {
             queuedBytes = player.getOutboundBuffer().position();
         }
         int playerLockWaitMs = nanosToMillis(System.nanoTime() - waitingSince);
-        PacketWriter reply = PacketBuffer.allocateWriter(17);
+        PacketWriter reply = PacketBuffer.allocateWriter(33);
         reply.writeOpcode(player.getOutboundCipher(), PING_OPCODE);
         reply.writeInt(pingId);
         reply.writeInt(queuedBytes);
         reply.writeInt(playerLockWaitMs);
         reply.writeInt(receiveGapMs);
+        reply.writeLong(receivedEpochMillis);
+        // Both server stamps are from the same clock. The client only uses
+        // cross-machine one-way estimates if it connects over loopback.
+        reply.writeLong(System.currentTimeMillis());
         player.writePacketBuffer(reply.getBuffer());
     }
 
