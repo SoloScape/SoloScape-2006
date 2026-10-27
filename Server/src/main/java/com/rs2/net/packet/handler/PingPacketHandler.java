@@ -22,6 +22,10 @@ public final class PingPacketHandler implements PacketHandler {
         long receivedNanos = System.nanoTime();
         long previousNanos = player.lastFpsPingReceivedNanos;
         player.lastFpsPingReceivedNanos = receivedNanos;
+        DedicatedReactor reactor = DedicatedReactor.getInstance();
+        if (reactor != null) {
+            reactor.noteFpsPing(player);
+        }
         int receiveGapMs = previousNanos == 0L ? -1
                 : nanosToMillis(Math.max(0L, receivedNanos - previousNanos));
 
@@ -38,7 +42,6 @@ public final class PingPacketHandler implements PacketHandler {
         int readToHandlerMs = player.fpsPingFirstByteNanos == 0L ? -1
                 : nanosToMillis(Math.max(0L, receivedNanos - player.fpsPingFirstByteNanos));
         player.fpsPingFirstByteNanos = 0L;
-        DedicatedReactor reactor = DedicatedReactor.getInstance();
         int longestReadDispatchMs = reactor == null ? -1 : reactor.takeLongestReadDispatchMillis();
         int longestReactorGapMs = reactor == null ? -1 : reactor.takeLongestReactorGapMillis();
         PacketWriter reply = PacketBuffer.allocateWriter(45);
