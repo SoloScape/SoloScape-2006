@@ -32,6 +32,10 @@ Sources:
   using the **verified revision-443 definitions 3324 and 3325**.
   Later OSRS NPC identifiers 5039/5040 are **not valid for the loaded 443
   character models**.
+- Both **original 7 March 2006 quest jingles** play in their respective
+  story sequences: legacy song IDs 571/572 resolve through the project's
+  existing audio map to revision-443 cache groups 120/168. Tests assert
+  the exact translation.
 - Quest regression tests cover stage entry, dialogue paths, item hand-offs,
   supporting characters and inventory-potion handling.
 
@@ -43,9 +47,8 @@ Sources:
    animation choices, player/NPC staging and dialogue beats are approximations.
    The crypt is cutscene-only in the reference game; its exact tile coordinates
    are undocumented. Do not invent a permanent explorable crypt.
-3. **Music and jingles.** The original Cadava Potion and Romeo Falls in Love
-   cues are documented, but their matching track IDs in this project's 443
-   cache have not been positively established, so none are guessed.
+3. **Music playback timing.** The original jingle IDs and cache assets have
+   been verified; the original music-to-camera timing has not.
 4. **Verbatim 2006 dialogue and its chathead expression IDs.** Existing quest
    lines remain, and missing branches use newly authored stand-ins; they have
    not been checked line-by-line against a dated 2006 transcript.
