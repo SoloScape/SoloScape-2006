@@ -33,8 +33,11 @@ public final class PingPacketHandler implements PacketHandler {
             queuedBytes = player.getOutboundBuffer().position();
         }
         int playerLockWaitMs = nanosToMillis(System.nanoTime() - waitingSince);
-        int readToHandlerMs = player.lastGameSocketReadNanos == 0L ? -1
-                : nanosToMillis(Math.max(0L, receivedNanos - player.lastGameSocketReadNanos));
+        // Capture time spent assembling a potentially split ping packet,
+        // rather than merely the time since the *last* socket read.
+        int readToHandlerMs = player.fpsPingFirstByteNanos == 0L ? -1
+                : nanosToMillis(Math.max(0L, receivedNanos - player.fpsPingFirstByteNanos));
+        player.fpsPingFirstByteNanos = 0L;
         DedicatedReactor reactor = DedicatedReactor.getInstance();
         int longestReadDispatchMs = reactor == null ? -1 : reactor.takeLongestReadDispatchMillis();
         PacketWriter reply = PacketBuffer.allocateWriter(41);
