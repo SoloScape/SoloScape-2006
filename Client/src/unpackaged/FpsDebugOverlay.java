@@ -151,7 +151,7 @@ public final class FpsDebugOverlay {
                         + "; client buffer wait: "
                         + (clientBufferedMs < 0L ? "unknown" : clientBufferedMs + " ms")
                         + "; server lock wait: " + serverLockWaitMs
-                        + " ms; read-to-handler: " + serverReadToHandlerMs
+                        + " ms; ping assembly delay: " + serverReadToHandlerMs
                         + " ms; longest reactor read/dispatch: " + serverLongestDispatchMs
                         + " ms; server receive interval: " + serverReceiveGapMs
                         + " ms; server queued outbound: " + serverQueuedBytes
