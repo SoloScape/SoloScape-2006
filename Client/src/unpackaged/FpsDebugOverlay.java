@@ -113,7 +113,8 @@ public final class FpsDebugOverlay {
     /** A reply is accepted only for the current in-flight request. */
     public static void onPingReply(int pingId, int queuedBytes,
             int serverLockWaitMs, int serverReceiveGapMs,
-            long serverReceivedMillis, long serverRepliedMillis) {
+            long serverReceivedMillis, long serverRepliedMillis,
+            int serverReadToHandlerMs, int serverLongestDispatchMs) {
         if (!OndemandRequest.aBoolean1718 || pendingSinceNanos == 0L
                 || pingId != pendingPingId) {
             return;
@@ -150,6 +151,8 @@ public final class FpsDebugOverlay {
                         + "; client buffer wait: "
                         + (clientBufferedMs < 0L ? "unknown" : clientBufferedMs + " ms")
                         + "; server lock wait: " + serverLockWaitMs
+                        + " ms; read-to-handler: " + serverReadToHandlerMs
+                        + " ms; longest reactor read/dispatch: " + serverLongestDispatchMs
                         + " ms; server receive interval: " + serverReceiveGapMs
                         + " ms; server queued outbound: " + serverQueuedBytes
                         + " bytes; longest client game-tick gap: "
