@@ -13,9 +13,9 @@ public final class DedicatedReactor
 extends Thread {
     private static DedicatedReactor instance;
     private final Selector selector;
-    // Bound the sleep even when the selector provider misses a readable event.
-    // The main game cycle still runs independently every 600 ms.
-    private static final long MAX_SELECT_WAIT_MILLIS = 20L;
+    // Track selector progress independently of individual packet processing.
+    private final java.util.concurrent.atomic.AtomicLong longestReactorGapNanos =
+            new java.util.concurrent.atomic.AtomicLong();
     // A slow handler blocks the entire selector, delaying unrelated pings.
     private final java.util.concurrent.atomic.AtomicLong longestReadDispatchNanos =
             new java.util.concurrent.atomic.AtomicLong();
@@ -34,9 +34,16 @@ extends Thread {
     @Override
     public final void run() {
         Thread.currentThread().setName("DedicatedReactor");
+        long previousSelectReturnNanos = 0L;
         while (!Thread.currentThread().isInterrupted() && this.selector.isOpen()) {
             try {
-                this.selector.select(MAX_SELECT_WAIT_MILLIS);
+                this.selector.select();
+                long now = System.nanoTime();
+                if (previousSelectReturnNanos != 0L) {
+                    long gap = Math.max(0L, now - previousSelectReturnNanos);
+                    longestReactorGapNanos.accumulateAndGet(gap, Math::max);
+                }
+                previousSelectReturnNanos = now;
                 if (Thread.currentThread().isInterrupted() || !this.selector.isOpen()) {
                     break;
                 }
@@ -84,6 +91,12 @@ extends Thread {
      * Snapshot the slowest recent socket-read/packet-dispatch operation.
      * Called by the ping handler on the same selector thread.
      */
+    /** Longest observed interval between selector returns since the last ping. */
+    public int takeLongestReactorGapMillis() {
+        long nanos = longestReactorGapNanos.getAndSet(0L);
+        return (int) Math.min(Integer.MAX_VALUE, (nanos + 500_000L) / 1_000_000L);
+    }
+
     public int takeLongestReadDispatchMillis() {
         long nanos = longestReadDispatchNanos.getAndSet(0L);
         return (int) Math.min(Integer.MAX_VALUE, (nanos + 500_000L) / 1_000_000L);
