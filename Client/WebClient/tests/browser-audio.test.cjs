@@ -44,6 +44,9 @@ async function main() {
     send(bytes) { this.sent.push([...bytes]); }
   }
   vm.runInNewContext(app, {
+    // Share binary constructors with the fake websocket input: instanceof
+    // ArrayBuffer otherwise fails across Node vm realms, unlike the browser.
+    ArrayBuffer, Uint8Array, DataView, Float32Array,
     window: { AudioContext: MockAudioContext, addEventListener() {} },
     document: { getElementById: id => elements[id], activeElement: null },
     WebSocket: MockWebSocket,
