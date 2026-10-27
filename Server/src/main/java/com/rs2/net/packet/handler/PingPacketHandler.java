@@ -40,7 +40,8 @@ public final class PingPacketHandler implements PacketHandler {
         player.fpsPingFirstByteNanos = 0L;
         DedicatedReactor reactor = DedicatedReactor.getInstance();
         int longestReadDispatchMs = reactor == null ? -1 : reactor.takeLongestReadDispatchMillis();
-        PacketWriter reply = PacketBuffer.allocateWriter(41);
+        int longestReactorGapMs = reactor == null ? -1 : reactor.takeLongestReactorGapMillis();
+        PacketWriter reply = PacketBuffer.allocateWriter(45);
         reply.writeOpcode(player.getOutboundCipher(), PING_OPCODE);
         reply.writeInt(pingId);
         reply.writeInt(queuedBytes);
@@ -52,6 +53,7 @@ public final class PingPacketHandler implements PacketHandler {
         reply.writeLong(System.currentTimeMillis());
         reply.writeInt(readToHandlerMs);
         reply.writeInt(longestReadDispatchMs);
+        reply.writeInt(longestReactorGapMs);
         player.writePacketBuffer(reply.getBuffer());
     }
 
