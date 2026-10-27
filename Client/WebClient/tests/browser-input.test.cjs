@@ -22,8 +22,9 @@ function browser(bounds = { left: 0, top: 0, width: 765, height: 503 }) {
   };
   const status = { textContent: '', classList: { toggle() {} } };
   const keyboard = { addEventListener(name, handler) { callbacks['keyboard:' + name] = handler; } };
+  const sound = { textContent: '', addEventListener(name, handler) { callbacks['sound:' + name] = handler; } };
   const softInput = { addEventListener(name, handler) { callbacks['input:' + name] = handler; } };
-  const elements = { game: canvas, status, keyboard, softInput };
+  const elements = { game: canvas, status, keyboard, sound, softInput };
   const document = { getElementById: name => elements[name], activeElement: null };
   const window = {
     addEventListener(name, handler) { callbacks['window:' + name] = handler; }
