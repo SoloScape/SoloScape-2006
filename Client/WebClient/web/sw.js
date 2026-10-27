@@ -1,4 +1,4 @@
-const CACHE = '06-client-v6';
+const CACHE = '06-client-v7';
 const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
