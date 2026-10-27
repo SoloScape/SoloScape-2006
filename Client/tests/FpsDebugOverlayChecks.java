@@ -8,16 +8,42 @@ public final class FpsDebugOverlayChecks {
         require(OndemandRequest.aBoolean1718, "First ::fps must show diagnostics");
         FpsDebugOverlay.toggle();
         require(!OndemandRequest.aBoolean1718, "Second ::fps must hide diagnostics");
+        require(FpsDebugOverlay.typicalLatencyMillis() == -1,
+                "Hiding diagnostics must discard old ping samples");
 
-        String[] lines = FpsDebugOverlay.formatLines(60, 42,
+        String[] lines = FpsDebugOverlay.formatLines(60, 42, 499,
                 48L * 1024 * 1024, 96L * 1024 * 1024, 256L * 1024 * 1024);
         require(lines.length == 4, "Expected four diagnostics");
         require(lines[0].equals("Framerate: 60 FPS"), "Wrong framerate");
-        require(lines[1].equals("Latency: 42 ms RTT"), "Wrong latency");
+        require(lines[1].equals("Latency: 42 ms median RTT (last 499 ms)"),
+                "Raw RTT spikes must stay visible beside the median");
         require(lines[2].equals("RAM usage: 48 MB"), "Wrong used heap");
         require(lines[3].equals("Memory: 96 / 256 MB"), "Wrong committed/max heap");
-        require(FpsDebugOverlay.formatLines(0, -1, 0, 0, -1)[1]
+        require(FpsDebugOverlay.formatLines(0, -1, -1, 0, 0, -1)[1]
                 .equals("Latency: N/A"), "Unavailable latency must not be fabricated");
+        require(FpsDebugOverlay.formatLines(0, 42, -1, 0, 0, -1)[1]
+                .equals("Latency: 42 ms median RTT (last timed out)"),
+                "Timed-out ping should not be printed as negative latency");
+
+        FpsDebugOverlay.addLatencySample(20);
+        FpsDebugOverlay.addLatencySample(22);
+        FpsDebugOverlay.addLatencySample(499);
+        FpsDebugOverlay.addLatencySample(21);
+        FpsDebugOverlay.addLatencySample(23);
+        require(FpsDebugOverlay.typicalLatencyMillis() == 22,
+                "One slow reply must not distort typical RTT");
+        FpsDebugOverlay.addLatencySample(500);
+        require(FpsDebugOverlay.typicalLatencyMillis() == 23,
+                "The oldest sample must leave the rolling window");
+        FpsDebugOverlay.addLatencySample(501);
+        require(FpsDebugOverlay.typicalLatencyMillis() == 499,
+                "Repeated slow RTT samples must raise the reported median");
+
+        FpsDebugOverlay.toggle();
+        require(OndemandRequest.aBoolean1718, "Re-enabled diagnostics must be visible");
+        require(FpsDebugOverlay.typicalLatencyMillis() == -1,
+                "Re-enabling must not reuse a previous ping history");
+        FpsDebugOverlay.toggle();
         System.out.println("FPS diagnostics checks passed.");
     }
 
