@@ -90,12 +90,14 @@ const coord = (packet, offset) => packet[offset] * 256 + packet[offset + 1];
 {
   const b = browser();
   b.emit('pointerdown', { pointerType: 'touch', clientX: 140, clientY: 110 });
+  assert.equal(count(b.sent, 1), 1, 'finger down must prime world hover for scene picking');
+  assert.equal(count(b.sent, 2), 0, 'finger down cannot accidentally move character');
   b.emit('pointerup', { pointerType: 'touch', clientX: 140, clientY: 110 });
-  assert.equal(count(b.sent, 2, 1), 1, 'tap should press left button');
-  assert.equal(count(b.sent, 3, 1), 0, 'tap should not immediately release');
-  assert.ok(b.timers[0].delay >= 40, 'leave a full client frame to process tap');
+  assert.equal(count(b.sent, 2, 1), 0, 'very fast scene tap waits for a rendered menu');
+  assert.ok(b.timers[0].delay >= 80, 'allow a game render before world click');
   b.flushTimers();
-  assert.equal(count(b.sent, 3, 1), 1, 'tap should release once');
+  assert.equal(count(b.sent, 2, 1), 1, 'scene tap presses left after hover');
+  assert.equal(count(b.sent, 3, 1), 1, 'scene tap releases after game tick');
 }
 {
   const b = browser();
@@ -110,12 +112,44 @@ const coord = (packet, offset) => packet[offset] * 256 + packet[offset + 1];
 {
   const b = browser();
   b.emit('pointerdown', { pointerType: 'touch' });
+  b.advance(300); // Hold finger on the 3D viewport before moving.
   b.emit('pointermove', { pointerType: 'touch', clientX: 135, clientY: 135 });
   b.emit('pointerup', { pointerType: 'touch', clientX: 135, clientY: 135 });
-  assert.equal(count(b.sent, 2, 1), 1, 'touch drag presses once');
-  assert.ok(count(b.sent, 7, 1) >= 1, 'touch swipe must emit game drag');
-  assert.equal(count(b.sent, 3, 1), 1, 'touch drag releases once');
-  assert.equal(b.timers.length, 0, 'drag must not schedule an extra tap');
+  assert.equal(count(b.sent, 2, 2), 1, '3D touch camera drag holds native middle mouse');
+  assert.ok(count(b.sent, 7, 2) >= 1, '3D touch swipe rotates camera');
+  assert.equal(count(b.sent, 3, 2), 1, 'camera drag releases middle mouse');
+  assert.equal(count(b.sent, 2, 1), 0, 'camera motion cannot click/walk');
+  assert.equal(b.timers.length, 0, 'camera drag must not schedule an extra tap');
+}
+{
+  const b = browser();
+  // Outside the 3D scene, inventory item drags must remain normal left drags.
+  b.emit('pointerdown', { pointerType: 'touch', clientX: 600, clientY: 250 });
+  b.emit('pointermove', { pointerType: 'touch', clientX: 625, clientY: 270 });
+  b.emit('pointerup', { pointerType: 'touch', clientX: 625, clientY: 270 });
+  assert.equal(count(b.sent, 2, 1), 1, 'inventory swipe presses left');
+  assert.ok(count(b.sent, 7, 1) > 0, 'inventory swipe must drag item');
+  assert.equal(count(b.sent, 3, 1), 1, 'inventory swipe releases left');
+  assert.equal(count(b.sent, 2, 2), 0, 'inventory drag must not rotate camera');
+}
+{
+  const b = browser();
+  // UI tabs/minimap are not dependent on 3D scene-picking and stay responsive.
+  b.emit('pointerdown', { pointerType: 'touch', clientX: 600, clientY: 80 });
+  b.emit('pointerup', { pointerType: 'touch', clientX: 600, clientY: 80 });
+  assert.equal(count(b.sent, 2, 1), 1, 'minimap tap presses without scene delay');
+  b.flushTimers();
+  assert.equal(count(b.sent, 3, 1), 1, 'minimap tap releases normally');
+}
+{
+  const b = browser();
+  // A held touch should allow the world menu to be built before tapping.
+  b.emit('pointerdown', { pointerType: 'touch', clientX: 200, clientY: 160 });
+  b.advance(130);
+  b.emit('pointerup', { pointerType: 'touch', clientX: 200, clientY: 160 });
+  assert.equal(count(b.sent, 2, 1), 1, 'normal-length world tap should click promptly');
+  b.flushTimers();
+  assert.equal(count(b.sent, 3, 1), 1, 'normal-length world tap releases');
 }
 {
   const b = browser();
