@@ -74,6 +74,59 @@ extends QuestScript {
     @Override
     public final boolean handleNpcDialogue(Player npcId, int npcId2, int value2, int value32, int value42) {
         if (npcId2 == 639) {
+            // Repeat conversations must remain available between quest hand-offs.
+            // Step 1 is only reached on a fresh conversation; the original
+            // longer sequences below still handle their own continuation steps.
+            if (value2 == 1) {
+                if (value42 == 1) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Juliet? Oh, she is ancient history now!", "Her cousin Phillipa and I are getting along splendidly.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 2) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Have you found my Juliet yet?", "Her house is just outside the west gate of Varrock.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 3 && !npcId.getInventoryManager().containsItem(755)) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Have you any news from Juliet?", "Please bring me her message when you have it.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 5) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("I do hope Father Lawrence has a plan!", "Please find out what he wants us to do.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 6) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Berries? A potion? This is all terribly confusing!", "Please help the Apothecary so I can see Juliet again.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 7) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Have you got the potion for Juliet?", "Please take it to her as soon as you can!", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+            }
+            if (value42 == 2 && (value2 == 21 || value2 == 23)) {
+                if (value2 == 21) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Her house is beyond the west gate of Varrock,", "near the western bank. Oh, how I miss her!", 591);
+                } else {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Juliet is lovely and clever and wonderful!", "I could talk about her all day, you know.", 591);
+                }
+                npcId.getDialogueManager().setNextDialogueStep(19);
+                return true;
+            }
+            if (value42 == 4 && (value2 == 32 || value2 == 33)) {
+                if (value2 == 32) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Not well, not well at all!", "Father Lawrence is our only hope now.", 591);
+                } else {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("I have not heard from her, alas!", "Please speak with Father Lawrence about our plight.", 591);
+                }
+                npcId.getDialogueManager().setNextDialogueStep(1);
+                return true;
+            }
             if (value42 == 0) {
                 if (value2 == 1) {
                     ((Player)npcId).getDialogueManager().showNpcTwoLineDialogue("Oh woe is me that I cannot find my Juliet! You haven't", "seen Juliet have you?", 591);
@@ -90,12 +143,17 @@ extends QuestScript {
                         return true;
                     }
                     if (value32 == 1) {
-                        ((Player)npcId).getDialogueManager().showOneLineStatement("This option is currently missing...");
-                        ((Player)npcId).getDialogueManager().setNextDialogueStep(2);
+                        npcId.getDialogueManager().showPlayerTwoLineDialogue("Yes, I saw a young woman outside Varrock's", "west gate. Perhaps that was Juliet?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(10);
                         return true;
                     }
-                    ((Player)npcId).getDialogueManager().finishDialogue();
-                    return false;
+                    if (value32 == 2) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("No, sorry. I haven't seen her.", 591);
+                        npcId.getDialogueManager().finishDialogue();
+                        return true;
+                    }
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
                 }
                 if (value2 == 4) {
                     ((Player)npcId).getDialogueManager().showNpcTwoLineDialogue("Oh would you? That would be great! She has this sort", "of hair...", 591);
@@ -175,8 +233,17 @@ extends QuestScript {
                         ((Player)npcId).getDialogueManager().finishDialogue();
                         return true;
                     }
-                    ((Player)npcId).getDialogueManager().showOneLineStatement("This option is currently missing...");
-                    ((Player)npcId).getDialogueManager().setNextDialogueStep(19);
+                    if (value32 == 1) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Where can I find Juliet?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(21);
+                        return true;
+                    }
+                    if (value32 == 2) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Tell me a little more about Juliet.", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(23);
+                        return true;
+                    }
+                    npcId.getDialogueManager().finishDialogue();
                     return true;
                 }
             }
@@ -325,8 +392,17 @@ extends QuestScript {
                         ((Player)npcId).getDialogueManager().finishDialogue();
                         return true;
                     }
-                    ((Player)npcId).getDialogueManager().showOneLineStatement("This option is currently missing...");
-                    ((Player)npcId).getDialogueManager().setNextDialogueStep(1);
+                    if (value32 == 1) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("How are you, Romeo?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(32);
+                        return true;
+                    }
+                    if (value32 == 3) {
+                        npcId.getDialogueManager().showPlayerOneLineDialogue("Have you heard anything from Juliet?", 591);
+                        npcId.getDialogueManager().setNextDialogueStep(33);
+                        return true;
+                    }
+                    npcId.getDialogueManager().finishDialogue();
                     return true;
                 }
             }
@@ -363,6 +439,49 @@ extends QuestScript {
             }
         }
         if (npcId2 == 637) {
+            // Juliet must be talkable both before and after each delivery.
+            if (value2 == 1) {
+                if (value42 == 0) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Oh, I wonder how my dear Romeo is doing.", "I wish my father would let us be together.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 1) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Romeo has run off with my cousin Phillipa!", "Please leave me alone. I have heard quite enough.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 3 && npcId.getInventoryManager().containsItem(755)) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Please take my message to Romeo, quickly!", "We must find a way to be together.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 4) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Father Lawrence may be able to help us.", "Please tell Romeo to follow his advice.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 5) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Father Lawrence has a plan, you say?", "Please ask the Apothecary what we need.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 6) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("We need Cadava berries for the potion?", "Please take them to the Apothecary.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 7 && !npcId.getInventoryManager().containsItem(756)) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("Did you get the Cadava potion yet?", "Please speak to the Apothecary if you lost it.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+                if (value42 == 8) {
+                    npcId.getDialogueManager().showNpcTwoLineDialogue("I hope Romeo understands the plan!", "Please tell him to find me in the crypt.", 591);
+                    npcId.getDialogueManager().finishDialogue();
+                    return true;
+                }
+            }
             if (value42 == 2) {
                 if (value2 == 1) {
                     ((Player)npcId).getDialogueManager().showPlayerTwoLineDialogue("Juliet, I come from Romeo.", "He begs me to tell you that he cares still.", 591);
