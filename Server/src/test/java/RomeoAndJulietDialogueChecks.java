@@ -25,6 +25,10 @@ public final class RomeoAndJulietDialogueChecks {
         InterfaceDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
+        require(com.rs2.net.packet.AudioIds443.jingle(571) == 120,
+                "Original Cadava Potion jingle is missing from the 443 cache");
+        require(com.rs2.net.packet.AudioIds443.jingle(572) == 168,
+                "Original Romeo Falls in Love jingle is missing from the 443 cache");
         require("Draul Leptoc".equalsIgnoreCase(
                 NpcDefinition.forId(RomeoJulietSupportingNpcs.DRAUL).getName()),
                 "Draul's revision-443 model is not mapped");
