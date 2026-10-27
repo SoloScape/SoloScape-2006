@@ -24,6 +24,11 @@
   const nextAudioTime = { 1: 0, 2: 0 };
   let lastReportedX = -1;
   let lastReportedY = -1;
+  // In the 3D viewport, a finger swipe should simulate the existing middle
+  // mouse camera drag. Inventory/chat gestures retain ordinary left dragging.
+  const VIEWPORT_WIDTH = 512;
+  const VIEWPORT_HEIGHT = 334;
+  let touchGeneration = 0;
 
   function setStatus(text, hide = false) {
     status.textContent = text;
@@ -227,11 +232,27 @@
     send([3, button, ...u16(x), ...u16(y)]);
   }
 
-  function click(button, x, y) {
+  function click(button, x, y, holdMs = 80) {
     mouseMove(x, y, true);
     mouseDown(button, x, y);
-    // Give the 50 Hz game loop time to observe a tap before clearing button-down.
-    setTimeout(() => mouseUp(button, x, y), 40);
+    // A world click must survive both the client render/scene-picking pass
+    // and the 20ms logic tick, even on a slow phone/remote desktop.
+    setTimeout(() => mouseUp(button, x, y), holdMs);
+  }
+
+  function touchTap(button, point, heldMs) {
+    // World object/ground interaction menus come from the last rendered frame.
+    // Move the cursor at finger-down, then allow at least one render pass before
+    // sending the press; sending move+press together at finger-up uses stale menus.
+    const inScene = point.x < VIEWPORT_WIDTH && point.y < VIEWPORT_HEIGHT;
+    const leadMs = inScene ? Math.max(0, 80 - heldMs) : 0;
+    const generation = touchGeneration;
+    const perform = () => {
+      if (generation !== touchGeneration) return;
+      click(button, point.x, point.y);
+    };
+    if (leadMs > 0) setTimeout(perform, leadMs);
+    else perform();
   }
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -249,8 +270,10 @@
       return;
     }
 
-    // Touch and pen gestures do not press the game mouse until the gesture is
-    // known: a tap clicks on release; a swipe starts a held left-button drag.
+    // Establish a game hover immediately: 3D world actions are selected
+    // during rendering and cannot be resolved from a brand-new press alone.
+    touchGeneration++;
+    mouseMove(point.x, point.y, true);
     pointer = {
       id: event.pointerId,
       type: 'touch',
@@ -259,6 +282,8 @@
       x: point.x,
       y: point.y,
       started: performance.now(),
+      // A scene swipe emulates the native middle mouse camera controls.
+      dragButton: point.x < VIEWPORT_WIDTH && point.y < VIEWPORT_HEIGHT ? 2 : 1,
       dragging: false,
       down: false
     };
@@ -297,10 +322,10 @@
         pointer.dragging = true;
         pointer.down = true;
         mouseMove(pointer.startX, pointer.startY, true);
-        mouseDown(1, pointer.startX, pointer.startY);
+        mouseDown(pointer.dragButton, pointer.startX, pointer.startY);
       }
     }
-    if (pointer.dragging) mouseDrag(1, point.x, point.y);
+    if (pointer.dragging) mouseDrag(pointer.dragButton, point.x, point.y);
   }, { passive: false });
 
   canvas.addEventListener('pointerup', (event) => {
@@ -325,9 +350,10 @@
 
     if (current.dragging) {
       if (point.inside && (point.x !== lastReportedX || point.y !== lastReportedY)) {
-        mouseDrag(1, point.x, point.y, true);
+        mouseDrag(current.dragButton, point.x, point.y, true);
       }
-      if (current.down) mouseUp(1, point.inside ? point.x : current.x,
+      if (current.down) mouseUp(current.dragButton,
+                               point.inside ? point.x : current.x,
                                point.inside ? point.y : current.y);
       if (!point.inside) mouseLeave();
       return;
@@ -340,23 +366,25 @@
       return;
     }
     const held = performance.now() - current.started;
-    click(held >= 450 ? 3 : 1, current.startX, current.startY);
+    touchTap(held >= 450 ? 3 : 1, current, held);
   }, { passive: false });
 
   canvas.addEventListener('pointercancel', (event) => {
     if (!pointer || pointer.id !== event.pointerId) return;
     const current = pointer;
     pointer = null;
-    if (current.down) mouseUp(current.button || 1, current.x, current.y);
+    if (current.down) mouseUp(current.dragButton || current.button || 1, current.x, current.y);
+    touchGeneration++;
     mouseLeave();
   });
 
   canvas.addEventListener('pointerleave', () => mouseLeave());
   window.addEventListener('blur', () => {
     if (pointer && pointer.down) {
-      mouseUp(pointer.button || 1, pointer.x, pointer.y);
+      mouseUp(pointer.dragButton || pointer.button || 1, pointer.x, pointer.y);
     }
     pointer = null;
+    touchGeneration++;
     mouseLeave();
   });
 
