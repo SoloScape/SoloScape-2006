@@ -8,7 +8,9 @@ import jagex.io.FrameBuffer;
  */
 public final class FpsDebugOverlay {
     private static final int PING_OPCODE = 254;
-    private static final long PING_INTERVAL_NANOS = 2_000_000_000L;
+    private static final long PING_INTERVAL_NANOS = 500_000_000L;
+    private static final int SAMPLE_WINDOW = 5;
+    private static final int SPIKE_THRESHOLD_MILLIS = 200;
     private static final long PING_TIMEOUT_NANOS = 5_000_000_000L;
     private static final int YELLOW = 0xFFFF00;
 
@@ -17,6 +19,11 @@ public final class FpsDebugOverlay {
     private static int nextPingId;
     private static int pendingPingId;
     private static int latencyMillis = -1;
+    private static final int[] latencySamples = new int[SAMPLE_WINDOW];
+    private static int latencySampleCount;
+    private static int latencySampleCursor;
+    private static long lastGameTickNanos;
+    private static long longestTickGapNanos;
 
     private FpsDebugOverlay() {
     }
@@ -30,6 +37,10 @@ public final class FpsDebugOverlay {
         lastSentNanos = 0L;
         pendingSinceNanos = 0L;
         latencyMillis = -1;
+        latencySampleCount = 0;
+        latencySampleCursor = 0;
+        lastGameTickNanos = 0L;
+        longestTickGapNanos = 0L;
     }
 
     /** Called on the game tick before the outgoing packet buffer is flushed. */
@@ -39,6 +50,10 @@ public final class FpsDebugOverlay {
             return;
         }
         long now = System.nanoTime();
+        if (lastGameTickNanos != 0L && pendingSinceNanos != 0L) {
+            longestTickGapNanos = Math.max(longestTickGapNanos, now - lastGameTickNanos);
+        }
+        lastGameTickNanos = now;
         if (pendingSinceNanos != 0L) {
             if (now - pendingSinceNanos < PING_TIMEOUT_NANOS) {
                 return;
@@ -53,6 +68,7 @@ public final class FpsDebugOverlay {
         pendingPingId = ++nextPingId;
         lastSentNanos = now;
         pendingSinceNanos = now;
+        longestTickGapNanos = 0L;
         FrameBuffer.outgoingGameBuffer.putFrame(PING_OPCODE);
         FrameBuffer.outgoingGameBuffer.putDword(pendingPingId);
     }
@@ -67,8 +83,33 @@ public final class FpsDebugOverlay {
         if (duration >= 0L) {
             latencyMillis = (int) Math.min(Integer.MAX_VALUE,
                     (duration + 500_000L) / 1_000_000L);
+            addLatencySample(latencyMillis);
+            if (latencyMillis >= SPIKE_THRESHOLD_MILLIS) {
+                long longestTickGapMillis = (longestTickGapNanos + 500_000L) / 1_000_000L;
+                System.out.println("[::fps] RTT spike: " + latencyMillis
+                        + " ms; longest client game-tick gap during probe: "
+                        + longestTickGapMillis + " ms");
+            }
         }
         pendingSinceNanos = 0L;
+    }
+
+    private static void addLatencySample(int milliseconds) {
+        latencySamples[latencySampleCursor] = milliseconds;
+        latencySampleCursor = (latencySampleCursor + 1) % SAMPLE_WINDOW;
+        latencySampleCount = Math.min(SAMPLE_WINDOW, latencySampleCount + 1);
+    }
+
+    // A rolling median shows typical network responsiveness without disguising
+    // individual slow replies: the latest raw RTT is shown beside it.
+    static int typicalLatencyMillis() {
+        if (latencySampleCount == 0) {
+            return -1;
+        }
+        int[] samples = new int[latencySampleCount];
+        System.arraycopy(latencySamples, 0, samples, 0, latencySampleCount);
+        java.util.Arrays.sort(samples);
+        return samples[latencySampleCount / 2];
     }
 
     public static void draw() {
@@ -77,7 +118,8 @@ public final class FpsDebugOverlay {
         }
         Runtime runtime = Runtime.getRuntime();
         long allocated = runtime.totalMemory();
-        String[] lines = formatLines(Class39_Sub5_Sub18.anInt2119, latencyMillis,
+        String[] lines = formatLines(Class39_Sub5_Sub18.anInt2119,
+                typicalLatencyMillis(), latencyMillis,
                 allocated - runtime.freeMemory(), allocated, runtime.maxMemory());
         // The scene framebuffer is 512 pixels wide. method630 right-aligns text.
         for (int index = 0; index < lines.length; index++) {
@@ -87,10 +129,15 @@ public final class FpsDebugOverlay {
         }
     }
 
-    static String[] formatLines(int fps, int pingMs, long used, long allocated, long maximum) {
+    static String[] formatLines(int fps, int typicalPingMs, int latestPingMs,
+            long used, long allocated, long maximum) {
+        String pingText = typicalPingMs < 0 ? "N/A"
+                : typicalPingMs + " ms median RTT"
+                        + (latestPingMs == typicalPingMs ? ""
+                                : " (last " + latestPingMs + " ms)");
         return new String[] {
                 "Framerate: " + fps + " FPS",
-                "Latency: " + (pingMs < 0 ? "N/A" : pingMs + " ms RTT"),
+                "Latency: " + pingText,
                 "RAM usage: " + toMiB(used) + " MB",
                 "Memory: " + toMiB(allocated) + " / "
                         + (maximum <= 0L ? "N/A" : toMiB(maximum) + " MB")
