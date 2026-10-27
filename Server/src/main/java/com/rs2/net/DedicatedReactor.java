@@ -15,6 +15,9 @@ extends Thread {
     private final Selector selector;
     private static final long DIAGNOSTIC_POLL_INTERVAL_MS = 20L;
     private static final long RECENT_FPS_PING_NANOS = 10_000_000_000L;
+    // Do not scan every connected player on each diagnostic poll.
+    private final java.util.concurrent.ConcurrentHashMap<Player, Long> recentlyPinging =
+            new java.util.concurrent.ConcurrentHashMap<Player, Long>();
 
     // Track selector progress independently of individual packet processing.
     private final java.util.concurrent.atomic.AtomicLong longestReactorGapNanos =
@@ -95,15 +98,19 @@ extends Thread {
         }
     }
 
+    /** Only actively using ::fps connections are eligible for read polling. */
+    public void noteFpsPing(Player player) {
+        recentlyPinging.put(player, System.nanoTime());
+    }
+
     private void pollRecentFpsConnections(long now) {
-        for (SelectionKey key : this.selector.keys()) {
-            if (!key.isValid() || !(key.attachment() instanceof Player)) {
-                continue;
-            }
-            Player player = (Player) key.attachment();
-            long lastPing = player.lastFpsPingReceivedNanos;
-            if (lastPing <= 0L || now - lastPing < 0L
-                    || now - lastPing > RECENT_FPS_PING_NANOS) {
+        for (java.util.Map.Entry<Player, Long> entry : recentlyPinging.entrySet()) {
+            Player player = entry.getKey();
+            long lastPing = entry.getValue();
+            if (now - lastPing < 0L || now - lastPing > RECENT_FPS_PING_NANOS
+                    || !player.getSocketChannel().isOpen()
+                    || !player.getSelectionKey().isValid()) {
+                recentlyPinging.remove(player, lastPing);
                 continue;
             }
             // SocketChannels are non-blocking. processIncoming returns
