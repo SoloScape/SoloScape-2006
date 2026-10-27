@@ -97,8 +97,10 @@ public class JSocket implements Runnable {
                     }
                 }
                 if (amountWrite > 0) {
+                    boolean writeSucceeded = false;
                     try {
                         ouputstream.write(buffer, offset, amountWrite);
+                        writeSucceeded = true;
                     } catch (IOException ioexception) {
                         aBoolean307 = true;
                     }
@@ -107,8 +109,10 @@ public class JSocket implements Runnable {
                     synchronized (this) {
                         int oldPosition = writePosition;
                         writePosition = (writePosition + amountWrite) % 5000;
-                        lastSuccessfulWriteNanos = writtenNanos;
-                        if (fpsProbeWriteEnd >= 0) {
+                        if (writeSucceeded) {
+                            lastSuccessfulWriteNanos = writtenNanos;
+                        }
+                        if (writeSucceeded && fpsProbeWriteEnd >= 0) {
                             int distance = (fpsProbeWriteEnd - oldPosition + 5000) % 5000;
                             if (distance > 0 && distance <= amountWrite) {
                                 deliveredProbeId = fpsProbeId;
