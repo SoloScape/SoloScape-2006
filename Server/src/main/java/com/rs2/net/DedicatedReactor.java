@@ -13,6 +13,9 @@ public final class DedicatedReactor
 extends Thread {
     private static DedicatedReactor instance;
     private final Selector selector;
+    private static final long DIAGNOSTIC_POLL_INTERVAL_MS = 20L;
+    private static final long RECENT_FPS_PING_NANOS = 10_000_000_000L;
+
     // Track selector progress independently of individual packet processing.
     private final java.util.concurrent.atomic.AtomicLong longestReactorGapNanos =
             new java.util.concurrent.atomic.AtomicLong();
@@ -37,7 +40,7 @@ extends Thread {
         long previousSelectReturnNanos = 0L;
         while (!Thread.currentThread().isInterrupted() && this.selector.isOpen()) {
             try {
-                this.selector.select();
+                this.selector.select(DIAGNOSTIC_POLL_INTERVAL_MS);
                 long now = System.nanoTime();
                 if (previousSelectReturnNanos != 0L) {
                     long gap = Math.max(0L, now - previousSelectReturnNanos);
@@ -74,6 +77,11 @@ extends Thread {
                         PacketDispatcher.flushOutgoing(player);
                     }
                 }
+                // Diagnostic fallback: on some platforms the registered OP_READ
+                // event appears to be delayed even though the client wrote the
+                // packet promptly. Poll recently pinging connections only, on
+                // this same reactor thread, to avoid concurrent buffer reads.
+                pollRecentFpsConnections(now);
             }
             catch (ClosedSelectorException closedSelectorException) {
                 break;
@@ -84,6 +92,23 @@ extends Thread {
                 }
                 break;
             }
+        }
+    }
+
+    private void pollRecentFpsConnections(long now) {
+        for (SelectionKey key : this.selector.keys()) {
+            if (!key.isValid() || !(key.attachment() instanceof Player)) {
+                continue;
+            }
+            Player player = (Player) key.attachment();
+            long lastPing = player.lastFpsPingReceivedNanos;
+            if (lastPing <= 0L || now - lastPing < 0L
+                    || now - lastPing > RECENT_FPS_PING_NANOS) {
+                continue;
+            }
+            // SocketChannels are non-blocking. processIncoming returns
+            // immediately when no bytes are currently available.
+            PacketDispatcher.processIncoming(player);
         }
     }
 
