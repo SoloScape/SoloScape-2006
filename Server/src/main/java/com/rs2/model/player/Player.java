@@ -531,6 +531,8 @@ extends Entity {
     public int jungleEventChanceCounter;
     public long lastCharacterSaveMillis;
     public long lastPacketReceivedMillis;
+    /** Last ::fps probe received on this connection; only the network thread writes it. */
+    public long lastFpsPingReceivedNanos;
     public long lastPlayerInputMillis;
     public int familyCrestGauntletItemId;
     public boolean logoutPacketSent;
