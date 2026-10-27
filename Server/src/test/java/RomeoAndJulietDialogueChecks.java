@@ -171,7 +171,7 @@ public final class RomeoAndJulietDialogueChecks {
         Player drinkingPlayer = player(7);
         drinkingPlayer.getInventoryManager().addItem(new ItemStack(POTION));
         RomeoAndJulietQuest drinkScript = new RomeoAndJulietQuest(0);
-        require(drinkScript.handleInventoryItemFirstOption(drinkingPlayer, POTION, 0, 7),
+        require(drinkScript.handleInventoryItemFirstOption(drinkingPlayer, 3214, POTION, 7),
                 "Drinking the potion was not handled");
         require(!drinkingPlayer.getInventoryManager().containsItem(POTION),
                 "Potion was not consumed");
