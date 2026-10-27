@@ -3705,7 +3705,8 @@ extends Entity {
 
     private boolean validateLocalLogin() {
         boolean enabled = false;
-        if (FileUtil.exists("./data/characters/" + this.username + ".dat")) {
+        if (FileUtil.exists("./data/characters/" + this.username + ".json")
+                || FileUtil.exists("./data/characters/" + this.username + ".dat")) {
             enabled = true;
         } else {
             if (this.username.toLowerCase().startsWith("mod ") || this.username.toLowerCase().startsWith("admin ") || this.username.toLowerCase().startsWith("owner ") || this.username.contains("  ") || !Player.hasValidUsernameCharacters(this.username) || Player.isReservedBotUsername(this.username) && !this.isBot) {
