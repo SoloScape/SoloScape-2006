@@ -650,6 +650,8 @@ implements Runnable {
                 ((AbstractInterruptibleChannel)serverSocketChannel).close();
                 return;
             }
+            // Keep small gameplay and diagnostic packets from waiting on Nagle.
+            ((SocketChannel)serverSocketChannel).socket().setTcpNoDelay(true);
             ((AbstractSelectableChannel)serverSocketChannel).configureBlocking(false);
             selectionKey = ((SelectableChannel)serverSocketChannel).register(selectionKey.selector(), 1);
             serverSocketChannel = new Player(selectionKey);
