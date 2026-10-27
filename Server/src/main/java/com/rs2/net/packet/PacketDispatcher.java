@@ -287,11 +287,16 @@ public final class PacketDispatcher {
             }
             if (player.getConnectionState().compareTo(PlayerConnectionState.DISCONNECTING) < 0) {
                 int readBytes = player.getSocketChannel().read(player.getInboundBuffer());
-                player.lastGameSocketReadNanos = System.nanoTime();
                 if (readBytes == -1) {
                     player.disconnect();
                     return;
                 }
+                if (readBytes == 0) {
+                    // Polling a non-blocking socket must not refresh idle timers.
+                    // Any incomplete packet remains in the compacted buffer.
+                    return;
+                }
+                player.lastGameSocketReadNanos = System.nanoTime();
             }
             player.getPacketReadTimer().reset();
             player.getInboundBuffer().flip();
