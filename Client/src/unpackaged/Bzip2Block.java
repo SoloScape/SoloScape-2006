@@ -199,7 +199,7 @@ public class Bzip2Block {
     public static boolean readFrame() {
         // HotSwap does not rerun Client's static packet-size initialization.
         Client.incomingSizes[18] = 3;
-        Client.incomingSizes[254] = 40; // pong: IDs, queue/lock/gap, epochs, read/dispatch delays
+        Client.incomingSizes[254] = 44; // pong: IDs, queue/lock/gap, epochs, read/dispatch/reactor delays
         if (Class37.gameSocket == null) {
             return false;
         }
@@ -251,10 +251,12 @@ public class Bzip2Block {
                 long serverRepliedMillis = Class39_Sub5_Sub11.gameBuffer.getQword();
                 int serverReadToHandlerMs = Class39_Sub5_Sub11.gameBuffer.getDword();
                 int serverLongestDispatchMs = Class39_Sub5_Sub11.gameBuffer.getDword();
+                int serverLongestReactorGapMs = Class39_Sub5_Sub11.gameBuffer.getDword();
                 FpsDebugOverlay.onPingReply(pingId, serverQueueBytes,
                         serverLockWaitMs, serverReceiveGapMs,
                         serverReceivedMillis, serverRepliedMillis,
-                        serverReadToHandlerMs, serverLongestDispatchMs);
+                        serverReadToHandlerMs, serverLongestDispatchMs,
+                        serverLongestReactorGapMs);
                 Class4.frameId = -1;
                 return true;
             }
