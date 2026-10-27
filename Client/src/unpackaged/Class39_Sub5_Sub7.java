@@ -177,8 +177,7 @@ public class Class39_Sub5_Sub7 extends SubNode
 		i_22_ = Cache.anInt101 / 256;
             // Pinch zoom adjusts the camera's *world distance*, not the UI scale.
             // Preserve the original terrain-based distance and yaw/pitch controls.
-            int cameraDistance = Math.max(450, Math.min(2600,
-                    i_22_ * 3 + 600 + WebClientBridge.cameraDistanceOffset()));
+            int cameraDistance = WebClientBridge.cameraDistance(i_22_ * 3 + 600);
 	    int i_23_ = SubNode.anInt1344 + Class34.anInt605 & 0x7ff;
 	    if (Class44.aBooleanArray837[4]
 		&& Class2.anIntArray49[4] + 128 > i_22_)
