@@ -17,6 +17,8 @@
   let pointer = null;
   let lastMoveSent = 0;
   let mouseInside = false;
+  let lastReportedX = -1;
+  let lastReportedY = -1;
 
   function setStatus(text, hide = false) {
     status.textContent = text;
@@ -114,6 +116,8 @@
     if (!force && mouseInside && now - lastMoveSent < 16) return;
     send([1, ...u16(x), ...u16(y)]);
     mouseInside = true;
+    lastReportedX = x;
+    lastReportedY = y;
     lastMoveSent = now;
   }
 
@@ -122,6 +126,8 @@
     if (!force && now - lastMoveSent < 16) return;
     send([7, button, ...u16(x), ...u16(y)]);
     mouseInside = true;
+    lastReportedX = x;
+    lastReportedY = y;
     lastMoveSent = now;
   }
 
@@ -224,7 +230,9 @@
 
     if (current.type === 'mouse') {
       if (point.inside) {
-        mouseDrag(current.button, point.x, point.y, true);
+        if (point.x !== lastReportedX || point.y !== lastReportedY) {
+          mouseDrag(current.button, point.x, point.y, true);
+        }
       } else {
         mouseLeave();
       }
@@ -234,7 +242,9 @@
     }
 
     if (current.dragging) {
-      if (point.inside) mouseDrag(1, point.x, point.y, true);
+      if (point.inside && (point.x !== lastReportedX || point.y !== lastReportedY)) {
+        mouseDrag(1, point.x, point.y, true);
+      }
       if (current.down) mouseUp(1, point.inside ? point.x : current.x,
                                point.inside ? point.y : current.y);
       if (!point.inside) mouseLeave();
