@@ -15,6 +15,6 @@ if not exist "build\client.jar" (
     if errorlevel 1 exit /b 1
 )
 rem Leave the rendering client running after the original EXE closes.
-start "" /b "%JAVA_HOME%\bin\javaw.exe" -Dclient.background=true -Dweb.bridge.port=8081 -Dweb.bridge.root=WebClient/web -Dclient.cache=../Server/cache -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar build/client.jar 1 local live highmem members english
+start "" /b "%JAVA_HOME%\bin\javaw.exe" -Dsun.java2d.d3d=false -Dclient.background=true -Dweb.bridge.port=8081 -Dweb.bridge.root=WebClient/web -Dclient.cache=../Server/cache -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar build/client.jar 1 local live highmem members english
 echo SoloScape browser service started in the background at http://127.0.0.1:8081/
 exit /b 0
