@@ -14,6 +14,7 @@ on:
       - 'Client/tests/FpsDebugOverlayChecks.java'
       - 'Server/src/main/java/com/rs2/Server.java'
       - 'Server/src/main/java/com/rs2/model/player/Player.java'
+      - 'Server/src/main/java/com/rs2/net/DedicatedReactor.java'
       - 'Server/src/main/java/com/rs2/net/packet/ClientPackets.java'
       - 'Server/src/main/java/com/rs2/net/packet/PacketDispatcher.java'
       - 'Server/src/main/java/com/rs2/net/packet/handler/PingPacketHandler.java'
