@@ -25,6 +25,11 @@ public final class RomeoAndJulietDialogueChecks {
         InterfaceDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         NpcDefinition.loadDefinitions();
+        for (int id = 3318; id <= 3327; id++) {
+            if (NpcDefinition.isDefined(id)) {
+                System.out.println("revision443 NPC " + id + ": " + NpcDefinition.forId(id).getName());
+            }
+        }
         for (int npcId : new int[] {5039, 5040}) {
             String name = NpcDefinition.isDefined(npcId) ? NpcDefinition.forId(npcId).getName() : "(not defined)";
             System.out.println("2006 supporting NPC " + npcId + ": " + name);
