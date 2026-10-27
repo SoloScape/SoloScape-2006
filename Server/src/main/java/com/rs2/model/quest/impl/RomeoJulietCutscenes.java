@@ -49,6 +49,9 @@ public final class RomeoJulietCutscenes extends Cutscene {
     @Override
     public void startDialogue() {
         Player player = getPlayer();
+        // Verified Jagex 2006 jingles: legacy 571/572 translate to
+        // revision-443 audio groups 120/168 via AudioIds443.
+        player.packetSender.sendMusicJingle(scene == JULIET_POTION ? 571 : 572, 0);
         if (scene == JULIET_POTION) {
             player.getDialogueManager().setDialogueNpcId(637);
             player.getDialogueManager().showNpcOneLineDialogue("I shall drink it now. Please tell Romeo about the crypt.", 591);
