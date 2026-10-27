@@ -94,7 +94,7 @@ public final class FpsDebugOverlay {
         pendingSinceNanos = 0L;
     }
 
-    private static void addLatencySample(int milliseconds) {
+    static void addLatencySample(int milliseconds) {
         latencySamples[latencySampleCursor] = milliseconds;
         latencySampleCursor = (latencySampleCursor + 1) % SAMPLE_WINDOW;
         latencySampleCount = Math.min(SAMPLE_WINDOW, latencySampleCount + 1);
@@ -134,6 +134,7 @@ public final class FpsDebugOverlay {
         String pingText = typicalPingMs < 0 ? "N/A"
                 : typicalPingMs + " ms median RTT"
                         + (latestPingMs == typicalPingMs ? ""
+                                : latestPingMs < 0 ? " (last timed out)"
                                 : " (last " + latestPingMs + " ms)");
         return new String[] {
                 "Framerate: " + fps + " FPS",
