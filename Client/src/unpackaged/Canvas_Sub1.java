@@ -120,40 +120,13 @@ public class Canvas_Sub1 extends Canvas
 	    if (Huffmans.anInt756 == 1)
 		Widget.aClass39_Sub5_Sub10_Sub3_2113
 		    .method670(472, 296);
-	    if (OndemandRequest.aBoolean1718) {
-		int i_0_ = 507;
-		int i_1_ = 16776960;
-		int i_2_ = 20;
-		Class39_Sub5_Sub14.p12fullFont.method630
-		    ((Class39_Sub5_Sub11.method708
-		      ((new JString[]
-			{ Class39_Sub5_Sub6.aClass3_1774,
-			  AbstractImage.method1007((byte) 71,
-					     Class39_Sub5_Sub18.anInt2119) }))),
-		     i_0_, i_2_, 16776960);
-		i_2_ += 15;
-		Runtime runtime = Runtime.getRuntime();
-		int i_3_
-		    = (int) ((runtime.totalMemory() + -runtime.freeMemory())
-			     / 1024L);
-		if (i_3_ > 32768 && Class45.aBoolean867)
-		    i_1_ = 16711680;
-		if (i_3_ > 65536 && !Class45.aBoolean867)
-		    i_1_ = 16711680;
-		Class39_Sub5_Sub14.p12fullFont.method630
-		    ((Class39_Sub5_Sub11.method708
-		      (new JString[] { StillGraphic.aClass3_2328,
-				      AbstractImage.method1007((byte) 71, i_3_),
-				      Class63.aClass3_1125 })),
-		     i_0_, i_2_, i_1_);
-		i_2_ += 15;
-		// Keep the FPS/memory diagnostics, but suppress the transient
-		// "Side panel redrawn", "Chat panel redrawn" and "Icons redrawn"
-		// development notices that otherwise flicker during normal play.
-		Class44.aBoolean833 = false;
-		Class39_Sub5_Sub14.aBoolean1908 = false;
-		NameTable.aBoolean183 = false;
-	    }
+            if (OndemandRequest.aBoolean1718) {
+                FpsDebugOverlay.draw();
+                // Avoid the old redrawn-panel notices obscuring the diagnostics.
+                Class44.aBoolean833 = false;
+                Class39_Sub5_Sub14.aBoolean1908 = false;
+                NameTable.aBoolean183 = false;
+            }
 	    if (Class39_Sub7.anInt1380 != 0) {
 		int i_4_ = Class39_Sub7.anInt1380 / 50;
 		int i_5_ = i_4_ / 60;
