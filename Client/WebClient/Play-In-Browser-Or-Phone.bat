@@ -33,11 +33,8 @@ echo The Java renderer runs with its native game window hidden.
 echo Keep this console open while playing in the browser or on your phone.
 echo Close this console to stop the renderer and its music.
 echo.
-rem Open the browser only after the bridge is actually serving the page.
-start "" /b powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Open-Browser-When-Ready.ps1" >nul 2>&1
-
 pushd "%CLIENT_ROOT%"
-"%JAVA_HOME%\bin\java.exe" -Dclient.background=true -Dweb.bridge.strictPort=true -XX:ErrorFile=client-web-hs-err.log -Dweb.bridge.port=8081 -Dweb.bridge.root="%WEB_ROOT%" -Dclient.cache="%CLIENT_CACHE_ROOT%" -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar "build\client.jar" 1 local live highmem members english
+"%JAVA_HOME%\bin\java.exe" -Dclient.background=true -Dweb.bridge.openBrowser=true -Dweb.bridge.strictPort=true -XX:ErrorFile=client-web-hs-err.log -Dweb.bridge.port=8081 -Dweb.bridge.root="%WEB_ROOT%" -Dclient.cache="%CLIENT_CACHE_ROOT%" -Dclient.host=127.0.0.1 -Dclient.port=43594 -jar "build\client.jar" 1 local live highmem members english
 set "EXIT_CODE=%ERRORLEVEL%"
 popd
 
