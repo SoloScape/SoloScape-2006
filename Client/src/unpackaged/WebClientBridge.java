@@ -39,6 +39,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Streams the real Java client's 765x503 software-rendered framebuffer to a
@@ -58,6 +59,12 @@ public final class WebClientBridge {
         return thread;
     });
     private static final AtomicBoolean ENCODE_PENDING = new AtomicBoolean(false);
+    private static final ExecutorService AUDIO_SENDER = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "webclient-audio-sender");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private static final AtomicInteger AUDIO_PENDING = new AtomicInteger();
 
     private static volatile boolean enabled;
     private static volatile Path webRoot;
@@ -70,6 +77,53 @@ public final class WebClientBridge {
     private static final AtomicBoolean EXIT_CHECK_PENDING = new AtomicBoolean(false);
 
     private WebClientBridge() {
+    }
+
+    static boolean isEnabled() {
+        return enabled;
+    }
+
+    private static boolean hasAudioListeners() {
+        for (ClientSession client : CLIENTS)
+            if (client.audioEnabled) return true;
+        return false;
+    }
+
+    /**
+     * Audio wire packet: ASCII 'A', stream (1=effects, 2=music),
+     * channel count, unsigned big-endian sample rate, and little-endian signed
+     * 16-bit interleaved PCM. Video packets continue to be plain PNGs.
+     */
+    public static void publishAudio(int stream, int sampleRate, int channels,
+                                    byte[] pcm, int length) {
+        if (!enabled || !hasAudioListeners() || length <= 0 || pcm == null
+                || (stream != 1 && stream != 2)
+                || channels < 1 || channels > 2 || sampleRate <= 0 || sampleRate > 65535
+                || length > pcm.length || length % (channels * 2) != 0) return;
+        if (AUDIO_PENDING.incrementAndGet() > 8) {
+            AUDIO_PENDING.decrementAndGet(); // Drop late audio instead of building a lag queue.
+            return;
+        }
+        final byte[] packet = new byte[5 + length];
+        packet[0] = 'A';
+        packet[1] = (byte) stream;
+        packet[2] = (byte) channels;
+        packet[3] = (byte) (sampleRate >>> 8);
+        packet[4] = (byte) sampleRate;
+        System.arraycopy(pcm, 0, packet, 5, length);
+        try {
+            AUDIO_SENDER.execute(() -> {
+                try {
+                    for (ClientSession client : CLIENTS) {
+                        if (client.audioEnabled) client.sendBinary(packet);
+                    }
+                } finally {
+                    AUDIO_PENDING.decrementAndGet();
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            AUDIO_PENDING.decrementAndGet();
+        }
     }
 
     public static void startFromProperties() {
@@ -501,6 +555,7 @@ public final class WebClientBridge {
         private final OutputStream out;
         private final Object writeLock = new Object();
         private volatile boolean closed;
+        private volatile boolean audioEnabled;
 
         ClientSession(Socket socket, InputStream in, OutputStream out) {
             this.socket = socket;
@@ -515,7 +570,11 @@ public final class WebClientBridge {
                 if (frame.opcode == 9) {
                     sendFrame(10, frame.payload);
                 } else if (frame.opcode == 2) {
-                    handleInput(frame.payload);
+                    if (frame.payload.length == 2 && (frame.payload[0] & 0xff) == 8) {
+                        audioEnabled = frame.payload[1] == 1;
+                    } else {
+                        handleInput(frame.payload);
+                    }
                 }
             }
         }
@@ -555,6 +614,7 @@ public final class WebClientBridge {
 
         void close() {
             closed = true;
+            audioEnabled = false;
             try { socket.close(); } catch (IOException ignored) { }
         }
     }
