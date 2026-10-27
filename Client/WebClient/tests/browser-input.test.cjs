@@ -84,6 +84,7 @@ const coord = (packet, offset) => packet[offset] * 256 + packet[offset + 1];
   b.emit('contextmenu', { button: 2 });
   assert.equal(count(b.sent, 2, 3), 1, 'right click must press exactly once');
   assert.equal(count(b.sent, 3, 3), 1, 'right click must release exactly once');
+  assert.equal(count(b.sent, 7), 0, 'stationary right-click cannot start a drag');
 }
 {
   const b = browser();
