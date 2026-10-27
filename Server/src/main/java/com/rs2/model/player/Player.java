@@ -1430,10 +1430,16 @@ extends Entity {
         long now = System.currentTimeMillis();
         // A dead connection must leave the world even if combat keeps refreshing its timer.
         if (this.lastPacketReceivedMillis != 0L && now - this.lastPacketReceivedMillis >= 60000L) {
+            System.out.println("[connection-timeout] player=" + this.getUsername()
+                    + " reason=no game packets for "
+                    + (now - this.lastPacketReceivedMillis) + "ms (60s threshold)");
             this.disconnect();
         } else if (ServerSettings.idleLogoutEnabled && this.getPlayerRights() < 2
                 && this.lastPlayerInputMillis != 0L && now - this.lastPlayerInputMillis >= 300000L
                 && this.getSingleCombatTimer().hasElapsed()) {
+            System.out.println("[idle-logout] player=" + this.getUsername()
+                    + " idleFor=" + (now - this.lastPlayerInputMillis)
+                    + "ms IDLE_LOGOUT=" + (ServerSettings.idleLogoutEnabled ? "1" : "0"));
             this.packetSender.sendLogout();
             this.disconnect();
         }
