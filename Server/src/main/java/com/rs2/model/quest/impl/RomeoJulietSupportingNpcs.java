@@ -7,8 +7,9 @@ import com.rs2.model.player.Player;
 
 /** 2006 rework supporting characters, absent from the imported spawn table. */
 public final class RomeoJulietSupportingNpcs {
-    public static final int DRAUL = 5039;
-    public static final int PHILLIPA = 5040;
+    // The revision-443 cache maps these to 3324/3325; later OSRS uses 5039/5040.
+    public static final int DRAUL = 3324;
+    public static final int PHILLIPA = 3325;
 
     private RomeoJulietSupportingNpcs() {
     }
