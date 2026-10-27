@@ -535,6 +535,8 @@ extends Entity {
     public long lastFpsPingReceivedNanos;
     /** When the reactor last finished a game socket read on this player. */
     public long lastGameSocketReadNanos;
+    /** When the first opcode byte of the current FPS ping was decoded. */
+    public long fpsPingFirstByteNanos;
     public long lastPlayerInputMillis;
     public int familyCrestGauntletItemId;
     public boolean logoutPacketSent;
