@@ -65,6 +65,29 @@ renderer on a different port. Rebuild the client after pulling this change.
 The game server on port 43594 does not serve the webpage on port 8081; the Java
 client bridge provides that page. Modern browsers keep using the same stream.
 
+## Browser audio
+
+The browser/phone launcher enables streaming of the Java client's original PCM
+sound effects and MIDI music through the same WebSocket as the video feed.
+Once the page loads, tap **Enable sound** in your browser. Mobile Safari and
+Chrome require an explicit user gesture before Web Audio playback can start.
+Use **Mute sound** to turn it off again.
+
+Audio is decoded and mixed on the computer running the Java client, then played
+on the remote device; the device does not need Java or a MIDI synthesizer.
+Music capture relies on the Java 8 software MIDI synthesizer; if the Java
+installation lacks that synthesizer, the terminal reports a MIDI capture
+warning and may fall back to host audio. If the Windows audio mixer has no
+mute or master-gain control, sound effects may still play on the host PC as
+well as in the browser.
+
+`Start-Original-Client.bat` intentionally retains its existing local Windows
+sound output for the original embedded-IE executable. Browser audio is enabled
+by `Play-In-Browser-Or-Phone.bat` only. You must keep that Java bridge running
+while listening remotely. Port 8081 works over the LAN; to listen away from
+home, access the host over a private VPN or secure tunnel instead of exposing
+the unencrypted HTTP/WebSocket bridge directly to the Internet.
+
 ## Phone controls
 
 - Tap = normal left click.
