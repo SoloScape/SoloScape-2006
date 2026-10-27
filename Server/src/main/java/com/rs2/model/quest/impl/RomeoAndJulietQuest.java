@@ -72,7 +72,8 @@ extends QuestScript {
     }
 
     @Override
-    public final boolean handleInventoryItemFirstOption(Player player, int itemId, int slot, int questStage) {
+    public final boolean handleInventoryItemFirstOption(Player player, int interfaceId, int itemId, int questStage) {
+        // QuestManager forwards the interface ID first and the clicked item second.
         if (itemId != 756 || questStage != 7) return false;
         if (!player.getInventoryManager().removeItem(new ItemStack(756, 1))) return false;
         player.getUpdateState().setAnimation(829);
