@@ -314,6 +314,8 @@ implements Runnable {
             QuestDefinition.loadDefinitions();
             ItemDefinition.loadDefinitions();
             NpcDefinition.loadDefinitions();
+            // Convert old binary saves after definitions are ready, before accepting logins.
+            CharacterFileManager.migrateLegacyCharacters();
             FoodHandler.loadPotionDefinitions();
             ShopManager.loadShops();
             InterfaceDefinition.loadDefinitions();
