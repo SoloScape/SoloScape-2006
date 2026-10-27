@@ -177,4 +177,72 @@ const coord = (packet, offset) => packet[offset] * 256 + packet[offset + 1];
   assert.equal(count(b.sent, 3, 1), 1, 'focus loss releases pressed mouse');
   assert.equal(count(b.sent, 6), 1, 'focus loss moves cursor off the game');
 }
+
+{
+  const b = browser();
+  // Pinch out (fingers apart) zooms the 3D camera in; pinch in zooms out.
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 100 });
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 2, clientX: 200, clientY: 100 });
+  assert.equal(count(b.sent, 2), 0, 'starting pinch must not click/walk');
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 2, clientX: 252, clientY: 100 });
+  const zoomIn = b.sent.filter(packet => packet[0] === 9);
+  assert.equal(zoomIn.length, 1, 'pinch-out sends a camera zoom packet');
+  assert.ok(zoomIn[0][1] > 127, 'pinch-out sends negative distance adjustment');
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 2, clientX: 126, clientY: 100 });
+  const zoom = b.sent.filter(packet => packet[0] === 9);
+  assert.equal(zoom.length, 2, 'pinch-in sends a camera zoom packet');
+  assert.ok(zoom[1][1] > 0 && zoom[1][1] < 128,
+      'pinch-in sends positive distance adjustment');
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 2, clientX: 126, clientY: 100 });
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 1, clientX: 130, clientY: 100 });
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 1, clientX: 130, clientY: 100 });
+  b.flushTimers();
+  assert.equal(count(b.sent, 2), 0, 'ending pinch must not click the world');
+  assert.equal(count(b.sent, 7), 0, 'ending pinch must not rotate the camera');
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 3, clientX: 200, clientY: 120 });
+  b.advance(150);
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 3, clientX: 200, clientY: 120 });
+  b.flushTimers();
+  assert.equal(count(b.sent, 2, 1), 1, 'regular touch-to-walk works after pinch');
+}
+{
+  const b = browser();
+  // Starting a second finger while rotating cancels the held middle button.
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 1 });
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 1, clientX: 130, clientY: 130 });
+  assert.equal(count(b.sent, 2, 2), 1, 'one finger starts camera drag');
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 2, clientX: 210, clientY: 130 });
+  assert.equal(count(b.sent, 3, 2), 1, 'pinch releases active middle-mouse drag');
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 2, clientX: 270, clientY: 130 });
+  assert.ok(count(b.sent, 9) > 0, 'can zoom after starting a camera drag');
+  b.emit('pointercancel', { pointerType: 'touch', pointerId: 1 });
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 2 });
+  assert.equal(count(b.sent, 2, 1), 0, 'cancelling a pinch never triggers walking');
+}
+{
+  const b = browser();
+  // Two fingers over inventory must never zoom the 3D scene or select an item.
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 1, clientX: 590, clientY: 220 });
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 2, clientX: 650, clientY: 220 });
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 2, clientX: 730, clientY: 220 });
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 1 });
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 2 });
+  b.flushTimers();
+  assert.equal(count(b.sent, 9), 0, 'inventory pinch must not zoom world');
+  assert.equal(count(b.sent, 2), 0, 'inventory pinch must not click an item');
+}
+{
+  const b = browser({ left: 90, top: 20, width: 382.5, height: 251.5 });
+  // CSS-scaled small-screen input still recognizes pinch gestures.
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 1, clientX: 145, clientY: 60 });
+  b.emit('pointerdown', { pointerType: 'touch', pointerId: 2, clientX: 200, clientY: 60 });
+  b.emit('pointermove', { pointerType: 'touch', pointerId: 2, clientX: 244, clientY: 60 });
+  assert.ok(count(b.sent, 9) > 0, 'pinch works in a scaled phone-sized viewport');
+  b.emit('blur');
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 1 });
+  b.emit('pointerup', { pointerType: 'touch', pointerId: 2 });
+  b.flushTimers();
+  assert.equal(count(b.sent, 2), 0, 'losing focus during pinch cannot click');
+}
+
 console.log('SoloScape browser mouse/touch input regression checks passed.');
