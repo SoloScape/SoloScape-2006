@@ -25,7 +25,23 @@ bash "$client/Build-Client.sh"
 cd "$client"
 echo "Starting SoloScape browser client: $url"
 echo "The renderer stays attached to this terminal. Ctrl+C stops it."
-open_browser
+# Open only after the Java bridge has bound its HTTP port. Opening earlier
+# can leave Chrome/Firefox stuck on a connection-refused page.
+if command -v xdg-open >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+    (
+        for ((attempt=0; attempt<120; attempt++)); do
+            if command -v curl >/dev/null 2>&1 &&
+               curl -fsS --max-time 2 "$url" 2>/dev/null | grep -q '/windows-client.js'; then
+                xdg-open "$url" >/dev/null 2>&1 || true
+                exit 0
+            fi
+            sleep 1
+        done
+        echo "Browser bridge did not become ready automatically; open $url manually." >&2
+    ) &
+else
+    echo "Open $url in a desktop browser when the renderer is ready."
+fi
 exec "$JAVA_HOME/bin/java" \
     -Dclient.background=true -Dweb.audio.remote=true \
     -Dweb.bridge.openBrowser=false -Dweb.bridge.strictPort=true \
