@@ -30,7 +30,20 @@ public final class FpsDebugOverlayChecks {
                 .equals("Latency: 583ms (last 579)"),
                 "Latency line should stay compact at high RTT values");
         FpsDebugOverlay.onOutboundBuffered(); // Safe when no ping is pending.
-        FpsDebugOverlay.onPingReply(123, 0, 0, 0); // Ignore unsolicited replies.
+        FpsDebugOverlay.onPingReply(123, 0, 0, 0, 0L, 0L); // Ignore unsolicited replies.
+
+        require(FpsDebugOverlay.diagnosticTimings(true, 1_000L, 1_020L, 1_021L, 1_050L)
+                .equals("request to server: 20 ms; server processing: 1 ms; server reply to client: 29 ms"),
+                "Loopback ping must split request, server and response delays");
+        require(FpsDebugOverlay.diagnosticTimings(false, 1_000L, 1_020L, 1_021L, 1_050L)
+                .contains("one-way timings: unavailable"),
+                "Remote clocks must not be assumed synchronized");
+        require(FpsDebugOverlay.diagnosticTimings(true, 1_020L, 1_000L, 1_021L, 1_050L)
+                .contains("one-way timings: unavailable"),
+                "Negative inbound times must not be displayed");
+        require(FpsDebugOverlay.diagnosticTimings(true, 1_000L, 1_020L, 1_021L, 1_010L)
+                .contains("one-way timings: unavailable"),
+                "Negative outbound times must not be displayed");
 
         FpsDebugOverlay.addLatencySample(20);
         FpsDebugOverlay.addLatencySample(22);
