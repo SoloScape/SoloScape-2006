@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# EXPERIMENTAL: attempt to run the real Java client locally in the phone browser.
-# Unlike Play-In-Browser-Or-Phone.sh, this does NOT start a Java renderer on Linux.
+# Experimental CheerpJ browser-local Java rendering over a LAN WS/TCP gateway.
 set -euo pipefail
-
 web="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 client="$(cd "$web/.." && pwd -P)"
 server="$(cd "$web/../../Server" && pwd -P)"
 stage="$web/build/local-render"
 cache="$server/cache"
 port="${LOCAL_RENDER_HTTP_PORT:-8082}"
+game_port="${LOCAL_RENDER_GAME_PORT:-43594}"
 
 if [[ ! -f "$cache/main_file_cache.dat2" ]]; then
     echo "Missing game cache: $cache/main_file_cache.dat2" >&2
@@ -20,30 +19,33 @@ for index in $(seq 0 13) 255; do
         exit 1
     fi
 done
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "python3 is required to serve the experimental browser files." >&2
-    exit 1
-fi
 
-# Existing build process uses Java 8 and includes BrowserClientBootstrap.
+export JAVA_HOME
+JAVA_HOME=$(bash "$web/../../Setup-Java-8.sh")
+export PATH="$JAVA_HOME/bin:$PATH"
 bash "$client/Build-Client.sh"
-mkdir -p "$stage/cache"
+mkdir -p "$stage/cache" "$web/build/gateway-classes"
 cp "$client/build/client.jar" "$stage/client.jar"
 cp "$web/web/local-render.html" "$stage/local-render.html"
+cp "$web/web/local-render-bridge.js" "$stage/local-render-bridge.js"
 cp "$cache/main_file_cache.dat2" "$stage/cache/main_file_cache.dat2"
 for index in $(seq 0 13) 255; do
     cp "$cache/main_file_cache.idx$index" "$stage/cache/main_file_cache.idx$index"
 done
 
+"$JAVA_HOME/bin/javac" -encoding UTF-8 -d "$web/build/gateway-classes" "$web/gateway/src/WebGateway.java"
+
 echo
-echo "EXPERIMENTAL browser-local client (not the existing PNG stream)"
+echo "EXPERIMENTAL browser-local Java client, LAN WebSocket transport (not PNG streaming)"
 echo "From your phone, open: http://<linux-lan-ip>:$port/local-render.html"
-echo "Enter the Linux server's Tailscale IP (not 127.0.0.1) in the page."
-echo "Keep the SoloScape game server running on port 43594."
-echo "This HTTP launcher is for trusted LAN or private-VPN testing only."
-echo "Do not port-forward $port or expose these files directly to the Internet."
-echo "Press Ctrl+C to stop serving browser files."
+echo "No Tailscale required; the gateway relays /game to 127.0.0.1:$game_port."
+echo "Keep the SoloScape game server running on port $game_port."
+echo "The page also downloads CheerpJ from its CDN (internet required)."
+echo "Do not port-forward or expose $port to the public Internet."
+echo "Press Ctrl+C to stop the gateway."
 echo
 
-# One-way cache/JAR delivery only: game rendering will happen in CheerpJ on phone.
-exec python3 -m http.server "$port" --bind 0.0.0.0 --directory "$stage"
+# Same origin on port 8082 serves cache/JAR and WS/TCP relay; no Linux renderer.
+# Strict port selection prevents an unexpected port change if 8082 is occupied.
+exec "$JAVA_HOME/bin/java" -cp "$web/build/gateway-classes" WebGateway \
+    0.0.0.0 "$port" 127.0.0.1 "$game_port" "$stage" strict
