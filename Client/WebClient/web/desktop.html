@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>SoloScape</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+    #display { position: fixed; inset: 0; width: 100%; height: 100%; background: black; }
+  </style>
+  <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+  <script src="local-render-bridge.js"></script>
+</head>
+<body>
+<div id="display"></div>
+<script>
+(async () => {
+  'use strict';
+  try {
+    if (typeof cheerpjInit !== 'function') {
+      throw new Error('CheerpJ runtime did not load. Check access to its CDN.');
+    }
+    await cheerpjInit({
+      version: 8,
+      enableInputMethods: true,
+      status: 'default',
+      natives: window.localRenderSocketNatives,
+      javaProperties: [
+        'client.host=127.0.0.1',
+        'client.port=43594',
+        'client.transport=lan-websocket'
+      ]
+    });
+    cheerpjCreateDisplay(-1, -1, document.getElementById('display'));
+    const library = await cheerpjRunLibrary('/app/client.jar');
+    const client = await library.unpackaged.BrowserClientBootstrap;
+    await client.start();
+  } catch (error) {
+    console.error('[local-render] Startup failed:', error);
+  }
+})();
+</script>
+</body>
+</html>
