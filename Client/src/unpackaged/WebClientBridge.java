@@ -86,7 +86,8 @@ public final class WebClientBridge {
     }
 
     static int cameraDistanceOffset() {
-        return enabled ? CAMERA_DISTANCE_OFFSET.get() : 0;
+        return (enabled || "lan-websocket".equals(System.getProperty("client.transport")))
+                ? CAMERA_DISTANCE_OFFSET.get() : 0;
     }
 
     static int cameraDistance(int normalDistance) {
@@ -95,7 +96,7 @@ public final class WebClientBridge {
 
     // Positive steps zoom out, negative steps zoom in. Bounds keep the scene usable.
     static void adjustCameraZoom(int steps) {
-        if (!enabled) return;
+        if (!enabled && !"lan-websocket".equals(System.getProperty("client.transport"))) return;
         final int amount = clamp(steps, -10, 10) * 70;
         CAMERA_DISTANCE_OFFSET.updateAndGet(
                 old -> clamp(old + amount, -550, 850));
