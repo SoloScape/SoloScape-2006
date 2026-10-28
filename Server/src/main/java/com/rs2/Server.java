@@ -407,6 +407,8 @@ implements Runnable {
             PartyRoomManager.loadPartyChest();
             NpcDropTable.loadDropTables();
             GameplayHelper.loadNpcSpawns();
+            // March 2006 Romeo & Juliet rework supporting characters.
+            com.rs2.model.quest.impl.RomeoJulietSupportingNpcs.spawnMissingNpcs();
             if (ServerSettings.grandExchangeEnabled) {
                 GameplayHelper.spawnNpc(3863, 3183, 3436, 0, 4);
             }
