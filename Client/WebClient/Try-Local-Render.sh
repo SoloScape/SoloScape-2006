@@ -26,7 +26,9 @@ export PATH="$JAVA_HOME/bin:$PATH"
 bash "$client/Build-Client.sh"
 mkdir -p "$stage/cache" "$web/build/gateway-classes"
 cp "$client/build/client.jar" "$stage/client.jar"
-cp "$web/web/local-render.html" "$stage/local-render.html"
+for page in local-render.html mobile.html desktop.html; do
+    cp "$web/web/$page" "$stage/$page"
+done
 cp "$web/web/local-render-bridge.js" "$stage/local-render-bridge.js"
 cp "$cache/main_file_cache.dat2" "$stage/cache/main_file_cache.dat2"
 for index in $(seq 0 13) 255; do
@@ -54,7 +56,8 @@ fi
 
 echo
 echo "EXPERIMENTAL browser-local Java client, LAN WebSocket transport (not PNG streaming)"
-echo "From your phone, open: http://<linux-lan-ip>:$port/local-render.html"
+echo "Phone: http://<linux-lan-ip>:$port/mobile.html"
+echo "Desktop: http://127.0.0.1:$port/desktop.html"
 echo "No Tailscale required; the gateway relays /game to 127.0.0.1:$game_port."
 echo "Keep the SoloScape game server running on port $game_port."
 echo "The page also downloads CheerpJ from its CDN (internet required)."
