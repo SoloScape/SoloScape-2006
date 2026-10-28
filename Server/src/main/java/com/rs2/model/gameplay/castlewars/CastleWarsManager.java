@@ -2326,6 +2326,10 @@ public final class CastleWarsManager {
             return;
         }
         dropCarriedFlag(player);
+        // Castle Wars supplies and bandages are lost on death, but ordinary
+        // equipment, runes, potions and weapons remain with the player.
+        removeBandages(player);
+        CastleWarsEngineeringManager.cleanupPlayerSupplies(player);
         player.clearPvpCombatReferences();
         moveToTeamSpawn(player, team);
         if (player.botEnabled) {
