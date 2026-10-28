@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>SoloScape — experimental local browser renderer</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #131313; color: #f5f5f5; font: 15px system-ui, sans-serif; }
+    main { max-width: 820px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { line-height: 1.5; color: #ccc; }
+    form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 15px 0; }
+    label { display: grid; gap: 5px; font-size: 13px; }
+    input { width: 220px; max-width: 75vw; padding: 10px; background: #252525; color: #fff; border: 1px solid #666; border-radius: 6px; }
+    #port { width: 90px; }
+    button, #loginLink { background: #e4b85b; color: #171717; border: 0; border-radius: 6px; font-weight: 700; padding: 11px 15px; cursor: pointer; }
+    #loginLink { display: inline-block; text-decoration: none; margin: 4px 0 12px; }
+    #loginLink[hidden] { display: none; }
+    #status { margin: 10px 0; padding: 10px 12px; border: 1px solid #484848; border-radius: 6px; white-space: pre-wrap; }
+    #display { max-width: 100%; overflow-x: auto; background: black; }
+    .note { font-size: 12px; color: #a7a7a7; }
+  </style>
+  <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+</head>
+<body>
+<main>
+  <h1>SoloScape — browser-local renderer (experimental)</h1>
+  <p>This is <strong>not</strong> the existing PNG stream. It attempts to run the actual Java 443 client inside your phone's browser using CheerpJ (WebAssembly). Your Linux machine still runs the game server.</p>
+  <form id="startForm">
+    <label>Linux server Tailscale IP
+      <input id="host" inputmode="decimal" placeholder="100.x.y.z" autocomplete="off" required>
+    </label>
+    <label>Game port
+      <input id="port" type="number" min="1" max="65535" value="43594" required>
+    </label>
+    <button id="start" type="submit">Try local rendering</button>
+  </form>
+  <a id="loginLink" hidden target="_blank" rel="noopener noreferrer">Sign in to Tailscale to connect</a>
+  <div role="status" id="status">Enter your Linux server's Tailscale IP and start the experiment. The Java client, not the streaming bridge, will run on this device.</div>
+  <div id="display"></div>
+  <p class="note">Requires a Tailscale-connected game server, browser sign-in, a staged client JAR and cache, and access to the CheerpJ runtime CDN. Never put a Tailscale authentication key in this HTML. On phones, Java AWT performance and touch controls are not yet verified. The original streamed client is still available on port 8081.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const form = document.getElementById('startForm');
+  const host = document.getElementById('host');
+  const port = document.getElementById('port');
+  const button = document.getElementById('start');
+  const status = document.getElementById('status');
+  const loginLink = document.getElementById('loginLink');
+  let started = false;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (started) return;
+    const gameHost = host.value.trim();
+    const gamePort = Number(port.value);
+    if (!/^[a-zA-Z0-9.:-]+$/.test(gameHost) ||
+        !Number.isInteger(gamePort) || gamePort < 1 || gamePort > 65535) {
+      status.textContent = 'Enter a valid Tailscale IP / hostname and port.';
+      return;
+    }
+    if (typeof cheerpjInit !== 'function') {
+      status.textContent = 'CheerpJ runtime did not load. Check connectivity to its CDN.';
+      return;
+    }
+    started = true;
+    button.disabled = true;
+    host.disabled = true;
+    port.disabled = true;
+    status.textContent = 'Initializing Java in this browser…';
+    try {
+      await cheerpjInit({
+        version: 8,
+        status: 'default',
+        javaProperties: [
+          'client.host=' + gameHost,
+          'client.port=' + gamePort
+        ],
+        tailscaleLoginUrlCb: (url) => {
+          loginLink.href = url;
+          loginLink.hidden = false;
+          status.textContent = 'Tailscale needs browser authentication. Tap the sign-in link, then return to this tab.';
+        }
+      });
+      status.textContent = 'Java initialized. Importing cache, then launching SoloScape…';
+      cheerpjCreateDisplay(765, 503, document.getElementById('display'));
+      const exitCode = await cheerpjRunMain(
+        'unpackaged.BrowserClientBootstrap',
+        '/app/client.jar',
+        '1', 'local', 'live', 'highmem', 'members', 'english'
+      );
+      status.textContent = 'Local Java client exited with code ' + exitCode + '. Check the browser console for diagnostics.';
+    } catch (error) {
+      status.textContent = 'Local rendering failed: ' + (error && error.message || String(error)) +
+        '. Check the browser console for details.';
+      console.error(error);
+    }
+  });
+})();
+</script>
+</body>
+</html>
