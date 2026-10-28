@@ -68,8 +68,11 @@ extends TickTask {
                 CastleWarsEngineeringManager.getMainDoorInteractionApproach(
                         this.player, this.objectId, this.objectX, this.objectY);
         if (castleWarsMainDoorApproach != null) {
-            if (this.player.getPosition().getX() == castleWarsMainDoorApproach.getX()
-                    && this.player.getPosition().getY() == castleWarsMainDoorApproach.getY()) {
+            // Both leaves share a doorway: a player already next to either
+            // leaf can attack the clicked leaf without stepping forward or
+            // being rerouted to stand directly in front of that specific leaf.
+            if (CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                    this.player, this.objectId, this.objectX, this.objectY)) {
                 this.player.getMovementQueue().clear();
                 this.player.getMovementQueue().clearMovementActions();
                 if (CastleWarsManager.handleSecondObjectAction(
