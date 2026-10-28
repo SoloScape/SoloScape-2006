@@ -8,6 +8,7 @@ on:
       - 'Client/src/**'
       - 'Client/tests/BrowserAudioStartupChecks.java'
       - 'Client/tests/LocalRenderTouchChecks.js'
+      - 'Client/tests/DesktopInputChecks.js'
       - 'Client/WebClient/web/local-render.html'
       - 'Client/WebClient/web/mobile.html'
       - 'Client/WebClient/web/desktop.html'
@@ -19,6 +20,7 @@ on:
       - 'Client/src/**'
       - 'Client/tests/BrowserAudioStartupChecks.java'
       - 'Client/tests/LocalRenderTouchChecks.js'
+      - 'Client/tests/DesktopInputChecks.js'
       - 'Client/WebClient/web/local-render.html'
       - 'Client/WebClient/web/mobile.html'
       - 'Client/WebClient/web/desktop.html'
@@ -56,3 +58,5 @@ jobs:
           timeout 30s java -Djava.awt.headless=true -cp Client/build/classes:Client/build/test-classes unpackaged.BrowserAudioStartupChecks
       - name: Check local-renderer touch gestures
         run: node Client/tests/LocalRenderTouchChecks.js
+      - name: Check desktop controls
+        run: node Client/tests/DesktopInputChecks.js
