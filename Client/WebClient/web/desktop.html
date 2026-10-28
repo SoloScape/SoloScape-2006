@@ -29,6 +29,7 @@
   function enqueue(action) {
     inputQueue = inputQueue.then(action)
       .catch(error => console.error('[desktop] Input failed:', error));
+    return inputQueue;
   }
   function gamePoint(event) {
     const rect = display.getBoundingClientRect();
@@ -39,7 +40,7 @@
       scene: x >= 0 && x < 512 && y >= 0 && y < 334 };
   }
   function sendMouse(id, button, point) {
-    enqueue(() => client.sendMouse(id, button, point.x, point.y));
+    return enqueue(() => client.sendMouse(id, button, point.x, point.y));
   }
   function consume(event) {
     event.preventDefault();
@@ -71,25 +72,49 @@
     consume(event);
     lastMiddleEvent = performance.now();
     display.setPointerCapture?.(event.pointerId);
-    middleDrag = { id: event.pointerId, point };
+    middleDrag = { id: event.pointerId, point, queuedPoint: point, frame: null, sending: false };
     sendMouse(503, 0, point);
     sendMouse(501, 2, point);
   }, { capture: true, passive: false });
+  function samePoint(a, b) { return a.x === b.x && a.y === b.y; }
+  function scheduleMiddleMove(drag) {
+    if (drag.frame !== null || drag.sending || samePoint(drag.point, drag.queuedPoint)) return;
+    drag.frame = requestAnimationFrame(() => {
+      drag.frame = null;
+      if (middleDrag !== drag) return;
+      // Keep at most one move in flight. New events replace the pending position,
+      // rather than accumulating hundreds of Java calls behind the cursor.
+      const point = drag.point;
+      drag.queuedPoint = point;
+      drag.sending = true;
+      sendMouse(506, 2, point).finally(() => {
+        drag.sending = false;
+        if (middleDrag === drag) scheduleMiddleMove(drag);
+      });
+    });
+  }
   display.addEventListener('pointermove', event => {
     if (!middleDrag || middleDrag.id !== event.pointerId) return;
     consume(event);
     lastMiddleEvent = performance.now();
     const point = gamePoint(event);
-    if (!point.inside) return;
-    middleDrag.point = point;
-    sendMouse(506, 2, point);
+    // Pointer capture can deliver coordinates outside the canvas. Clamp them so
+    // leaving and re-entering does not resume from a stale interior position.
+    middleDrag.point = { x: Math.max(0, Math.min(764, point.x)),
+      y: Math.max(0, Math.min(502, point.y)) };
+    scheduleMiddleMove(middleDrag);
   }, { capture: true, passive: false });
   function releaseMiddle(event) {
     if (!middleDrag || (event && middleDrag.id !== event.pointerId)) return;
     if (event) consume(event);
     lastMiddleEvent = performance.now();
-    sendMouse(502, 2, middleDrag.point);
+    const drag = middleDrag;
     middleDrag = null;
+    if (drag.frame !== null) cancelAnimationFrame(drag.frame);
+    // Flush the final position before release, even if the last animation frame
+    // has not run yet. Previously queued movement remains ordered before it.
+    if (!samePoint(drag.point, drag.queuedPoint)) sendMouse(506, 2, drag.point);
+    sendMouse(502, 2, drag.point);
   }
   display.addEventListener('pointerup', releaseMiddle, { capture: true, passive: false });
   display.addEventListener('pointercancel', releaseMiddle, { capture: true, passive: false });
