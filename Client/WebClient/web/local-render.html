@@ -39,7 +39,7 @@
     <path d="M5 9h2m2 0h2m2 0h2m2 0h2M5 12h2m2 0h2m2 0h2m2 0h2M7 16h10"/>
   </svg>
 </button>
-<textarea id="phone-input" aria-label="Game keyboard input" inputmode="text" enterkeyhint="enter"
+<textarea id="phone-input" aria-label="Game keyboard input" inputmode="none" readonly enterkeyhint="enter"
   autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" tabindex="-1"></textarea>
 <script>
 (async () => {
@@ -49,6 +49,7 @@
   const keyboard = document.getElementById('keyboard');
   const phoneInput = document.getElementById('phone-input');
   let clientBridge;
+  let keyboardRequested = false;
   let keyboardViewport = null;
   let keyboardCloseTimer;
   let lastGameTapY = null;
@@ -63,17 +64,58 @@
     phoneInput.value = ' ';
     phoneInput.setSelectionRange(1, 1);
   }
+  function closeKeyboard() {
+    keyboardRequested = false;
+    phoneInput.readOnly = true;
+    phoneInput.inputMode = 'none';
+    if (document.activeElement === phoneInput) phoneInput.blur();
+    keyboard.setAttribute('aria-pressed', 'false');
+  }
+  function suppressRuntimeEditors() {
+    // CheerpJ may create or refocus hidden text controls even with input methods off.
+    for (const editor of document.querySelectorAll('input, textarea, [contenteditable]')) {
+      if (editor === phoneInput) continue;
+      if (editor.getAttribute('inputmode') !== 'none') editor.setAttribute('inputmode', 'none');
+      if ('readOnly' in editor && !editor.readOnly) editor.readOnly = true;
+      if (editor.hasAttribute('contenteditable') && editor.getAttribute('contenteditable') !== 'false') {
+        editor.setAttribute('contenteditable', 'false');
+      }
+    }
+  }
+  suppressRuntimeEditors();
+  new MutationObserver(suppressRuntimeEditors).observe(document.body, {
+    subtree: true, childList: true, attributes: true,
+    attributeFilter: ['inputmode', 'readonly', 'contenteditable']
+  });
+  document.addEventListener('pointerdown', event => {
+    suppressRuntimeEditors();
+    if (!keyboard.contains(event.target)) closeKeyboard();
+  }, { capture: true });
+  document.addEventListener('focusin', event => {
+    const target = event.target;
+    if (target === phoneInput && keyboardRequested) return;
+    if (target.matches && target.matches('input, textarea, [contenteditable="true"]')) {
+      target.blur();
+    }
+  }, { capture: true });
   keyboard.addEventListener('pointerdown', event => event.preventDefault());
   keyboard.addEventListener('click', () => {
     if (document.activeElement === phoneInput) {
-      phoneInput.blur();
+      closeKeyboard();
     } else {
+      keyboardRequested = true;
+      phoneInput.readOnly = false;
+      phoneInput.inputMode = 'text';
       resetInput();
       // Focus synchronously inside the user's tap so mobile browsers open the keyboard.
       phoneInput.focus({ preventScroll: true });
     }
   });
   phoneInput.addEventListener('focus', () => {
+    if (!keyboardRequested) {
+      closeKeyboard();
+      return;
+    }
     clearTimeout(keyboardCloseTimer);
     // Capture the full-size display before the keyboard changes the visual viewport.
     if (!keyboardViewport) {
@@ -86,6 +128,9 @@
     fitClient();
   });
   phoneInput.addEventListener('blur', () => {
+    keyboardRequested = false;
+    phoneInput.readOnly = true;
+    phoneInput.inputMode = 'none';
     keyboard.setAttribute('aria-pressed', 'false');
     phoneInput.value = '';
     // Keep the size stable through the keyboard's closing animation.
@@ -96,7 +141,7 @@
   });
   display.addEventListener('pointerdown', event => {
     lastGameTapY = event.clientY - viewport.getBoundingClientRect().top;
-    phoneInput.blur();
+    closeKeyboard();
   }, { capture: true });
   phoneInput.addEventListener('beforeinput', event => {
     if (event.isComposing) return;
@@ -167,7 +212,7 @@
   window.addEventListener('orientationchange', () => {
     keyboardViewport = null;
     lastGameTapY = null;
-    phoneInput.blur();
+    closeKeyboard();
     fitClient();
   });
   if (window.visualViewport) {
