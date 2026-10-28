@@ -243,10 +243,14 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	    });
 	    Class10.frame.addWindowListener(this);
 	    Class10.frame.setVisible(true);
-	    if (!background) Class10.frame.toFront();
 	    Insets insets = Class10.frame.getInsets();
 	    Class10.frame.setSize(insets.right + (insets.left + i_6_), insets.top + i_7_ + insets.bottom);
 	    Class10.frame.setMinimumSize(new Dimension(Class10.frame.getWidth(), Class10.frame.getHeight()));
+	    if (!background) {
+		// Place the fully sized, decorated native window away from screen edges.
+		Class10.frame.setLocationRelativeTo(null);
+		Class10.frame.toFront();
+	    }
 	    Cache.aClass21_108 = Class39_Sub5_Sub9.signlink = new Signlink(true, null, inetaddress, i_10_, string, i_8_);
 	    Class39_Sub5_Sub9.signlink.requestThread(this, 1);
 	} catch (Exception exception) {

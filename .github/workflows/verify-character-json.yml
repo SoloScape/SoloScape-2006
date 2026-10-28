@@ -10,12 +10,14 @@ on:
       - 'Server/src/main/java/com/rs2/util/CharacterFileManager.java'
       - 'Server/src/main/java/com/rs2/util/CharacterJson*.java'
       - 'Server/src/test/java/CharacterJsonSaveChecks.java'
+      - 'Server/src/test/java/CharacterRuntimeSaveChecks.java'
       - '.github/workflows/verify-character-json.yml'
   pull_request:
     paths:
       - 'Server/src/main/java/com/rs2/util/CharacterJson*.java'
       - 'Server/src/main/java/com/rs2/util/CharacterFileManager.java'
       - 'Server/src/test/java/CharacterJsonSaveChecks.java'
+      - 'Server/src/test/java/CharacterRuntimeSaveChecks.java'
   workflow_dispatch:
 jobs:
   character-json:
@@ -32,5 +34,6 @@ jobs:
           mkdir -p build-json-checks
           find src/main/java -name '*.java' > /tmp/soloscape-json-sources.txt
           javac -encoding UTF-8 -cp 'lib/*' -d build-json-checks @/tmp/soloscape-json-sources.txt
-          javac -encoding UTF-8 -cp 'build-json-checks:lib/*' -d build-json-checks src/test/java/CharacterJsonSaveChecks.java
+          javac -encoding UTF-8 -cp 'build-json-checks:lib/*' -d build-json-checks src/test/java/CharacterJsonSaveChecks.java src/test/java/CharacterRuntimeSaveChecks.java
           java -cp 'build-json-checks:lib/*' CharacterJsonSaveChecks
+          java -cp 'build-json-checks:lib/*' CharacterRuntimeSaveChecks

@@ -83,9 +83,6 @@ public final class CharacterFileManager {
                 HiscoresDatabase.savePlayer(player);
             }
         }
-        if (System.currentTimeMillis() - player.lastCharacterSaveMillis < 50L) {
-            return true;
-        }
         String username = player.getUsername();
         LoginProtocol.beginCharacterSave(username);
 
@@ -99,6 +96,7 @@ public final class CharacterFileManager {
             if (ServerSettings.sqlitePlayerSaveEnabled) {
                 // Preserve the independently configured database backend.
                 CharacterFileManager.writePlayerFile(player);
+                player.lastCharacterSaveMillis = System.currentTimeMillis();
                 return true;
             }
 
@@ -134,6 +132,8 @@ public final class CharacterFileManager {
                                 new File(characterDirectory, username + ".dat.bak").toPath(),
                                 StandardCopyOption.REPLACE_EXISTING);
                     }
+                    // Mark the save only after the JSON file was committed successfully.
+                    player.lastCharacterSaveMillis = System.currentTimeMillis();
                     return true;
                 } catch (Exception exception) {
                     System.err.println("Character JSON save attempt " + attempt
@@ -1231,7 +1231,6 @@ public final class CharacterFileManager {
             ((DataOutputStream)value6).writeLong(((Player)value).reservedSaveLong1);
             ((DataOutputStream)value6).writeInt(((Player)value).reservedSaveInt2);
             ((DataOutputStream)value6).writeInt(((Player)value).reservedSaveInt3);
-            ((Player)value).lastCharacterSaveMillis = System.currentTimeMillis();
             value7 = value;
             ((DataOutputStream)value6).writeUTF("");
             ((DataOutputStream)value6).writeInt(((Player)value).familyCrestGauntletItemId);
