@@ -72,6 +72,24 @@ public final class BrowserClientBootstrap {
         });
     }
 
+
+    /** Mouse coordinates use the original game resolution, including on resized canvases. */
+    public static int sendMouse(int id, int button, int x, int y) throws Exception {
+        WebClientBridge.mouse(id, button, x, y);
+        if (!java.awt.EventQueue.isDispatchThread()) {
+            java.awt.EventQueue.invokeAndWait(() -> { });
+        }
+        return sceneFrame();
+    }
+
+    public static int sceneFrame() {
+        return Class31.state == 30 ? Canvas_Sub1.anInt15 : -1;
+    }
+
+    public static void zoom(int steps) {
+        WebClientBridge.adjustCameraZoom(steps);
+    }
+
     private static void copyCacheFile(String fileName) throws IOException {
         File source = new File(SOURCE_CACHE, fileName);
         File target = new File(LOCAL_CACHE, fileName);
