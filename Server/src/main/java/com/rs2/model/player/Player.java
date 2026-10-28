@@ -1957,9 +1957,8 @@ extends Entity {
                                 value2 = this;
                                 ((Player)value2).fightCaveController.cleanupIfInFightCave();
                                 value2 = this;
-                                if (((Player)value2).loginResponseCode == 2) {
-                                    CharacterFileManager.savePlayer(this);
-                                }
+                                // Save on the game-loop thread after disconnect cleanup.
+                                // The disconnect queue owns the final character snapshot.
                             }
                         }
                     }
