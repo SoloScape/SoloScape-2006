@@ -48,6 +48,30 @@ public final class BrowserClientBootstrap {
         }
     }
 
+
+    /** Start through library mode so keyboard calls share the game's class loader. */
+    public static void start() {
+        main(new String[] {"1", "local", "live", "highmem", "members", "english"});
+    }
+
+    /** Forward explicit phone-keyboard input without focusing CheerpJ's text overlay. */
+    public static void sendKey(final int code, final int character) {
+        java.awt.EventQueue.invokeLater(() -> {
+            java.awt.Canvas canvas = Class41.aCanvas778;
+            if (canvas == null) return;
+            char value = character <= 0 ? java.awt.event.KeyEvent.CHAR_UNDEFINED : (char) character;
+            long when = System.currentTimeMillis();
+            java.awt.event.KeyEvent pressed = new java.awt.event.KeyEvent(canvas,
+                    java.awt.event.KeyEvent.KEY_PRESSED, when, 0, code, value);
+            java.awt.event.KeyEvent released = new java.awt.event.KeyEvent(canvas,
+                    java.awt.event.KeyEvent.KEY_RELEASED, when, 0, code, value);
+            for (java.awt.event.KeyListener listener : canvas.getKeyListeners()) {
+                listener.keyPressed(pressed);
+                listener.keyReleased(released);
+            }
+        });
+    }
+
     private static void copyCacheFile(String fileName) throws IOException {
         File source = new File(SOURCE_CACHE, fileName);
         File target = new File(LOCAL_CACHE, fileName);
