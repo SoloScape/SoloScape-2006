@@ -65,6 +65,17 @@ public final class BrowserAudioStartupChecks {
                 "Touch hover did not return scene render progress");
         require(jagex.world.actors.Projectile.anInt2208 == 100 && Class10.anInt172 == 110,
                 "Touch hover coordinates were not mapped through the resized game canvas");
+        jagex.utils.IsaacPrng.anInt1091 = 100;
+        Class33.anInt599 = 110;
+        BrowserClientBootstrap.sceneRendered();
+        require(!BrowserClientBootstrap.sceneHoverReady(100, 110, 7),
+                "A frame already in progress incorrectly acknowledged the new hover");
+        Canvas_Sub1.anInt15 = 8;
+        BrowserClientBootstrap.sceneRendered();
+        require(BrowserClientBootstrap.sceneHoverReady(100, 110, 7),
+                "Completed scene hover was not acknowledged");
+        require(!BrowserClientBootstrap.sceneHoverReady(105, 113, 7),
+                "A scene rendered at an old position incorrectly acknowledged finger drift");
         BrowserClientBootstrap.sendMouse(501, 1, 120, 130);
         require(JMouseListener.anInt791 == 120 && Class41.anInt784 == 130 && Class23.anInt430 == 1,
                 "Touch tap did not reach the game's click queue");
