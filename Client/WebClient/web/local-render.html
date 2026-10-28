@@ -24,7 +24,7 @@
     #keyboard:disabled { opacity: .4; }
     #keyboard[aria-pressed="true"] { background: #66512b; }
     #phone-input {
-      position: fixed; bottom: 0; left: 0; width: 1px; height: 1px;
+      position: fixed; top: 8px; left: 8px; width: 1px; height: 1px;
       opacity: 0; border: 0; padding: 0; font-size: 16px; pointer-events: none;
     }
   </style>
@@ -49,6 +49,9 @@
   const keyboard = document.getElementById('keyboard');
   const phoneInput = document.getElementById('phone-input');
   let clientBridge;
+  let keyboardViewport = null;
+  let keyboardCloseTimer;
+  let lastGameTapY = null;
   let pendingKeys = Promise.resolve();
   function sendKey(code, character) {
     if (!clientBridge) return;
@@ -70,12 +73,31 @@
       phoneInput.focus({ preventScroll: true });
     }
   });
-  phoneInput.addEventListener('focus', () => keyboard.setAttribute('aria-pressed', 'true'));
+  phoneInput.addEventListener('focus', () => {
+    clearTimeout(keyboardCloseTimer);
+    // Capture the full-size display before the keyboard changes the visual viewport.
+    if (!keyboardViewport) {
+      keyboardViewport = {
+        width: parseFloat(viewport.style.width),
+        height: parseFloat(viewport.style.height)
+      };
+    }
+    keyboard.setAttribute('aria-pressed', 'true');
+    fitClient();
+  });
   phoneInput.addEventListener('blur', () => {
     keyboard.setAttribute('aria-pressed', 'false');
     phoneInput.value = '';
+    // Keep the size stable through the keyboard's closing animation.
+    keyboardCloseTimer = setTimeout(() => {
+      keyboardViewport = null;
+      fitClient();
+    }, 400);
   });
-  display.addEventListener('pointerdown', () => phoneInput.blur(), { capture: true });
+  display.addEventListener('pointerdown', event => {
+    lastGameTapY = event.clientY - viewport.getBoundingClientRect().top;
+    phoneInput.blur();
+  }, { capture: true });
   phoneInput.addEventListener('beforeinput', event => {
     if (event.isComposing) return;
     if (event.inputType.startsWith('delete')) {
@@ -123,13 +145,31 @@
   phoneInput.addEventListener('keypress', event => event.stopPropagation());
   function fitClient() {
     const visible = window.visualViewport;
-    // Visual viewport follows mobile browser bars, rotation and the on-screen keyboard.
-    viewport.style.width = (visible ? visible.width : window.innerWidth) + 'px';
-    viewport.style.height = (visible ? visible.height : window.innerHeight) + 'px';
-    viewport.style.left = (visible ? visible.offsetLeft : 0) + 'px';
-    viewport.style.top = (visible ? visible.offsetTop : 0) + 'px';
+    const visibleWidth = visible ? visible.width : window.innerWidth;
+    const visibleHeight = visible ? visible.height : window.innerHeight;
+    const left = visible ? visible.offsetLeft : 0;
+    const top = visible ? visible.offsetTop : 0;
+    // Freeze the game dimensions while typing. Move the last tapped field above
+    // the keyboard instead of rescaling the entire client into the remaining space.
+    const width = keyboardViewport ? keyboardViewport.width : visibleWidth;
+    const height = keyboardViewport ? keyboardViewport.height : visibleHeight;
+    const anchorY = lastGameTapY === null ? height * 0.55 : lastGameTapY;
+    const pan = keyboardViewport
+      ? Math.min(Math.max(0, height - visibleHeight), Math.max(0, anchorY + 48 - visibleHeight))
+      : 0;
+    viewport.style.width = width + 'px';
+    viewport.style.height = height + 'px';
+    viewport.style.left = left + 'px';
+    viewport.style.top = (top - pan) + 'px';
+    keyboard.style.top = (top + visibleHeight / 2) + 'px';
   }
   window.addEventListener('resize', fitClient);
+  window.addEventListener('orientationchange', () => {
+    keyboardViewport = null;
+    lastGameTapY = null;
+    phoneInput.blur();
+    fitClient();
+  });
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', fitClient);
     window.visualViewport.addEventListener('scroll', fitClient);
