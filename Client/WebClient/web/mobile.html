@@ -139,11 +139,6 @@
       fitClient();
     }, 400);
   });
-  function primeTouchHover(touch, point) {
-    touch.hoverPoint = point;
-    touch.hoverAt = performance.now();
-    touch.hover = mouse(503, 0, point);
-  }
   display.addEventListener('pointerdown', event => {
     lastGameTapY = event.clientY - viewport.getBoundingClientRect().top;
     closeKeyboard();
@@ -230,6 +225,11 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     return true;
+  }
+  function primeTouchHover(touch, point) {
+    touch.hoverPoint = point;
+    touch.hoverAt = performance.now();
+    touch.hover = mouse(503, 0, point);
   }
   function tapAfterHover(touch, generation) {
     // Keep hover, press and release together. Later taps must not move the cursor
