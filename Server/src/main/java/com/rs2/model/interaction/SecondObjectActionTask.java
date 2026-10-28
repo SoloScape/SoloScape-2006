@@ -106,6 +106,11 @@ extends TickTask {
             this.stop();
             return;
         }
+        if (AlKharidGateToll.isTollGate(this.objectId, this.objectX, this.objectY, this.objectPlane)) {
+            AlKharidGateToll.tryPass(this.player);
+            this.stop();
+            return;
+        }
         if (this.player.getQuestManager().handleSecondObjectAction(this.objectId, this.objectX, this.objectY)) {
             this.stop();
             return;
