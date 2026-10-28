@@ -113,6 +113,13 @@ public final class BrowserClientBootstrap {
         return hover != null && hover.frame > afterFrame && hover.x == x && hover.y == y;
     }
 
+    /** The game snapshots and clears this press under the same mouse-listener lock. */
+    public static boolean clickConsumed() {
+        synchronized (Class39_Sub13.aClass42_1502) {
+            return Class23.anInt430 == 0;
+        }
+    }
+
     public static void zoom(int steps) {
         WebClientBridge.adjustCameraZoom(steps);
     }
