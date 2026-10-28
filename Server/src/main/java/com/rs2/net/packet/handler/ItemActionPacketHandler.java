@@ -1998,6 +1998,18 @@ implements PacketHandler {
                 CastleWarsManager.openCastleWarsManual(player);
                 return;
             }
+            case CastleWarsEngineeringManager.BARRICADE_ITEM_ID: {
+                // The inventory action places the barricade at the player's
+                // current tile; only bots could reach this method before.
+                if (!CastleWarsManager.isInGame(player)) {
+                    player.packetSender.sendGameMessage("You can only set up barricades in Castle Wars.");
+                    return;
+                }
+                if (!CastleWarsEngineeringManager.placeBarricade(player)) {
+                    player.packetSender.sendGameMessage("You can't set up a barricade here.");
+                }
+                return;
+            }
             case 4049: {
                 if (!player.isInCastleWars()) {
                     player.packetSender.sendGameMessage("You can only use these in Castle Wars.");
