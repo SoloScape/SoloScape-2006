@@ -255,7 +255,7 @@ public class JSocket implements Runnable {
      * This runs after the title packet arrives as well as on initial load,
      * and restores stock geometry when another two-choice dialogue opens.
      */
-    static void configureCastleWarsOfferSwords() {
+    public static void configureCastleWarsOfferSwords() {
         if (Class62_Sub1.widgets == null || Class62_Sub1.widgets.length <= 228) {
             return;
         }
