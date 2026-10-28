@@ -223,37 +223,37 @@ For detailed implementation notes and limitations, see [Server/README.md](Server
 
 ## Roadmap
 
-The goal is an increasingly faithful **18 December 2006 (revision 443)** experience, with stable local play and developer tooling. The items below are **priorities under review**, not promised release dates. They are informed by the [historical accuracy audit](AUDIT_2006-12-18.md) and [dependency-ordered fix plan](fix-order.md); those documents capture an earlier snapshot, so individual findings must be rechecked against current code before being treated as open bugs.
+SoloScape aims to recreate the **18 December 2006 (revision 443)** experience. The tracker below follows the requested skill-by-skill layout and measures **historical completeness**, not simply whether source code for a skill exists.
 
-### Phase 1 — Historical accuracy and progression safeguards
+**Status key:** ✅ Complete and verified · 🚧 In progress · ⛔ Not yet marked complete (may have partial implementations) · ➖ Outside the 2006 scope
 
-- [ ] Audit and restrict normal-player debug/progression commands.
-- [ ] Keep later RuneScape systems—such as the Grand Exchange, bank tabs, and Ironman modes—out of a strict December 2006 profile, while allowing deliberately optional custom features where appropriate.
-- [ ] Prevent post-target items, drops, spawns, and rewards from leaking into strict 2006 gameplay; resolve custom-item ID collisions.
-- [ ] Review historical death/loot rules, seasonal event activation, and account/economy behavior.
+### Skills & combat
 
-### Phase 2 — Revision 443 data and core systems
+| Skill | Status | Skill | Status |
+| --- | :---: | --- | :---: |
+| Woodcutting | 🚧 | Mining | ⛔ |
+| Agility | ⛔ | Smithing | ⛔ |
+| Herblore | ⛔ | Fishing | ⛔ |
+| Thieving | ⛔ | Cooking | ⛔ |
+| Crafting | ⛔ | Firemaking | ⛔ |
+| Fletching | ⛔ | Runecrafting | ⛔ |
+| Slayer | ⛔ | Farming | ⛔ |
+| Construction | ⛔ | Hunter | ⛔ |
+| Prayer | ⛔ | Magic | ⛔ |
+| Ranged | ⛔ | Melee (Attack, Strength, Defence & Hitpoints) | ⛔ |
 
-- [ ] Reconcile the NPC spawn population and quest definitions with the target date, including quests released through *Animal Magnetism*.
-- [ ] Complete the **23-skill** server model, including a real Hunter skill slot and persistence across file and optional SQLite saves.
-- [ ] Expand **Hunter** and **Construction** from their current incomplete state into usable, era-appropriate skills.
-- [ ] Tighten cache validation, item-definition boundaries, and save-data compatibility tests.
+**Sailing:** ➖ Not part of the December 2006 skill set, so it is outside this project's historical target rather than an unfinished 2006 skill.
 
-### Phase 3 — 2006 gameplay coverage
+**Important:** Some skills marked ⛔ already have working mechanics in the server. This tracker deliberately does **not** equate ⛔ with “no code exists”; it means the skill has not yet been marked fully implemented and historically verified. Woodcutting is shown as 🚧, as in the proposed tracker. Update statuses as features are tested and completed.
 
-- [ ] Complete missing or partial target-date quests, dialogue, rewards, and quest-menu behavior.
-- [ ] Restore or finish the Lunar spellbook, target-era Slayer coverage, random events, and activities such as the Stronghold of Security.
-- [ ] Review period-accurate Treasure Trails, crossbow systems, Capes of Accomplishment, and other late-2006 content.
-- [ ] Close gaps in NPC, object, item, and interface interaction routing identified by the audit.
+### Other development priorities
 
-### Phase 4 — Mechanics, validation, and polish
+- **Historical accuracy:** Isolate later RuneScape systems, secure progression commands, and audit post-2006 items, drops, spawns, and death mechanics.
+- **Revision 443 data:** Finish the target-era NPC/quest population, Hunter/Construction support, skill persistence, and cache/definition validation.
+- **Content completion:** Extend quests, Lunar magic, random events, activities, Slayer, Treasure Trails, and other late-2006 systems.
+- **Quality and parity:** Fix period-specific combat, Prayer, weapon and food behavior; finish interaction coverage and add live client/server acceptance tests.
 
-- [ ] Verify and correct combat accuracy, weapon speed, special attacks, Prayer effects, food effects, and other period-specific mechanics.
-- [ ] Expand client/server regression coverage and perform live in-game checks for key quests, skills, combat, travel, and interfaces.
-- [ ] Re-run the [interaction audit](Server/README.md#interaction-coverage-and-revision-443-routing) and [strict-content checks](tools/strict-content-checks.md), triaging unresolved findings.
-- [ ] Maintain a reproducible acceptance checklist for revision 443 before claiming historically complete gameplay.
-
-**Already in place:** the revision 443 client/cache foundation, automatic Java 8 setup, local build/play scripts, JSON save migration, developer tooling, browser/phone streaming, and an implementation of the Christmas rescue event. These still need continued testing where noted above.
+These are priorities, **not release commitments**. The [historical audit](AUDIT_2006-12-18.md) and [ordered fix plan](fix-order.md) provide the detailed backlog; because they document an earlier code snapshot, recheck each finding before treating it as unresolved. The [Current Working Features](#current-working-features) section lists systems already present in the repository.
 
 ## Troubleshooting
 
