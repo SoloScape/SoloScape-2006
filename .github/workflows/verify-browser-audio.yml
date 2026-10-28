@@ -9,6 +9,8 @@ on:
       - 'Client/tests/BrowserAudioStartupChecks.java'
       - 'Client/tests/LocalRenderTouchChecks.js'
       - 'Client/WebClient/web/local-render.html'
+      - 'Client/WebClient/web/mobile.html'
+      - 'Client/WebClient/web/desktop.html'
       - 'Client/WebClient/Try-Local-Render.sh'
       - 'Server/cache/map-fallback/**'
       - '.github/workflows/verify-browser-audio.yml'
@@ -18,6 +20,8 @@ on:
       - 'Client/tests/BrowserAudioStartupChecks.java'
       - 'Client/tests/LocalRenderTouchChecks.js'
       - 'Client/WebClient/web/local-render.html'
+      - 'Client/WebClient/web/mobile.html'
+      - 'Client/WebClient/web/desktop.html'
       - 'Client/WebClient/Try-Local-Render.sh'
       - 'Server/cache/map-fallback/**'
       - '.github/workflows/verify-browser-audio.yml'
@@ -40,6 +44,9 @@ jobs:
         run: |
           bash -n Client/WebClient/Try-Local-Render.sh
           bash Client/WebClient/Try-Local-Render.sh --prepare-only
+          for page in local-render.html mobile.html desktop.html; do
+            cmp "Client/WebClient/web/$page" "Client/WebClient/build/local-render/$page"
+          done
           test -s Client/WebClient/build/local-render/cache/map-fallback/l50_50.dat
           while IFS= read -r name; do
             cmp "Server/cache/map-fallback/$name" "Client/WebClient/build/local-render/cache/map-fallback/$name"
