@@ -50,7 +50,51 @@ public final class BrowserAudioStartupChecks {
         java.awt.EventQueue.invokeAndWait(() -> { });
         require(Class39_Sub5_Sub4_Sub4.anInt2299 == 3,
                 "Keyboard input should be ignored when no game canvas exists");
-        System.out.println("Browser audio startup and phone keyboard checks passed.");
+
+        jagex.utils.IsaacPrng.anInt1087 = 765;
+        jagex.utils.Deque.anInt919 = 503;
+        Canvas_Sub1 touchCanvas = new Canvas_Sub1(new java.awt.Canvas());
+        touchCanvas.setSize(1530, 1006);
+        JMouseListener mouseListener = Class39_Sub13.aClass42_1502;
+        touchCanvas.addMouseListener(mouseListener);
+        touchCanvas.addMouseMotionListener(mouseListener);
+        Class41.aCanvas778 = touchCanvas;
+        Class31.state = 30;
+        Canvas_Sub1.anInt15 = 7;
+        require(BrowserClientBootstrap.sendMouse(503, 0, 100, 110) == 7,
+                "Touch hover did not return scene render progress");
+        require(jagex.world.actors.Projectile.anInt2208 == 100 && Class10.anInt172 == 110,
+                "Touch hover coordinates were not mapped through the resized game canvas");
+        BrowserClientBootstrap.sendMouse(501, 1, 120, 130);
+        require(JMouseListener.anInt791 == 120 && Class41.anInt784 == 130 && Class23.anInt430 == 1,
+                "Touch tap did not reach the game's click queue");
+        BrowserClientBootstrap.sendMouse(502, 1, 120, 130);
+        Class23.anInt430 = 0;
+        Class34.anInt605 = 500;
+        jagex.io.JSocket.anInt301 = 200;
+        BrowserClientBootstrap.sendMouse(501, 2, 100, 100);
+        BrowserClientBootstrap.sendMouse(506, 2, 140, 120);
+        BrowserClientBootstrap.sendMouse(502, 2, 140, 120);
+        require(Class34.anInt605 == 420 && jagex.io.JSocket.anInt301 == 220,
+                "Finger drag did not rotate the camera through its existing handler");
+        require(Class23.anInt430 == 0, "Camera drag generated an unintended walking click");
+        BrowserClientBootstrap.zoom(-2);
+        require(WebClientBridge.cameraDistanceOffset() == -140,
+                "Browser-local pinch did not zoom in");
+        BrowserClientBootstrap.zoom(1);
+        require(WebClientBridge.cameraDistanceOffset() == -70,
+                "Browser-local pinch did not zoom out");
+        for (int n = 0; n < 10; n++) BrowserClientBootstrap.zoom(10);
+        require(WebClientBridge.cameraDistanceOffset() == 850, "Zoom-out limit was not enforced");
+        for (int n = 0; n < 10; n++) BrowserClientBootstrap.zoom(-10);
+        require(WebClientBridge.cameraDistanceOffset() == -550, "Zoom-in limit was not enforced");
+        System.clearProperty("client.transport");
+        BrowserClientBootstrap.zoom(10);
+        require(WebClientBridge.cameraDistanceOffset() == 0, "Phone zoom leaked into desktop mode");
+        System.setProperty("client.transport", "lan-websocket");
+        require(WebClientBridge.cameraDistanceOffset() == -550,
+                "Desktop mode unexpectedly changed the stored browser zoom");
+        System.out.println("Browser audio, keyboard and touch checks passed.");
     }
 
     private static void require(boolean condition, String message) {
