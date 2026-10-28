@@ -405,6 +405,7 @@ public final class CastleWarsManager {
         cleanupWaitingPlayers();
         cleanupGamePlayers();
         cleanupDroppedFlags(now);
+        refreshReturnedFlagStandsForPlayers();
         CastleWarsEngineeringManager.processBarricadeFires(now);
         CastleWarsEngineeringManager.processCatapultFires(now);
 
@@ -1198,6 +1199,42 @@ public final class CastleWarsManager {
 
         new DynamicObject(emptyStandId, stand.getX(), stand.getY(), stand.getPlane(),
                 orientation, objectType, restoreObjectId, 999999999, false);
+    }
+
+    /**
+     * A player may have seen the flag stand empty, left its floor while the
+     * flag was returned, then walked back without triggering a region rebuild.
+     * Resync only when that player approaches a safe stand whose old dynamic
+     * replacement is no longer active. This avoids repeated object packets.
+     */
+    private static void refreshReturnedFlagStandsForPlayers() {
+        if (!gameInProgress) {
+            return;
+        }
+        for (Player player : gamePlayers.keySet()) {
+            if (player == null || player.isBot || player.getPosition().getPlane() != 3) {
+                continue;
+            }
+            boolean needsRefresh = false;
+            for (Object visibleObject : player.visibleDynamicObjects) {
+                if (!(visibleObject instanceof DynamicObject)) {
+                    continue;
+                }
+                DynamicObject dynamicObject = (DynamicObject) visibleObject;
+                Position position = dynamicObject.getWorldObject().getPosition();
+                boolean returnedStand =
+                        (saradominFlagAtBase && position.equals(SARADOMIN_FLAG_STAND))
+                        || (zamorakFlagAtBase && position.equals(ZAMORAK_FLAG_STAND));
+                if (returnedStand && !ObjectManager.activeDynamicObjects.contains(dynamicObject)
+                        && GameUtil.isWithinDistance(player.getPosition(), position, 60)) {
+                    needsRefresh = true;
+                    break;
+                }
+            }
+            if (needsRefresh) {
+                ObjectManager.getInstance().refreshDynamicObjectsForPlayer(player);
+            }
+        }
     }
 
     public static GroundItem getDroppedFlagGroundItem(Team flagTeam) {
