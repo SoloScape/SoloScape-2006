@@ -224,6 +224,11 @@ public abstract class ClientApplet extends Applet implements Runnable, FocusList
 	    Deque.anInt919 = i_7_;
 	    IsaacPrng.anInt1087 = i_6_;
 	    Class10.frame = new Frame();
+        if ("lan-websocket".equals(System.getProperty("client.transport"))) {
+            // The browser page fits the 765x503 game; desktop window decorations
+            // would extend below that display and clip the bottom of the client.
+            Class10.frame.setUndecorated(true);
+        }
 	    boolean background = Boolean.getBoolean("client.background")
 		&& Integer.getInteger("web.bridge.port", -1) > 0;
 	    if (background) {
