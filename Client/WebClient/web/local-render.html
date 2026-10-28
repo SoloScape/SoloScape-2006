@@ -226,27 +226,35 @@
     event.stopImmediatePropagation();
     return true;
   }
-  async function tapAfterHover(touch, generation) {
-    const frame = await touch.hover;
-    // Scene picking runs during rendering. Wait for a complete frame at the tap
-    // position before pressing, rather than guessing a delay on a slow phone.
-    if (touch.point.scene && frame >= 0) {
-      const deadline = performance.now() + 3000;
-      let ready = false;
-      while (generation === touchGeneration && performance.now() < deadline) {
-        ready = await clientBridge.sceneHoverReady(touch.point.x, touch.point.y, frame);
-        if (ready) break;
-        await new Promise(resolve => setTimeout(resolve, 25));
+  function tapAfterHover(touch, generation) {
+    // Keep hover, press and release together. Later taps must not move the cursor
+    // or overwrite a click while the game is still processing the previous one.
+    return queuePointer(async () => {
+      if (generation !== touchGeneration) return;
+      const frame = await clientBridge.sendMouse(503, 0, touch.point.x, touch.point.y);
+      if (touch.point.scene && frame >= 0) {
+        const deadline = performance.now() + 3000;
+        let ready = false;
+        while (generation === touchGeneration && performance.now() < deadline) {
+          ready = await clientBridge.sceneHoverReady(touch.point.x, touch.point.y, frame);
+          if (ready) break;
+          await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        if (!ready) return;
       }
-      // Never send a click using a stale menu if rendering has stalled.
-      if (!ready) return;
-    }
-    if (generation !== touchGeneration) return;
-    const button = performance.now() - touch.started >= 450 && touch.held >= 450 ? 3 : 1;
-    await mouse(501, button, touch.point);
-    // Let a game tick consume the press before releasing the button.
-    await new Promise(resolve => setTimeout(resolve, 80));
-    await mouse(502, button, touch.point);
+      if (generation !== touchGeneration) return;
+      const button = touch.held >= 450 ? 3 : 1;
+      await clientBridge.sendMouse(501, button, touch.point.x, touch.point.y);
+      try {
+        const deadline = performance.now() + 3000;
+        while (generation === touchGeneration && performance.now() < deadline) {
+          if (await clientBridge.clickConsumed()) break;
+          await new Promise(resolve => setTimeout(resolve, 25));
+        }
+      } finally {
+        await clientBridge.sendMouse(502, button, touch.point.x, touch.point.y);
+      }
+    });
   }
   display.addEventListener('pointerdown', event => {
     if (!captureTouch(event)) return;
@@ -263,11 +271,10 @@
       return;
     }
     if (pinchBlocked) return;
-    touchGeneration++;
     activeTouch = { id: event.pointerId, point, start: point,
       clientX: event.clientX, clientY: event.clientY, started: performance.now(),
-      button: point.scene ? 2 : 1, down: false, lastMove: -Infinity,
-      hover: mouse(503, 0, point) };
+      button: point.scene ? 2 : 1, down: false, lastMove: -Infinity };
+    mouse(503, 0, point);
   }, { capture: true, passive: false });
   display.addEventListener('pointermove', event => {
     if (!captureTouch(event)) return;
@@ -292,7 +299,9 @@
     if (!point.inside) return;
     activeTouch.point = point;
     if (!activeTouch.down && Math.hypot(event.clientX - activeTouch.clientX,
-        event.clientY - activeTouch.clientY) > 8) {
+        event.clientY - activeTouch.clientY) > 12) {
+      // A deliberate drag cancels pending taps; small finger drift does not.
+      touchGeneration++;
       mouse(501, activeTouch.button, activeTouch.start);
       activeTouch.down = true;
     }
@@ -320,7 +329,6 @@
       // Small finger drift is still a tap. Prime the exact release coordinate,
       // not the earlier finger-down coordinate used to distinguish a drag.
       touch.point = point;
-      touch.hover = mouse(503, 0, point);
       tapAfterHover(touch, touchGeneration).catch(error =>
         console.error('[local-render] Tap failed:', error));
     }
