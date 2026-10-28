@@ -12,6 +12,8 @@ const handlers = {};
 const calls = [];
 let now = 0;
 let frame = 0;
+let allowHover = true;
+let hoveredPoint = null;
 let rect = { left: 0, top: 0, width: 765, height: 503 };
 const display = {
   addEventListener(type, handler) { (handlers[type] ||= []).push(handler); },
@@ -22,8 +24,15 @@ const context = {
   display,
   window: { addEventListener() {} },
   clientBridge: {
-    async sendMouse(id, button, x, y) { calls.push({ id, button, x, y, frame }); return 0; },
-    async sceneFrame() { return ++frame; },
+    async sendMouse(id, button, x, y) {
+      calls.push({ id, button, x, y, frame });
+      if (id === 503) hoveredPoint = { x, y };
+      return 0;
+    },
+    async sceneHoverReady(x, y) {
+      frame++;
+      return allowHover && frame >= 2 && hoveredPoint.x === x && hoveredPoint.y === y;
+    },
     async zoom(steps) { calls.push({ zoom: steps }); }
   },
   performance: { now: () => now },
@@ -47,15 +56,35 @@ function pointer(type, id, x, y, pointerType = 'touch') {
   return event;
 }
 async function settle() {
-  for (let n = 0; n < 100; n++) await Promise.resolve();
+  for (let n = 0; n < 1500; n++) await Promise.resolve();
 }
 (async () => {
   const down = pointer('pointerdown', 1, 100, 100);
   pointer('pointerup', 1, 100, 100);
   await settle();
   assert.ok(down.prevented && down.stopped, 'CheerpJ must not also synthesize a touch click');
-  assert.deepEqual(calls.map(e => [e.id, e.button]), [[503, 0], [501, 1], [502, 1]]);
-  assert.ok(calls[1].frame >= 2, 'Ground tap pressed before scene picking rendered');
+  assert.deepEqual(calls.map(e => [e.id, e.button]), [[503, 0], [503, 0], [501, 1], [502, 1]]);
+  assert.ok(calls[2].frame >= 2, 'Ground tap pressed before scene picking rendered');
+
+  calls.length = 0;
+  pointer('pointerdown', 11, 100, 100);
+  pointer('pointermove', 11, 103, 102);
+  pointer('pointerup', 11, 105, 103);
+  await settle();
+  assert.equal(calls.filter(e => e.id === 501).length, 1, 'One tap must deliver one click');
+  assert.deepEqual(calls.filter(e => e.id === 501).map(e => [e.x, e.y]), [[105, 103]],
+      'Finger drift must prime and click the final tap position');
+  assert.deepEqual(calls.filter(e => e.id === 503).map(e => [e.x, e.y]),
+      [[100, 100], [105, 103]], 'Release coordinates were not hovered before clicking');
+
+  calls.length = 0;
+  allowHover = false;
+  pointer('pointerdown', 12, 200, 200);
+  pointer('pointerup', 12, 200, 200);
+  await settle();
+  assert.ok(!calls.some(e => e.id === 501),
+      'Unrelated rendered frames must not acknowledge hover at the tap position');
+  allowHover = true;
 
   calls.length = 0;
   rect = { left: 13, top: 7, width: 1000, height: 600 };
