@@ -363,6 +363,22 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
+        // The old 377 aiming panel (11169) has no revision-443 widget
+        // mapping. showInterface silently drops it for build 443, leaving
+        // players unable to fire at all. Until a native 443 aiming panel is
+        // available, a click fires at an automatically selected battlefield
+        // target using the normal rock/reload/damage rules.
+        if (ServerSettings.clientBuild == 443) {
+            if (fireCatapult(player)) {
+                player.getPacketSender().sendGameMessage(
+                        "You fire the catapult at the battlefield!");
+            } else {
+                player.getPacketSender().sendGameMessage(
+                        "The catapult is still reloading.");
+            }
+            return true;
+        }
+
         CatapultAim aim = new CatapultAim(team);
         catapultAims.put(player, aim);
         player.getPacketSender().showInterface(CATAPULT_INTERFACE_ID);
