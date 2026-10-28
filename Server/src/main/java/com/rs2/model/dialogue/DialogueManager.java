@@ -19,6 +19,7 @@ import com.rs2.model.ground.GroundItem;
 import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.item.ItemStack;
+import com.rs2.model.interaction.AlKharidGateToll;
 import com.rs2.model.item.action.BarrowsRepairHandler;
 import com.rs2.model.item.action.GodBookHandler;
 import com.rs2.model.npc.Npc;
@@ -4113,15 +4114,14 @@ public class DialogueManager {
                 continueDialogueWithNpcIdControlSwitch2 : switch (player.getDialogueManager().getDialogueStep()) {
                     case 1: {
                         if (player.botEnabled) {
-                            player.getPacketSender().queueRelativeMovementStep(player.getPosition().getX() < 3268 ? 1 : -1, 0, true);
-                            player.getPacketSender().openDoubleDoorPair(2882, 2883, 3268, 3227, 3268, 3228, 0);
+                            AlKharidGateToll.tryPass(player);
                             break;
                         }
                         player.getDialogueManager().showPlayerOneLineDialogue("Can I come through this gate?", 591);
                         return true;
                     }
                     case 2: {
-                        if (player.getQuestState(11) == 1 || player.getQuestState(11) == 9) {
+                        if (AlKharidGateToll.hasFreePassage(player)) {
                             player.getDialogueManager().showNpcOneLineDialogue("You may pass for free, you are a friend of Al-Kharid.", 591);
                             player.getDialogueManager().setNextDialogueStep(19);
                         } else {
@@ -4139,10 +4139,7 @@ public class DialogueManager {
                     case 4: {
                         switch (optionIndex) {
                             case 1: {
-                                if (!player.getInventoryManager().containsItemAmount(995, 10)) break continueDialogueWithNpcIdControlSwitch2;
-                                player.getInventoryManager().removeItem(new ItemStack(995, 10));
-                                player.getPacketSender().queueRelativeMovementStep(player.getPosition().getX() < 3268 ? 1 : -1, 0, true);
-                                player.getPacketSender().openDoubleDoorPair(2882, 2883, 3268, 3227, 3268, 3228, 0);
+                                AlKharidGateToll.tryPass(player);
                                 break continueDialogueWithNpcIdControlSwitch2;
                             }
                             case 2: {
@@ -4164,10 +4161,7 @@ public class DialogueManager {
                     case 6: {
                         switch (optionIndex) {
                             case 1: {
-                                if (!player.getInventoryManager().containsItemAmount(995, 10)) break continueDialogueWithNpcIdControlSwitch2;
-                                player.getInventoryManager().removeItem(new ItemStack(995, 10));
-                                player.getPacketSender().queueRelativeMovementStep(player.getPosition().getX() < 3268 ? 1 : -1, 0, true);
-                                player.getPacketSender().openDoubleDoorPair(2882, 2883, 3268, 3227, 3268, 3228, 0);
+                                AlKharidGateToll.tryPass(player);
                                 break continueDialogueWithNpcIdControlSwitch2;
                             }
                             case 2: {
@@ -4183,8 +4177,7 @@ public class DialogueManager {
                         return true;
                     }
                     case 19: {
-                        player.getPacketSender().queueRelativeMovementStep(player.getPosition().getX() < 3268 ? 1 : -1, 0, true);
-                        player.getPacketSender().openDoubleDoorPair(2882, 2883, 3268, 3227, 3268, 3228, 0);
+                        AlKharidGateToll.tryPass(player);
                         break;
                     }
                     case 8: {
