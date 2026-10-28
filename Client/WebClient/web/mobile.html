@@ -196,6 +196,8 @@
   let pinchDistance = null;
   let touchGeneration = 0;
   let lastTouchTime = -Infinity;
+  // Input is useful only while it still represents the user's current gesture.
+  const TAP_MAX_AGE_MS = 500;
   let pointerQueue = Promise.resolve();
   function queuePointer(action) {
     const result = pointerQueue.then(action);
@@ -229,13 +231,17 @@
   function primeTouchHover(touch, point) {
     touch.hoverPoint = point;
     touch.hoverAt = performance.now();
-    touch.hover = mouse(503, 0, point);
+    const generation = touchGeneration;
+    touch.hover = queuePointer(() => generation === touchGeneration
+      ? clientBridge.sendMouse(503, 0, point.x, point.y) : -1);
   }
   function tapAfterHover(touch, generation) {
-    // Keep hover, press and release together. Later taps must not move the cursor
-    // or overwrite a click while the game is still processing the previous one.
+    // Serialize Java calls, but never replay old taps after a stalled bridge/frame.
+    // Start the deadline at finger-up, including time spent waiting in the queue.
+    const deadline = performance.now() + TAP_MAX_AGE_MS;
+    const current = () => generation === touchGeneration && performance.now() < deadline;
     return queuePointer(async () => {
-      if (generation !== touchGeneration) return;
+      if (!current()) return;
       // Reuse hover primed while the finger was down. Starting it again on lift
       // needlessly adds another full render frame to every stationary tap.
       const primed = touch.hoverPoint && touch.hoverPoint.x === touch.point.x &&
@@ -243,21 +249,20 @@
       const frame = primed ? await touch.hover :
         await clientBridge.sendMouse(503, 0, touch.point.x, touch.point.y);
       if (touch.point.scene && frame >= 0) {
-        const deadline = performance.now() + 3000;
         let ready = false;
-        while (generation === touchGeneration && performance.now() < deadline) {
+        while (current()) {
           ready = await clientBridge.sceneHoverReady(touch.point.x, touch.point.y, frame);
           if (ready) break;
           await new Promise(resolve => setTimeout(resolve, 16));
         }
         if (!ready) return;
       }
-      if (generation !== touchGeneration) return;
+      if (!current()) return;
       const button = touch.held >= 450 ? 3 : 1;
       await clientBridge.sendMouse(501, button, touch.point.x, touch.point.y);
       try {
-        const deadline = performance.now() + 3000;
-        while (generation === touchGeneration && performance.now() < deadline) {
+        const releaseDeadline = performance.now() + TAP_MAX_AGE_MS;
+        while (generation === touchGeneration && performance.now() < releaseDeadline) {
           if (await clientBridge.clickConsumed()) break;
           await new Promise(resolve => setTimeout(resolve, 16));
         }
@@ -281,6 +286,8 @@
       return;
     }
     if (pinchBlocked) return;
+    // A new finger-down supersedes any tap still waiting for Java or scene picking.
+    touchGeneration++;
     activeTouch = { id: event.pointerId, point, start: point,
       clientX: event.clientX, clientY: event.clientY, started: performance.now(),
       button: point.scene ? 2 : 1, down: false, lastMove: -Infinity };
