@@ -87,6 +87,8 @@ public final class InterfaceBridge {
         mappings.put(197, 380);   // Wilderness level overlay
         mappings.put(201, 389);   // duel-area overlay
         mappings.put(4535, 24);   // Barrows overlay
+        mappings.put(6673, 57);  // Castle Wars waiting room overlay
+        mappings.put(11344, 59); // Castle Wars in-game status overlay
         mappings.put(12414, 96);  // cave darkness, light (opacity 50)
         mappings.put(12416, 97);  // cave darkness, heavy (opacity 200)
         mappings.put(12418, 98);  // cave darkness, medium (opacity 150)
@@ -124,6 +126,15 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        // Native Castle Wars HUD (group 59): stock text components.
+        // Score and flag icons are driven by varps 377/378 instead.
+        put(mappings, 11346, 59, 1);  // Saradomin score label
+        put(mappings, 11352, 59, 7);  // Main door health
+        put(mappings, 11353, 59, 8);  // Match time
+        put(mappings, 11356, 59, 11); // Side door
+        put(mappings, 11358, 59, 13); // First tunnel
+        put(mappings, 11360, 59, 15); // Second tunnel
+        put(mappings, 11362, 59, 17); // Catapult
         putRange(mappings, 18890, 500, 0, 49);
         putRange(mappings, 18939, 501, 0, 45);
         putRange(mappings, 18984, 502, 0, 34);
