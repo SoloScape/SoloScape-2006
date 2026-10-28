@@ -1,135 +1,253 @@
-# SoloScape
+# SoloScape 2006
 
-## Live AI client testing
+**A local, single-player RuneScape experience built around the December 2006 era.**
 
-Run `Client/Start-Client-Dev-Mode.bat` to enable live HotSwap and the local MCP endpoint at
-`http://127.0.0.1:7780/mcp` and activity dashboard at `http://127.0.0.1:7780/`.
-The tools inspect and operate the real game client. Start the server and log in
-normally first. Setup, supported tools and verification are documented in
-[Client/DEVELOPER-TOOLS.md](Client/DEVELOPER-TOOLS.md).
+SoloScape brings together a Java game client, a self-hosted game server, and the data needed to explore a 2006-era RuneScape world. It is designed to run on your own Windows computer, with tools for both players and developers.
 
-## New player guide: build and play
+The project targets the **18 December 2006 / revision 443** cache and protocol. Revision compatibility and gameplay content are still being audited; see [Project status](#project-status) before assuming that every historical interaction is complete.
 
-The **server** runs the game world and saves your player. The **client** is the
-game window you play in. **Building** turns the source code into files that can
-run; you need to build both before your first game and again after code changes.
+[Get started](#quick-start) · [Features](#features) · [Developer setup](#development) · [Server documentation](Server/README.md) · [Browser client](Client/WebClient/README.md)
 
-Keep the `Client` and `Server` folders together in the main SoloScape folder.
-`Start-Here-SoloScape.bat` automatically calls `Setup-Java-8.bat` to check for
-a Java 8 JDK. If none is found, it downloads and installs one, then continues.
-The build scripts do the same check. Allow internet access on the first run
-if you do not already have a Java 8 JDK; no separate setup step is needed.
+## Features
 
-### First-time setup: build once, then play from the main folder
-
-1. In the main SoloScape folder, double-click `Start-Here-SoloScape.bat`.
-2. Choose **1 - First-time setup** and wait for both builds to finish.
-3. After both builds succeed, the command window closes automatically.
-   `Start-Server.bat` and `Play-Client.bat` appear beside `Start-Here-SoloScape.bat`.
-4. Double-click `Start-Server.bat` in that main folder. In the control panel,
-   click **Start Server** and wait for the server to be online.
-5. Double-click `Play-Client.bat` in the same folder and log in.
-
-Use those two main-folder launchers for later play sessions. Keep the server
-running while you play. If either build fails, the setup window stays open so
-you can read the error; fix the problem and try option 1 again.
-
-### Easiest way: build and start everything
-
-1. Open the main SoloScape folder in File Explorer.
-2. Double-click `Start-Here-SoloScape.bat`.
-3. Choose **4 - Play SoloScape**. It builds the server and client, starts the
-   server automatically, then opens the game window.
-4. Wait for the server to be online, then log in with the username and password
-   you want to use. Your local player is created and saved by the server.
-5. Keep the server window open while playing.
-
-### Build the server and client yourself
-
-1. Open the `Server` folder and double-click `Build-Server.bat`.
-2. Wait for **Build complete: dist\server.jar**. `Start-Server.bat` now appears
-   in both the `Server` folder and the main folder. Press any key when prompted.
-3. Open the `Client` folder and double-click `Build-Client.bat`.
-4. Wait for **Build complete: build\client.jar**. `Play-Client.bat` now appears
-   in both the `Client` folder and the main folder. The client build window closes automatically when finished.
-
-Choose **1** in `Start-Here-SoloScape.bat` to build both and close the menu
-after success, **2** to build only the client, or **3** to build only the server. Building does not start
-the game. If you see an error, fix it before continuing.
-
-The play launchers are created only after their builds succeed. If you do not
-see them yet, build that component first. Leave the `.bat.template` files in
-place: the build scripts use them to create the launchers.
-
-### Start the server and client yourself
-
-1. After building, open the main SoloScape folder and double-click `Start-Server.bat`.
-2. In the server control panel, click **Start Server** and wait for it to show
-   that the server is online.
-3. In the same main folder, double-click `Play-Client.bat`.
-4. Log in with the username and password you want to use.
-5. Keep the server running for your whole play session. When finished, close the
-   game client, then stop the server through its control panel.
-
-For later sessions, use these same two launchers. Rebuild after changing or
-updating code, and stop any running developer-mode watchers before rebuilding.
-If the client cannot connect, check that you clicked **Start Server** and that
-the server is online.
-
-## Which file should I open?
-
-**New player? Double-click `Start-Here-SoloScape.bat` in the main folder,
-then choose option 1 to build both and create the play launchers here.** Keep the
-server window open while you play: it runs the game world and saves your player.
-
-| Batch file | What it does |
+| Area | What's included |
 | --- | --- |
-| `Start-Here-SoloScape.bat` | Opens the main menu to play, rebuild, or update the game. |
-| `Play-Client.bat` | Created by the client build. Opens the game window; start the server first. |
-| `Start-Server.bat` | Created by the server build. Opens the control panel; click **Start Server**. |
-| `Client/Build-Client.bat` | Turns the client source code into runnable game files. Does not start the game. |
-| `Server/Build-Server.bat` | Turns the server source code into runnable server files. Does not start the server. |
-| `Client/Start-Client-Dev-Mode.bat` | For editing code: starts the client with live HotSwap, automatic rebuilds and the developer tools dashboard/MCP endpoint on port 7780. |
-| `Server/Start-Server-Dev-Mode.bat` | For editing code: starts the server and rebuilds it when source files change. |
-| `Client/WebClient/Play-In-Browser-Or-Phone.bat` | Starts the client with browser/phone access and prints the address to open. Start the server first. |
-| `Setup-Java-8.bat` | Helper used automatically by the other scripts to find or install Java 8. You do not need to open it yourself. |
+| **Game client** | Java 8 client using the bundled revision 443 cache, with the familiar game view, interfaces, chat, inventory, and world rendering. |
+| **Local server** | World simulation, player login and persistence, NPCs, game systems, and a desktop server control panel. |
+| **Gameplay content** | Server-side implementations for skills, combat, quests, minigames, trading, and configurable bot populations. Individual content coverage varies. |
+| **Player saves** | JSON-based character files with automatic migration from older `.dat` saves; optional SQLite-based persistence is also available. |
+| **Browser and phone access** | A browser view that streams the real Java client, with touch input and optional streamed audio. |
+| **Developer workflow** | Live recompilation/HotSwap, interaction diagnostics, a local client testing dashboard, and an MCP endpoint. |
+| **Verification** | Java checks, content audits, and GitHub Actions workflows for selected features and regressions. |
 
-Install a Java 8 JDK (any update, including 8u101 and 8u491). The batch scripts
-automatically find it through `JAVA_HOME`, PATH, the Windows registry, or common
-installation folders. For a custom location, set `JAVA_HOME` to the JDK folder.
-A JRE alone or Java 11+ cannot build the client. Keep `Setup-Java-8.bat` in the repository root and `java8.ps1` and `scape.ps1`
-in the `tools` folder when distributing the scripts.
+The repository also contains a recreation of the **2006 Christmas rescue event**, including Shanty Claws, snowballs, gublinches, cage progress, and event rewards. See [the server documentation](Server/README.md#2006-christmas-rescue) for the walkthrough and implementation notes.
 
-If no Java 8 JDK is found, the scripts download a free Eclipse Temurin Java 8
-JDK from Adoptium, verify its SHA-256 checksum, and extract it under
-`%LOCALAPPDATA%\SoloScape\java8`. This requires internet access on the first run
-and no administrator permissions. Later runs reuse that installation offline.
+## Requirements
 
-From the repository root, use Windows PowerShell:
+- **Windows** for the supported `.bat` launchers and PowerShell tooling.
+- **Java 8 JDK** (not just a JRE). The scripts require Java 8 rather than Java 11+.
+- Enough free memory to run the client and server; the server launcher is configured with a **1 GB maximum Java heap**.
+- Internet access on the first run **if Java 8 is not already installed**.
+
+**You usually do not need to install Java manually.** The scripts look for a compatible Java 8 JDK and, if none is found, download Eclipse Temurin Java 8, verify its SHA-256 checksum, and install it under `%LOCALAPPDATA%\SoloScape\java8` without administrator permissions. Existing local installations can be selected with `JAVA_HOME`.
+
+Keep the complete repository together: the client depends on the sibling `Server/cache` folder, and the build scripts use files in `tools/`.
+
+## Quick start
+
+### Option A — Build and play automatically
+
+1. [Download the repository](https://github.com/SoloScape/SoloScape-2006/archive/refs/heads/main.zip) and extract it, or clone it using Git.
+2. Open the extracted **SoloScape-2006** folder.
+3. Double-click **`Start-Here-SoloScape.bat`**.
+4. Choose **`4 — Play SoloScape`**.
+5. The launcher builds the server and client, starts the server automatically, then opens the game. Log in with the username and password you want to use for your local character.
+
+Keep the server running while playing. On your first launch, the Java setup step may need an internet connection.
+
+### Option B — Build once and use separate launchers
+
+1. Double-click `Start-Here-SoloScape.bat` and choose **`1 — First-time setup`**.
+2. After both builds succeed, open **`Start-Server.bat`** from the main folder.
+3. In the server control panel, click **Start Server** and wait until it is online.
+4. Open **`Play-Client.bat`** from the main folder and log in.
+
+The two main-folder launchers are **generated by a successful build**; they are not missing from the source download. For later play sessions, use those launchers without rebuilding unless the code has changed.
+
+> **Tip:** If the game cannot connect, make sure the server control panel says the server is online. Launching the control panel alone does not start the game world.
+
+## Launcher reference
+
+| File | Purpose |
+| --- | --- |
+| `Start-Here-SoloScape.bat` | Main menu for setup, playing, development, cleanup, and updates. |
+| `Start-Server.bat` | Generated launcher for the server control panel. |
+| `Play-Client.bat` | Generated launcher for the Java client. |
+| `Server/Build-Server.bat` | Compiles the server into `Server/dist/server.jar`. |
+| `Client/Build-Client.bat` | Compiles the client into `Client/build/client.jar`. |
+| `Server/Start-Server-Dev-Mode.bat` | Server with automatic recompilation and live-development support. |
+| `Client/Start-Client-Dev-Mode.bat` | Client with HotSwap and the local developer tools endpoint. |
+| `Client/WebClient/Play-In-Browser-Or-Phone.bat` | Streams the Java client to a web browser or phone. |
+| `Setup-Java-8.bat` | Shared Java 8 setup helper; called by the other scripts. |
+
+The main menu offers:
+
+| Option | Action |
+| --- | --- |
+| `1` | Build server and client |
+| `2` | Build client only |
+| `3` | Build server only |
+| `4` | Build and play |
+| `5` | Start developer mode |
+| `6` | Clean generated build files |
+| `7` | Pull Git updates (fast-forward only) |
+| `0` | Exit |
+
+## Development
+
+The project uses **Java 8** and bundled JAR dependencies rather than Gradle or Maven. Builds are driven by the included batch and PowerShell scripts.
+
+### PowerShell commands
+
+From the repository root:
 
 ```powershell
-.\tools\scape.ps1 build          # Build both
-.\tools\scape.ps1 build client   # Build only the client
-.\tools\scape.ps1 build server   # Build only the server
-.\tools\scape.ps1 run            # Build and launch both; automatically start the server
-.\tools\scape.ps1 dev            # Launch both with live recompilation
-.\tools\scape.ps1 clean          # Remove generated build files
-.\tools\scape.ps1 update         # Pull latest commits (fast-forward only)
+.\tools\scape.ps1 build          # Build server and client
+.\tools\scape.ps1 build server   # Server only
+.\tools\scape.ps1 build client   # Client only
+.\tools\scape.ps1 run            # Build and launch both
+.\tools\scape.ps1 dev            # Start live development mode
+.\tools\scape.ps1 clean          # Delete generated build output
+.\tools\scape.ps1 update         # Git pull --ff-only
 ```
 
-Double-click `Start-Here-SoloScape.bat` for the same commands as menu options 1-7, with `0`
-to exit. It also accepts commands, such as `Start-Here-SoloScape.bat build client`, and uses
-PowerShell with execution-policy bypass for that invocation.
+You can also pass commands to the main launcher, for example:
 
-`run` and `dev` open separate client and server consoles. Development mode uses
-the existing HotSwap watchers: saving Java sources recompiles changes, and
-structural edits trigger application restarts. Both applications need the
-bundled `Server/cache` folder. Close the applications to stop them; stop both
-development watchers before building or cleaning.
+```bat
+Start-Here-SoloScape.bat build client
+```
 
-`clean` removes `Client/build`, `Server/build`, `Server/build-release`, and
-`Server/dist`, plus the generated `Play-Client.bat` and `Start-Server.bat`
-launchers in the main and component folders. Rebuild to recreate them. Cache files, libraries, configuration, and player saves are kept.
+**Build outputs:** `Server/dist/server.jar` and `Client/build/client.jar`. Keep the server's `lib/` directory and the shared `Server/cache/` data in their original locations when running the project.
 
-`update` requires Git on PATH and a branch with an upstream remote. It preserves
-local work and reports conflicting changes or diverged history for you to resolve.
+The `clean` command removes compiled files and generated launchers. It **does not delete** the bundled cache, character saves, or server content data. Stop running development watchers before building or cleaning.
+
+### Live development and client inspection
+
+Run `Start-Here-SoloScape.bat` and choose **`5`**, or launch the development scripts individually. Java source changes are recompiled automatically; edits that cannot be HotSwapped cause an application restart.
+
+With the client developer launcher running, open:
+
+| Endpoint | Address |
+| --- | --- |
+| Developer activity dashboard | [http://127.0.0.1:7780/](http://127.0.0.1:7780/) |
+| MCP endpoint | `http://127.0.0.1:7780/mcp` |
+
+These endpoints are local to the machine running the client and are **disabled during normal play**. The tools can inspect client state, widgets, inventories, NPCs, objects, dialogue, screenshots, and interaction outcomes. See [Client/DEVELOPER-TOOLS.md](Client/DEVELOPER-TOOLS.md) for configuration, tool names, and examples.
+
+### Repository layout
+
+```text
+SoloScape-2006/
+├── Client/
+│   ├── src/                   Java client and assets
+│   ├── tests/                 Client regression checks
+│   ├── WebClient/             Browser/phone streaming bridge
+│   ├── Build-Client.bat
+│   └── DEVELOPER-TOOLS.md
+├── Server/
+│   ├── src/main/java/         Server and control-panel source
+│   ├── src/test/              Server checks
+│   ├── cache/                 Revision 443 cache and map data
+│   ├── data/                  Content, settings, and player data
+│   ├── lib/                   Bundled Java dependencies
+│   ├── Build-Server.bat
+│   ├── README.md
+│   └── CHARACTER-SAVES.md
+├── tools/                     Build helpers and audit scripts
+├── docs/                      Additional development notes
+├── .github/workflows/         Automated verification workflows
+├── Start-Here-SoloScape.bat
+├── Setup-Java-8.bat
+└── readme.md
+```
+
+## Play in a browser or on your phone
+
+SoloScape also offers a browser front end. **This is not a JavaScript port of RuneScape.** The actual Java client continues to load the cache, render the world, and process the game protocol on the host computer; the browser receives rendered frames and forwards input.
+
+1. Start the game server.
+2. Run `Client/WebClient/Play-In-Browser-Or-Phone.bat`.
+3. Open **[http://127.0.0.1:8081/](http://127.0.0.1:8081/)** on the host computer.
+4. For a phone on the same local network, use the LAN address printed in the launcher console.
+
+The web view keeps the native **765 × 503** game aspect ratio and supports touch controls, camera gestures, and browser audio (after enabling sound). The host computer must remain on, with the Java bridge running.
+
+**Security:** The browser bridge uses local HTTP/WebSocket transport. Do **not** expose port `8081` directly to the public internet. Use a trusted private network or secure tunnel for access outside your LAN.
+
+See [Client/WebClient/README.md](Client/WebClient/README.md) for supported controls, audio notes, and the original Windows executable option.
+
+## Player data and configuration
+
+The server uses **`127.0.0.1:43594`** for local client connections by default. The server's control panel provides settings for the world and gameplay; more details are in [Server/README.md](Server/README.md).
+
+For file-based characters:
+
+- Active saves: `Server/data/characters/<username>.json`
+- Migrated legacy saves: `<username>.dat.bak`
+- Previous JSON backups: `<username>.json.bak`
+- Server snapshots: `Server/data/backups/`
+
+Older binary character files are migrated to JSON automatically. If an existing JSON save and legacy file share a username, the JSON save takes precedence. Optional SQLite-backed persistence is separate from the default file-based flow.
+
+**Back up your saves before upgrading or editing them.** Stop the server before editing a character, and never commit player saves to a public repository: they may contain account information, including credentials in the project's legacy representation.
+
+Read [Server/CHARACTER-SAVES.md](Server/CHARACTER-SAVES.md) before migrating or manually changing character data.
+
+## Testing and audits
+
+Selected regression checks run through [GitHub Actions](.github/workflows/). Local verification scripts include:
+
+```powershell
+.\tools\developer-tools-checks.ps1
+.\tools\interaction-audit.ps1 -Check
+.\tools\strict-content-checks.ps1
+```
+
+These commands check different parts of the client and content; they are **not** a substitute for logging in and verifying gameplay. The strict content audit deliberately flags unresolved IDs and source-review candidates, so its output may contain outstanding work rather than an all-green report.
+
+See [the interaction migration notes](Server/README.md#interaction-coverage-and-revision-443-routing) and [strict content check notes](tools/strict-content-checks.md).
+
+## Project status
+
+SoloScape is an **actively developed and audited recreation**, not a claim of complete 2006 game parity.
+
+- The current client/server work targets the **revision 443** cache, login/update handshake, and region layout.
+- Some packet handling, interfaces, and interactions still require graphical or in-game verification.
+- Existing game systems provide a foundation, but **not every NPC, item action, quest, or minigame has been fully verified**.
+- Automated checks cover selected behaviors; a passing check does not prove that all gameplay is historically accurate.
+
+For detailed implementation notes and limitations, see [Server/README.md](Server/README.md) and the [revision audit](AUDIT_2006-12-18.md).
+
+## Troubleshooting
+
+<details>
+<summary><strong>I can't find Play-Client.bat or Start-Server.bat.</strong></summary>
+
+These files are generated after a successful build. Run `Start-Here-SoloScape.bat` and select option `1`, or build the corresponding component directly.
+</details>
+
+<details>
+<summary><strong>The build cannot find Java or javac.</strong></summary>
+
+Run the provided launcher again with internet access, or install a **Java 8 JDK** and set `JAVA_HOME` to its directory. A JRE or Java 11+ is not a replacement for this project's required toolchain.
+</details>
+
+<details>
+<summary><strong>The client fails to connect or load the cache.</strong></summary>
+
+Start the server first and check that it reports online. Keep the original `Client/` and `Server/` directory layout intact; the client launcher expects `Server/cache/main_file_cache.dat2` and its map-fallback files.
+</details>
+
+<details>
+<summary><strong>Changes aren't appearing after I edit the source.</strong></summary>
+
+Rebuild the modified component, or use the live development launcher. Stop development watchers before a clean/release build and restart the client if you are checking cache or visual changes.
+</details>
+
+<details>
+<summary><strong>The browser view doesn't open on my phone.</strong></summary>
+
+Keep the bridge console running, use the LAN URL printed by the script (not the host's `127.0.0.1` address), and make sure both devices can reach each other on the local network.
+</details>
+
+## Contributing
+
+Issues and pull requests are welcome for reproducible bugs, revision compatibility, gameplay content, tests, and documentation. Describe the behavior you observed, the expected result, and how to reproduce it. For code changes, include relevant verification steps and call out anything you could not test in a live client.
+
+## Credits and legal notice
+
+SoloScape is an **unofficial fan project** and is not affiliated with or endorsed by Jagex. RuneScape names, artwork, assets, and trademarks belong to their respective owners.
+
+The server includes bundled third-party dependencies and code adapted in part from the **RS Mod pathfinder**. Refer to [Server/README.md#third-party-notices](Server/README.md#third-party-notices) for the included attribution.
+
+**Licensing:** No repository-wide `LICENSE` file is currently provided. Public source availability should not be interpreted as blanket permission to redistribute all code, bundled libraries, or game assets.
