@@ -2,7 +2,27 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const html = fs.readFileSync('Client/WebClient/web/local-render.html', 'utf8');
+const html = fs.readFileSync('Client/WebClient/web/mobile.html', 'utf8');
+for (const page of ['desktop.html', 'local-render.html']) {
+  const content = fs.readFileSync('Client/WebClient/web/' + page, 'utf8');
+  const script = content.match(/<script>\\s*([\\s\\S]*?)<\\/script>/)[1];
+  new vm.Script(script);
+  if (page === 'desktop.html') {
+    assert.ok(!content.includes('id="keyboard"') && !content.includes('id="phone-input"'),
+        'Desktop must not include phone keyboard controls');
+    assert.ok(content.includes('enableInputMethods: true'), 'Desktop keyboard input must stay enabled');
+  } else {
+    for (const coarse of [false, true]) {
+      let destination;
+      vm.runInNewContext(script, { window: {
+        matchMedia: () => ({ matches: coarse }),
+        location: { search: '?test=1', hash: '#game', replace: value => { destination = value; } }
+      } });
+      assert.equal(destination, (coarse ? 'mobile.html' : 'desktop.html') + '?test=1#game',
+          'Legacy link did not choose the correct client page');
+    }
+  }
+}
 const inline = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
 new vm.Script(inline);
 const source = inline.slice(inline.indexOf('  // Local touch gestures'),
