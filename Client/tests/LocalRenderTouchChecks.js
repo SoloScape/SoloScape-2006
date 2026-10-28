@@ -14,6 +14,8 @@ let now = 0;
 let frame = 0;
 let allowHover = true;
 let hoveredPoint = null;
+let consumeAfter = 2;
+let consumePolls = 0;
 let rect = { left: 0, top: 0, width: 765, height: 503 };
 const display = {
   addEventListener(type, handler) { (handlers[type] ||= []).push(handler); },
@@ -25,7 +27,8 @@ const context = {
   window: { addEventListener() {} },
   clientBridge: {
     async sendMouse(id, button, x, y) {
-      calls.push({ id, button, x, y, frame });
+      calls.push({ id, button, x, y, frame, consumed: consumePolls >= consumeAfter });
+      if (id === 501) consumePolls = 0;
       if (id === 503) hoveredPoint = { x, y };
       return 0;
     },
@@ -33,6 +36,7 @@ const context = {
       frame++;
       return allowHover && frame >= 2 && hoveredPoint.x === x && hoveredPoint.y === y;
     },
+    async clickConsumed() { return ++consumePolls >= consumeAfter; },
     async zoom(steps) { calls.push({ zoom: steps }); }
   },
   performance: { now: () => now },
@@ -76,6 +80,29 @@ async function settle() {
       'Finger drift must prime and click the final tap position');
   assert.deepEqual(calls.filter(e => e.id === 503).map(e => [e.x, e.y]),
       [[100, 100], [105, 103]], 'Release coordinates were not hovered before clicking');
+
+  calls.length = 0;
+  pointer('pointerdown', 13, 100, 100);
+  pointer('pointermove', 13, 109, 102);
+  pointer('pointerup', 13, 110, 103);
+  await settle();
+  assert.equal(calls.filter(e => e.id === 501 && e.button === 1).length, 1,
+      'Normal finger wobble incorrectly became a camera drag');
+  assert.ok(!calls.some(e => e.button === 2), 'Small tap movement rotated the camera');
+
+  calls.length = 0;
+  consumeAfter = 6; // Model a slow client logic tick.
+  pointer('pointerdown', 14, 100, 100);
+  pointer('pointerup', 14, 100, 100);
+  pointer('pointerdown', 15, 200, 200);
+  pointer('pointerup', 15, 200, 200);
+  await settle();
+  assert.deepEqual(calls.filter(e => e.id === 501 || e.id === 502).map(e => [e.id, e.x]),
+      [[501, 100], [502, 100], [501, 200], [502, 200]],
+      'Quick successive taps must each be delivered once, in order');
+  assert.ok(calls.filter(e => e.id === 502).every(e => e.consumed),
+      'Tap released before the slow game tick consumed its press');
+  consumeAfter = 2;
 
   calls.length = 0;
   allowHover = false;
