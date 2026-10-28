@@ -261,6 +261,7 @@ public class Class39_Sub5_Sub7 extends SubNode
 	Node.anInt742 = i_27_;
 	Class39_Sub5_Sub4_Sub4.anInt2315 = i_29_;
 	Class43.anInt799 = i_28_;
+        BrowserClientBootstrap.sceneRendered();
     }
     
     static {
