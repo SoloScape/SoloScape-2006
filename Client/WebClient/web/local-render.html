@@ -231,12 +231,15 @@
     // Scene picking runs during rendering. Wait for a complete frame at the tap
     // position before pressing, rather than guessing a delay on a slow phone.
     if (touch.point.scene && frame >= 0) {
-      const deadline = performance.now() + 1500;
+      const deadline = performance.now() + 3000;
+      let ready = false;
       while (generation === touchGeneration && performance.now() < deadline) {
-        const current = await clientBridge.sceneFrame();
-        if (current < 0 || current - frame >= 2) break;
+        ready = await clientBridge.sceneHoverReady(touch.point.x, touch.point.y, frame);
+        if (ready) break;
         await new Promise(resolve => setTimeout(resolve, 25));
       }
+      // Never send a click using a stale menu if rendering has stalled.
+      if (!ready) return;
     }
     if (generation !== touchGeneration) return;
     const button = performance.now() - touch.started >= 450 && touch.held >= 450 ? 3 : 1;
@@ -314,6 +317,10 @@
       mouse(502, touch.button, touch.point);
     } else if (point.inside) {
       touch.held = performance.now() - touch.started;
+      // Small finger drift is still a tap. Prime the exact release coordinate,
+      // not the earlier finger-down coordinate used to distinguish a drag.
+      touch.point = point;
+      touch.hover = mouse(503, 0, point);
       tapAfterHover(touch, touchGeneration).catch(error =>
         console.error('[local-render] Tap failed:', error));
     }
