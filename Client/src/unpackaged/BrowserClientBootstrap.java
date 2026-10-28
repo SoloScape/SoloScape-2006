@@ -86,6 +86,12 @@ public final class BrowserClientBootstrap {
     }
 
 
+    /** Control keys must not carry printable characters into the chat queue. */
+    public static void setKeyDown(int code, boolean down) {
+        WebClientBridge.key(down ? java.awt.event.KeyEvent.KEY_PRESSED
+                : java.awt.event.KeyEvent.KEY_RELEASED, code, 0);
+    }
+
     /** Mouse coordinates use the original game resolution, including on resized canvases. */
     public static int sendMouse(int id, int button, int x, int y) throws Exception {
         WebClientBridge.mouse(id, button, x, y);
