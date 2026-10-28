@@ -19,6 +19,17 @@ import java.io.OutputStream;
  * This is NOT used by the existing Java desktop or streamed WebClient launchers.
  */
 public final class BrowserClientBootstrap {
+    private static volatile SceneHover completedSceneHover;
+
+    private static final class SceneHover {
+        final int frame, x, y;
+        SceneHover(int frame, int x, int y) {
+            this.frame = frame;
+            this.x = x;
+            this.y = y;
+        }
+    }
+
     private static final File SOURCE_CACHE = new File("/app/cache");
     private static final File LOCAL_CACHE = new File("/files/soloscape-cache");
 
@@ -84,6 +95,20 @@ public final class BrowserClientBootstrap {
 
     public static int sceneFrame() {
         return Class31.state == 30 ? Canvas_Sub1.anInt15 : -1;
+    }
+
+    /** Published only after scene picking and the context menu have finished rendering. */
+    static void sceneRendered() {
+        if ("lan-websocket".equals(System.getProperty("client.transport"))) {
+            completedSceneHover = new SceneHover(Canvas_Sub1.anInt15,
+                    jagex.utils.IsaacPrng.anInt1091, Class33.anInt599);
+        }
+    }
+
+    public static boolean sceneHoverReady(int x, int y, int afterFrame) {
+        if (Class31.state != 30) return true;
+        SceneHover hover = completedSceneHover;
+        return hover != null && hover.frame > afterFrame && hover.x == x && hover.y == y;
     }
 
     public static void zoom(int steps) {
