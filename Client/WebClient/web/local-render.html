@@ -45,6 +45,8 @@
     }
     await cheerpjInit({
       version: 8,
+      // Game taps should not focus CheerpJ's mobile text-input overlay.
+      enableInputMethods: false,
       status: 'default',
       natives: window.localRenderSocketNatives,
       javaProperties: [
