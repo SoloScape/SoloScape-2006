@@ -13,7 +13,7 @@
                env(safe-area-inset-bottom) env(safe-area-inset-left);
       overflow: hidden;
     }
-    #display { position: relative; width: 100%; height: 100%; background: black; }
+    #display { position: relative; width: 100%; height: 100%; background: black; touch-action: none; user-select: none; }
     #keyboard {
       position: fixed; z-index: 10000; top: 50%;
       right: max(8px, env(safe-area-inset-right)); transform: translateY(-50%);
@@ -188,6 +188,160 @@
   });
   phoneInput.addEventListener('keyup', event => event.stopPropagation());
   phoneInput.addEventListener('keypress', event => event.stopPropagation());
+
+  // Local touch gestures use the real Java input path, not synthetic DOM clicks.
+  const touchPoints = new Map();
+  let activeTouch = null;
+  let pinchBlocked = false;
+  let pinchDistance = null;
+  let touchGeneration = 0;
+  let lastTouchTime = -Infinity;
+  let pointerQueue = Promise.resolve();
+  function queuePointer(action) {
+    const result = pointerQueue.then(action);
+    pointerQueue = result.catch(error => console.error('[local-render] Touch input failed:', error));
+    return result;
+  }
+  function mouse(id, button, point) {
+    return queuePointer(() => clientBridge.sendMouse(id, button, point.x, point.y));
+  }
+  function gamePoint(event) {
+    const rect = display.getBoundingClientRect();
+    const scale = Math.min(rect.width / 765, rect.height / 503);
+    const x = (event.clientX - rect.left - (rect.width - 765 * scale) / 2) / scale;
+    const y = (event.clientY - rect.top - (rect.height - 503 * scale) / 2) / scale;
+    return { x: Math.floor(x), y: Math.floor(y),
+      inside: scale > 0 && x >= 0 && x < 765 && y >= 0 && y < 503,
+      scene: x >= 0 && x < 512 && y >= 0 && y < 334 };
+  }
+  function fingerDistance() {
+    if (touchPoints.size !== 2) return null;
+    const [a, b] = Array.from(touchPoints.values());
+    return a.scene && b.scene ? Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) : null;
+  }
+  function captureTouch(event) {
+    if (event.pointerType === 'mouse' || !clientBridge) return false;
+    lastTouchTime = performance.now();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return true;
+  }
+  async function tapAfterHover(touch, generation) {
+    const frame = await touch.hover;
+    // Scene picking runs during rendering. Wait for a complete frame at the tap
+    // position before pressing, rather than guessing a delay on a slow phone.
+    if (touch.point.scene && frame >= 0) {
+      const deadline = performance.now() + 1500;
+      while (generation === touchGeneration && performance.now() < deadline) {
+        const current = await clientBridge.sceneFrame();
+        if (current < 0 || current - frame >= 2) break;
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+    }
+    if (generation !== touchGeneration) return;
+    const button = performance.now() - touch.started >= 450 && touch.held >= 450 ? 3 : 1;
+    await mouse(501, button, touch.point);
+    // Let a game tick consume the press before releasing the button.
+    await new Promise(resolve => setTimeout(resolve, 80));
+    await mouse(502, button, touch.point);
+  }
+  display.addEventListener('pointerdown', event => {
+    if (!captureTouch(event)) return;
+    const point = gamePoint(event);
+    if (!point.inside) return;
+    display.setPointerCapture?.(event.pointerId);
+    touchPoints.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY, scene: point.scene });
+    if (touchPoints.size >= 2) {
+      touchGeneration++;
+      if (activeTouch && activeTouch.down) mouse(502, activeTouch.button, activeTouch.point);
+      activeTouch = null;
+      pinchBlocked = true;
+      pinchDistance = fingerDistance();
+      return;
+    }
+    if (pinchBlocked) return;
+    touchGeneration++;
+    activeTouch = { id: event.pointerId, point, start: point,
+      clientX: event.clientX, clientY: event.clientY, started: performance.now(),
+      button: point.scene ? 2 : 1, down: false, lastMove: -Infinity,
+      hover: mouse(503, 0, point) };
+  }, { capture: true, passive: false });
+  display.addEventListener('pointermove', event => {
+    if (!captureTouch(event)) return;
+    const finger = touchPoints.get(event.pointerId);
+    if (finger) {
+      finger.clientX = event.clientX;
+      finger.clientY = event.clientY;
+    }
+    if (pinchBlocked) {
+      const distance = fingerDistance();
+      if (distance !== null && pinchDistance !== null) {
+        const steps = Math.max(-10, Math.min(10, Math.trunc((distance - pinchDistance) / 12)));
+        if (steps) {
+          queuePointer(() => clientBridge.zoom(-steps));
+          pinchDistance += steps * 12;
+        }
+      }
+      return;
+    }
+    if (!activeTouch || activeTouch.id !== event.pointerId) return;
+    const point = gamePoint(event);
+    if (!point.inside) return;
+    activeTouch.point = point;
+    if (!activeTouch.down && Math.hypot(event.clientX - activeTouch.clientX,
+        event.clientY - activeTouch.clientY) > 8) {
+      mouse(501, activeTouch.button, activeTouch.start);
+      activeTouch.down = true;
+    }
+    if (activeTouch.down && performance.now() - activeTouch.lastMove >= 25) {
+      mouse(506, activeTouch.button, point);
+      activeTouch.lastMove = performance.now();
+    }
+  }, { capture: true, passive: false });
+  display.addEventListener('pointerup', event => {
+    if (!captureTouch(event)) return;
+    touchPoints.delete(event.pointerId);
+    if (pinchBlocked) {
+      if (!touchPoints.size) { pinchBlocked = false; pinchDistance = null; }
+      return;
+    }
+    if (!activeTouch || activeTouch.id !== event.pointerId) return;
+    const touch = activeTouch;
+    activeTouch = null;
+    const point = gamePoint(event);
+    if (touch.down) {
+      if (point.inside) { touch.point = point; mouse(506, touch.button, point); }
+      mouse(502, touch.button, touch.point);
+    } else if (point.inside) {
+      touch.held = performance.now() - touch.started;
+      tapAfterHover(touch, touchGeneration).catch(error =>
+        console.error('[local-render] Tap failed:', error));
+    }
+  }, { capture: true, passive: false });
+  function cancelTouches() {
+    touchGeneration++;
+    if (activeTouch && activeTouch.down) mouse(502, activeTouch.button, activeTouch.point);
+    activeTouch = null;
+    touchPoints.clear();
+    pinchBlocked = false;
+    pinchDistance = null;
+  }
+  display.addEventListener('pointercancel', event => {
+    if (captureTouch(event)) cancelTouches();
+  }, { capture: true, passive: false });
+  window.addEventListener('blur', cancelTouches);
+  // Avoid CheerpJ also turning the same finger gesture into a second mouse click.
+  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel',
+      'mousedown', 'mousemove', 'mouseup', 'click', 'contextmenu']) {
+    display.addEventListener(type, event => {
+      if (type.startsWith('touch') || event.sourceCapabilities?.firesTouchEvents ||
+          performance.now() - lastTouchTime < 800) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { capture: true, passive: false });
+  }
+
   function fitClient() {
     const visible = window.visualViewport;
     const visibleWidth = visible ? visible.width : window.innerWidth;
