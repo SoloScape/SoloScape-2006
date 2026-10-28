@@ -732,6 +732,29 @@ public final class CastleWarsEngineeringManager {
         return true;
     }
 
+    /** Both halves of a large door share one opening. A player alongside either
+     * closed leaf can operate the pair without stepping across the doorway. */
+    public static boolean isAtMainDoorInteractionApproach(Player player,
+                                                          int objectId,
+                                                          int objectX,
+                                                          int objectY) {
+        if (player == null || !isClosedMainDoorObject(objectId)
+                || player.getPosition().getPlane() != MAIN_DOOR_PLANE) {
+            return false;
+        }
+        MainDoorState door = findMainDoor(objectId, objectX, objectY);
+        if (door == null || door.mode != MainDoorMode.CLOSED) {
+            return false;
+        }
+        for (MainDoorLeaf leaf : door.leaves) {
+            if (player.getPosition().getX() == leaf.closedX
+                    && Math.abs(player.getPosition().getY() - leaf.closedY) == 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Position getMainDoorInteractionApproach(Player player,
                                                           int objectId,
                                                           int objectX,
