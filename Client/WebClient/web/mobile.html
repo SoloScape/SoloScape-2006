@@ -139,6 +139,11 @@
       fitClient();
     }, 400);
   });
+  function primeTouchHover(touch, point) {
+    touch.hoverPoint = point;
+    touch.hoverAt = performance.now();
+    touch.hover = mouse(503, 0, point);
+  }
   display.addEventListener('pointerdown', event => {
     lastGameTapY = event.clientY - viewport.getBoundingClientRect().top;
     closeKeyboard();
@@ -231,14 +236,19 @@
     // or overwrite a click while the game is still processing the previous one.
     return queuePointer(async () => {
       if (generation !== touchGeneration) return;
-      const frame = await clientBridge.sendMouse(503, 0, touch.point.x, touch.point.y);
+      // Reuse hover primed while the finger was down. Starting it again on lift
+      // needlessly adds another full render frame to every stationary tap.
+      const primed = touch.hoverPoint && touch.hoverPoint.x === touch.point.x &&
+        touch.hoverPoint.y === touch.point.y;
+      const frame = primed ? await touch.hover :
+        await clientBridge.sendMouse(503, 0, touch.point.x, touch.point.y);
       if (touch.point.scene && frame >= 0) {
         const deadline = performance.now() + 3000;
         let ready = false;
         while (generation === touchGeneration && performance.now() < deadline) {
           ready = await clientBridge.sceneHoverReady(touch.point.x, touch.point.y, frame);
           if (ready) break;
-          await new Promise(resolve => setTimeout(resolve, 25));
+          await new Promise(resolve => setTimeout(resolve, 16));
         }
         if (!ready) return;
       }
@@ -249,7 +259,7 @@
         const deadline = performance.now() + 3000;
         while (generation === touchGeneration && performance.now() < deadline) {
           if (await clientBridge.clickConsumed()) break;
-          await new Promise(resolve => setTimeout(resolve, 25));
+          await new Promise(resolve => setTimeout(resolve, 16));
         }
       } finally {
         await clientBridge.sendMouse(502, button, touch.point.x, touch.point.y);
@@ -274,7 +284,7 @@
     activeTouch = { id: event.pointerId, point, start: point,
       clientX: event.clientX, clientY: event.clientY, started: performance.now(),
       button: point.scene ? 2 : 1, down: false, lastMove: -Infinity };
-    mouse(503, 0, point);
+    primeTouchHover(activeTouch, point);
   }, { capture: true, passive: false });
   display.addEventListener('pointermove', event => {
     if (!captureTouch(event)) return;
@@ -304,6 +314,11 @@
       touchGeneration++;
       mouse(501, activeTouch.button, activeTouch.start);
       activeTouch.down = true;
+    }
+    if (!activeTouch.down && performance.now() - activeTouch.hoverAt >= 16 &&
+        Math.hypot(point.x - activeTouch.hoverPoint.x, point.y - activeTouch.hoverPoint.y) >= 4) {
+      // Warm the menu during normal finger drift, before the finger lifts.
+      primeTouchHover(activeTouch, point);
     }
     if (activeTouch.down && performance.now() - activeTouch.lastMove >= 25) {
       mouse(506, activeTouch.button, point);
