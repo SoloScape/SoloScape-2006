@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const html = fs.readFileSync('Client/WebClient/web/mobile.html', 'utf8');
 for (const page of ['desktop.html', 'local-render.html']) {
   const content = fs.readFileSync('Client/WebClient/web/' + page, 'utf8');
-  const script = content.match(/<script>\\s*([\\s\\S]*?)<\\/script>/)[1];
+  const script = content.split('<script>')[1].split('</script>')[0];
   new vm.Script(script);
   if (page === 'desktop.html') {
     assert.ok(!content.includes('id="keyboard"') && !content.includes('id="phone-input"'),
