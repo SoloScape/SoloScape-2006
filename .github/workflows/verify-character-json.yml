@@ -17,6 +17,7 @@ on:
       - 'Server/src/main/java/com/rs2/util/CharacterJson*.java'
       - 'Server/src/main/java/com/rs2/util/CharacterFileManager.java'
       - 'Server/src/test/java/CharacterJsonSaveChecks.java'
+      - 'Server/src/test/java/CharacterRuntimeSaveChecks.java'
   workflow_dispatch:
 jobs:
   character-json:
