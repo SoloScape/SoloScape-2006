@@ -13,22 +13,17 @@
                env(safe-area-inset-bottom) env(safe-area-inset-left);
       overflow: hidden;
     }
-    #screen { position: relative; width: 100%; height: 100%; }
-    #display {
-      position: absolute; width: 765px; height: 503px;
-      transform-origin: top left; background: black;
-    }
+    #display { position: relative; width: 100%; height: 100%; background: black; }
   </style>
   <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
   <script src="local-render-bridge.js"></script>
 </head>
 <body>
-<div id="viewport"><div id="screen"><div id="display"></div></div></div>
+<div id="viewport"><div id="display"></div></div>
 <script>
 (async () => {
   'use strict';
   const viewport = document.getElementById('viewport');
-  const screen = document.getElementById('screen');
   const display = document.getElementById('display');
   function fitClient() {
     const visible = window.visualViewport;
@@ -37,14 +32,7 @@
     viewport.style.height = (visible ? visible.height : window.innerHeight) + 'px';
     viewport.style.left = (visible ? visible.offsetLeft : 0) + 'px';
     viewport.style.top = (visible ? visible.offsetTop : 0) + 'px';
-    const width = screen.clientWidth;
-    const height = screen.clientHeight;
-    const scale = Math.min(width / 765, height / 503);
-    display.style.left = Math.max(0, (width - 765 * scale) / 2) + 'px';
-    display.style.top = Math.max(0, (height - 503 * scale) / 2) + 'px';
-    display.style.transform = 'scale(' + scale + ')';
   }
-  new ResizeObserver(fitClient).observe(screen);
   window.addEventListener('resize', fitClient);
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', fitClient);
@@ -65,7 +53,7 @@
         'client.transport=lan-websocket'
       ]
     });
-    cheerpjCreateDisplay(765, 503, display);
+    cheerpjCreateDisplay(-1, -1, display);
     const exitCode = await cheerpjRunMain(
       'unpackaged.BrowserClientBootstrap',
       '/app/client.jar',
