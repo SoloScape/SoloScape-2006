@@ -6,21 +6,34 @@ SoloScape brings together a Java game client, a self-hosted game server, and the
 
 The project targets the **18 December 2006 / revision 443** cache and protocol. Revision compatibility and gameplay content are still being audited; see [Project status](#project-status) before assuming that every historical interaction is complete.
 
-[Get started](#quick-start) · [Features](#features) · [Developer setup](#development) · [Server documentation](Server/README.md) · [Browser client](Client/WebClient/README.md)
+[Get started](#quick-start) · [Current features](#current-working-features) · [Roadmap](#roadmap) · [Developer setup](#development) · [Server documentation](Server/README.md) · [Browser client](Client/WebClient/README.md)
 
-## Features
+## Current Working Features
 
-| Area | What's included |
-| --- | --- |
-| **Game client** | Java 8 client using the bundled revision 443 cache, with the familiar game view, interfaces, chat, inventory, and world rendering. |
-| **Local server** | World simulation, player login and persistence, NPCs, game systems, and a desktop server control panel. |
-| **Gameplay content** | Server-side implementations for skills, combat, quests, minigames, trading, and configurable bot populations. Individual content coverage varies. |
-| **Player saves** | JSON-based character files with automatic migration from older `.dat` saves; optional SQLite-based persistence is also available. |
-| **Browser and phone access** | A browser view that streams the real Java client, with touch input and optional streamed audio. |
-| **Developer workflow** | Live recompilation/HotSwap, interaction diagnostics, a local client testing dashboard, and an MCP endpoint. |
-| **Verification** | Java checks, content audits, and GitHub Actions workflows for selected features and regressions. |
+The following functionality is **present in the current repository**, with launchers, implementations, documentation, and/or targeted checks. This is a summary of the available systems—not a claim that every interaction or historical detail has passed a full playthrough.
 
-The repository also contains a recreation of the **2006 Christmas rescue event**, including Shanty Claws, snowballs, gublinches, cage progress, and event rewards. See [the server documentation](Server/README.md#2006-christmas-rescue) for the walkthrough and implementation notes.
+### Client and world
+
+- **Java 8 client and local game server:** Build and launch both components on Windows, connect to the local server on port `43594`, and use the desktop server control panel.
+- **Revision 443 game foundation:** Bundled 18 December 2006-era JS5 cache, map/XTEA data, and revision-specific login, update, and region handling. Some packet/interface behavior still needs visual verification.
+- **Basic world interaction:** Client rendering, player/NPC updates, movement, inventory/equipment, chat, interfaces, and server-side NPC/object/item interaction routing.
+- **Server-managed world:** World simulation, content data, shops, player trading, and configurable simulated bot populations. Individual routes and content remain subject to testing.
+
+### Gameplay and content
+
+- **Existing skill implementations:** Code modules for Woodcutting, Mining, Fishing, Firemaking, Cooking, Smithing, Crafting, Fletching, Farming, Herblore, Agility, Thieving, Magic, Prayer, Runecrafting, and Slayer. **Availability does not mean every action, level, or item combination is complete.**
+- **Combat and activities:** Existing combat systems and activity modules including Barrows, Castle Wars, Fight Caves, and the Duel Arena; completeness and era-appropriate mechanics vary.
+- **Quests and onboarding:** A Tutorial Island flow and quest framework, with targeted regression checks for selected quests and interactions such as *The Restless Ghost*.
+- **2006 Christmas rescue:** Implemented Shanty Claws/Gublinch quest flow, snowball mechanics, cage progress, and event rewards, with dedicated server and client checks. See the [event documentation](Server/README.md#2006-christmas-rescue).
+
+### Saves, access, and developer tools
+
+- **Character persistence:** JSON character saves, automatic migration from legacy `.dat` files, backup/recovery paths, and an optional SQLite-backed storage path.
+- **Browser/phone play:** A web view streamed from the actual Java client, including touch/camera controls and optional browser audio; the Java renderer remains on the host computer.
+- **Live development:** Java source watching/HotSwap, client screenshots and state inspection, a localhost MCP endpoint, and an activity dashboard.
+- **Diagnostics and tests:** Packet/interaction debug traces, targeted Java regression checks, strict-content and interaction audit tools, and GitHub Actions workflows.
+
+For deeper implementation details, see [the server guide](Server/README.md), [client developer tools](Client/DEVELOPER-TOOLS.md), and the [browser client guide](Client/WebClient/README.md).
 
 ## Requirements
 
@@ -207,6 +220,40 @@ SoloScape is an **actively developed and audited recreation**, not a claim of co
 - Automated checks cover selected behaviors; a passing check does not prove that all gameplay is historically accurate.
 
 For detailed implementation notes and limitations, see [Server/README.md](Server/README.md) and the [revision audit](AUDIT_2006-12-18.md).
+
+## Roadmap
+
+The goal is an increasingly faithful **18 December 2006 (revision 443)** experience, with stable local play and developer tooling. The items below are **priorities under review**, not promised release dates. They are informed by the [historical accuracy audit](AUDIT_2006-12-18.md) and [dependency-ordered fix plan](fix-order.md); those documents capture an earlier snapshot, so individual findings must be rechecked against current code before being treated as open bugs.
+
+### Phase 1 — Historical accuracy and progression safeguards
+
+- [ ] Audit and restrict normal-player debug/progression commands.
+- [ ] Keep later RuneScape systems—such as the Grand Exchange, bank tabs, and Ironman modes—out of a strict December 2006 profile, while allowing deliberately optional custom features where appropriate.
+- [ ] Prevent post-target items, drops, spawns, and rewards from leaking into strict 2006 gameplay; resolve custom-item ID collisions.
+- [ ] Review historical death/loot rules, seasonal event activation, and account/economy behavior.
+
+### Phase 2 — Revision 443 data and core systems
+
+- [ ] Reconcile the NPC spawn population and quest definitions with the target date, including quests released through *Animal Magnetism*.
+- [ ] Complete the **23-skill** server model, including a real Hunter skill slot and persistence across file and optional SQLite saves.
+- [ ] Expand **Hunter** and **Construction** from their current incomplete state into usable, era-appropriate skills.
+- [ ] Tighten cache validation, item-definition boundaries, and save-data compatibility tests.
+
+### Phase 3 — 2006 gameplay coverage
+
+- [ ] Complete missing or partial target-date quests, dialogue, rewards, and quest-menu behavior.
+- [ ] Restore or finish the Lunar spellbook, target-era Slayer coverage, random events, and activities such as the Stronghold of Security.
+- [ ] Review period-accurate Treasure Trails, crossbow systems, Capes of Accomplishment, and other late-2006 content.
+- [ ] Close gaps in NPC, object, item, and interface interaction routing identified by the audit.
+
+### Phase 4 — Mechanics, validation, and polish
+
+- [ ] Verify and correct combat accuracy, weapon speed, special attacks, Prayer effects, food effects, and other period-specific mechanics.
+- [ ] Expand client/server regression coverage and perform live in-game checks for key quests, skills, combat, travel, and interfaces.
+- [ ] Re-run the [interaction audit](Server/README.md#interaction-coverage-and-revision-443-routing) and [strict-content checks](tools/strict-content-checks.md), triaging unresolved findings.
+- [ ] Maintain a reproducible acceptance checklist for revision 443 before claiming historically complete gameplay.
+
+**Already in place:** the revision 443 client/cache foundation, automatic Java 8 setup, local build/play scripts, JSON save migration, developer tooling, browser/phone streaming, and an implementation of the Christmas rescue event. These still need continued testing where noted above.
 
 ## Troubleshooting
 
