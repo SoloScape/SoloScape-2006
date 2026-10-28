@@ -128,7 +128,7 @@ public final class BrowserClientBootstrap {
                 new FileInputStream(manifest), java.nio.charset.StandardCharsets.UTF_8))) {
             String name;
             while ((name = reader.readLine()) != null) {
-                if (!name.matches("l[0-9]+_[0-9]+\\\\.dat")) {
+                if (!name.matches("l[0-9]+_[0-9]+[.]dat")) {
                     throw new IOException("Invalid map fallback filename: " + name);
                 }
                 // Always refresh these small files, including repairs of identical length.
