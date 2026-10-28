@@ -146,11 +146,31 @@ public final class ObjectManager {
         int index = 0;
         while (index < length) {
             value = playerArray[index];
-            if (value != null && ((Entity)value).getPosition().getPlane() == dynamicObject.getWorldObject().getPosition().getPlane() && GameUtil.isWithinDistance(dynamicObject.getWorldObject().getPosition().getX(), dynamicObject.getWorldObject().getPosition().getY(), ((Entity)value).getPosition().getX(), ((Entity)value).getPosition().getY(), 60)) {
+            if (value != null && shouldSendDynamicObjectRestore(
+                    ((Player)value).getPosition(),
+                    dynamicObject.getWorldObject().getPosition(),
+                    ((Player)value).visibleDynamicObjects.contains(dynamicObject))) {
+                // A player who saw this object may still have its old model in
+                // their loaded scene after walking beyond the normal 60-tile
+                // visibility radius. Restore it without requiring a death or
+                // region rebuild (important for returned Castle Wars flags).
                 ((Player)value).packetSender.sendObjectCreate(dynamicObject.restoreObjectId, dynamicObject.getWorldObject().getPosition().getX(), dynamicObject.getWorldObject().getPosition().getY(), dynamicObject.getWorldObject().getPosition().getPlane(), dynamicObject.orientation, dynamicObject.getWorldObject().getType());
             }
             ++index;
         }
+    }
+
+    /** Previously streamed objects must be restored even outside spawn radius.
+     * The packet writer will ignore objects outside the client's loaded scene. */
+    public static boolean shouldSendDynamicObjectRestore(
+            Position playerPosition, Position objectPosition, boolean previouslyVisible) {
+        if (playerPosition == null || objectPosition == null
+                || playerPosition.getPlane() != objectPosition.getPlane()) {
+            return false;
+        }
+        return previouslyVisible || GameUtil.isWithinDistance(
+                objectPosition.getX(), objectPosition.getY(),
+                playerPosition.getX(), playerPosition.getY(), 60);
     }
 
     public static DynamicObject findDynamicObjectAt(int objectId, int value2, int value32) {
