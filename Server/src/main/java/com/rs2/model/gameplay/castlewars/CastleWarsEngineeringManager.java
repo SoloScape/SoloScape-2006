@@ -272,6 +272,13 @@ public final class CastleWarsEngineeringManager {
             }
         }
 
+        // Using a catapult rock directly on a working catapult should be
+        // equivalent to operating it, including the revision-443 fallback.
+        if (itemId == ROCK_ITEM_ID
+                && (objectId == SARADOMIN_CATAPULT_ID || objectId == ZAMORAK_CATAPULT_ID)) {
+            return operateCatapult(player, objectId);
+        }
+
         if (itemId == TINDERBOX_ITEM_ID
                 && (objectId == SARADOMIN_CATAPULT_ID || objectId == ZAMORAK_CATAPULT_ID)) {
             return igniteEnemyCatapult(player, objectId);
