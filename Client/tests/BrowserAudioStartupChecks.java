@@ -51,6 +51,21 @@ public final class BrowserAudioStartupChecks {
         require(Class39_Sub5_Sub4_Sub4.anInt2299 == 3,
                 "Keyboard input should be ignored when no game canvas exists");
 
+        Class41.aCanvas778 = new java.awt.Canvas();
+        Class41.aCanvas778.addKeyListener(jagex.world.actors.Npc.aClass35_2499);
+        int arrowStart = Class39_Sub5_Sub4_Sub4.anInt2299;
+        for (int code = 37; code <= 40; code++) {
+            BrowserClientBootstrap.setKeyDown(code, true);
+            BrowserClientBootstrap.setKeyDown(code, false);
+        }
+        java.awt.EventQueue.invokeAndWait(() -> { });
+        require(Class39_Sub5_Sub4_Sub4.anInt2299 == arrowStart + 4,
+                "Desktop arrows did not reach the control-key queue");
+        for (int slot = arrowStart; slot < arrowStart + 4; slot++) {
+            require(Class46_Sub1.anIntArray1558[slot] == -1,
+                    "A desktop arrow generated a printable chat character");
+        }
+
         jagex.utils.IsaacPrng.anInt1087 = 765;
         jagex.utils.Deque.anInt919 = 503;
         Canvas_Sub1 touchCanvas = new Canvas_Sub1(new java.awt.Canvas());
