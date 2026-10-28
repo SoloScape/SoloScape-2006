@@ -105,7 +105,28 @@ public final class BrowserAudioStartupChecks {
         System.setProperty("client.transport", "lan-websocket");
         require(WebClientBridge.cameraDistanceOffset() == -550,
                 "Desktop mode unexpectedly changed the stored browser zoom");
-        System.out.println("Browser audio, keyboard and touch checks passed.");
+        java.io.File stagedCache = new java.io.File("Client/WebClient/build/local-render/cache");
+        java.nio.file.Path browserCache = java.nio.file.Files.createTempDirectory("browser-map-cache");
+        BrowserClientBootstrap.copyMapFallbacks(stagedCache, browserCache.toFile());
+        java.io.File[] fallbackFiles = new java.io.File("Server/cache/map-fallback")
+                .listFiles((dir, name) -> name.matches("l[0-9]+_[0-9]+[.]dat"));
+        require(fallbackFiles != null && fallbackFiles.length > 0, "Bundled map fallbacks are missing");
+        for (java.io.File fallback : fallbackFiles) {
+            java.nio.file.Path imported = browserCache.resolve("map-fallback").resolve(fallback.getName());
+            require(java.util.Arrays.equals(java.nio.file.Files.readAllBytes(fallback.toPath()),
+                    java.nio.file.Files.readAllBytes(imported)),
+                    "Browser cache did not import the complete map: " + fallback.getName());
+        }
+        java.nio.file.Path lumbridge = browserCache.resolve("map-fallback/l50_50.dat");
+        byte[] expectedMap = java.nio.file.Files.readAllBytes(lumbridge);
+        require(expectedMap.length > 0, "Lumbridge fallback is empty");
+        byte[] staleMap = expectedMap.clone();
+        staleMap[0] ^= 1;
+        java.nio.file.Files.write(lumbridge, staleMap);
+        BrowserClientBootstrap.copyMapFallbacks(stagedCache, browserCache.toFile());
+        require(java.util.Arrays.equals(expectedMap, java.nio.file.Files.readAllBytes(lumbridge)),
+                "A same-length stale browser map was not refreshed");
+        System.out.println("Browser audio, keyboard, touch and map import checks passed.");
     }
 
     private static void require(boolean condition, String message) {
