@@ -79,6 +79,11 @@ public final class BrowserAudioStartupChecks {
         BrowserClientBootstrap.sendMouse(501, 1, 120, 130);
         require(JMouseListener.anInt791 == 120 && Class41.anInt784 == 130 && Class23.anInt430 == 1,
                 "Touch tap did not reach the game's click queue");
+        require(!BrowserClientBootstrap.clickConsumed(),
+                "Touch press was acknowledged before the logic tick sampled it");
+        Class39_Sub5_Sub18.method776((byte) -99);
+        require(BrowserClientBootstrap.clickConsumed() && Class46.anInt887 == 1,
+                "Logic tick did not acknowledge and preserve the pending touch click");
         BrowserClientBootstrap.sendMouse(502, 1, 120, 130);
         Class23.anInt430 = 0;
         Class34.anInt605 = 500;
