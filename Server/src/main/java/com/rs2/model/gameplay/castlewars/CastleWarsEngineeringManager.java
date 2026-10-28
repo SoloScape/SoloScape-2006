@@ -1269,8 +1269,8 @@ public final class CastleWarsEngineeringManager {
 
     public static void cleanupPlayerSupplies(Player player) {
         int[] ids = new int[]{ROCK_ITEM_ID, EXPLOSIVE_POTION_ID, BARRICADE_ITEM_ID,
-                CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, EMPTY_BUCKET_ITEM_ID,
-                BUCKET_OF_WATER_ITEM_ID};
+                CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, BRONZE_PICKAXE_ID,
+                TINDERBOX_ITEM_ID, EMPTY_BUCKET_ITEM_ID, BUCKET_OF_WATER_ITEM_ID};
         for (int id : ids) {
             int amount = player.getInventoryManager().getItemAmount(id);
             if (amount > 0) {
