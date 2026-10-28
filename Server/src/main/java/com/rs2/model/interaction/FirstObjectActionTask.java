@@ -133,8 +133,8 @@ extends TickTask {
                 CastleWarsEngineeringManager.getMainDoorInteractionApproach(
                         this.player, this.objectId, this.objectX, this.objectY);
         if (castleWarsMainDoorApproach != null) {
-            if (this.player.getPosition().getX() == castleWarsMainDoorApproach.getX()
-                    && this.player.getPosition().getY() == castleWarsMainDoorApproach.getY()
+            if (CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                    this.player, this.objectId, this.objectX, this.objectY)
                     && CastleWarsManager.handleFirstObjectAction(
                             this.player, this.objectId, this.objectX, this.objectY)) {
                 this.stop();
