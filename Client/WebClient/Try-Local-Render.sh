@@ -33,7 +33,24 @@ for index in $(seq 0 13) 255; do
     cp "$cache/main_file_cache.idx$index" "$stage/cache/main_file_cache.idx$index"
 done
 
+# CheerpJ cannot enumerate the HTTP /app mount, so publish an explicit map list.
+mkdir -p "$stage/cache/map-fallback"
+: > "$stage/cache/map-fallback/manifest.txt"
+for fallback in "$cache"/map-fallback/l*.dat; do
+    [[ -f "$fallback" ]] || continue
+    name=${fallback##*/}
+    cp "$fallback" "$stage/cache/map-fallback/$name"
+    printf '%s\n' "$name" >> "$stage/cache/map-fallback/manifest.txt"
+done
+[[ -s "$stage/cache/map-fallback/manifest.txt" ]] ||
+    { echo "Missing location map fallbacks in $cache/map-fallback" >&2; exit 1; }
+
 "$JAVA_HOME/bin/javac" -encoding UTF-8 -d "$web/build/gateway-classes" "$web/gateway/src/WebGateway.java"
+
+if [[ "${1:-}" == --prepare-only ]]; then
+    echo "Browser-local cache and gateway prepared in $stage"
+    exit 0
+fi
 
 echo
 echo "EXPERIMENTAL browser-local Java client, LAN WebSocket transport (not PNG streaming)"
