@@ -49,7 +49,24 @@ public final class CharacterRuntimeSaveChecks {
                     "Bank deposit not persisted");
             require(record.skillExperience[0] == 15000L, "XP not persisted");
             require(record.x == 3210 && record.y == 3222, "Position not persisted");
-            System.out.println("Live character save, inventory, bank and XP checks passed.");
+
+            // Recreate the Player, as happens on the next login, and reload
+            // through the server's real character-loading method.
+            Player restored = new Player(null);
+            restored.setUsername(username);
+            CharacterFileManager.loadPlayerFromFile("./data/characters/", restored);
+            ItemStack restoredBankItem = restored.getBankContainer().getItemAtTabSlot(0, 0);
+            ItemStack restoredInventoryItem = restored.getInventoryManager().getContainer().getItemAt(0);
+            require(restoredBankItem != null && restoredBankItem.getAmount() == 456,
+                    "Bank deposit not restored on login");
+            require(restoredInventoryItem != null && restoredInventoryItem.getAmount() == 123,
+                    "Inventory not restored on login");
+            require(restored.getSkillManager().getExperience()[0] == 15000.0,
+                    "XP not restored on login");
+            require(restored.getPosition().getX() == 3210
+                    && restored.getPosition().getY() == 3222,
+                    "Position not restored on login");
+            System.out.println("Live character save and login reload checks passed.");
         } finally {
             Files.deleteIfExists(save.toPath());
             Files.deleteIfExists(backup.toPath());
