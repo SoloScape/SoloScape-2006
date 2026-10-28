@@ -48,6 +48,8 @@ public final class BrowserClientBootstrap {
                 copyCacheFile("main_file_cache.idx" + index);
             }
 
+            copyMapFallbacks(SOURCE_CACHE, LOCAL_CACHE);
+
             // Do not copy uid.dat: every browser session generates its own local UID.
             System.setProperty("client.cache", LOCAL_CACHE.getAbsolutePath());
             System.out.println("[local-render] Cache ready in the browser. Starting Java renderer.");
@@ -115,15 +117,43 @@ public final class BrowserClientBootstrap {
         WebClientBridge.adjustCameraZoom(steps);
     }
 
+    static void copyMapFallbacks(File sourceCache, File localCache) throws IOException {
+        File folder = new File(localCache, "map-fallback");
+        if (!folder.isDirectory() && !folder.mkdirs()) {
+            throw new IOException("Cannot create browser map fallback directory: " + folder);
+        }
+        File manifest = new File(sourceCache, "map-fallback/manifest.txt");
+        int count = 0;
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(
+                new FileInputStream(manifest), java.nio.charset.StandardCharsets.UTF_8))) {
+            String name;
+            while ((name = reader.readLine()) != null) {
+                if (!name.matches("l[0-9]+_[0-9]+\\\\.dat")) {
+                    throw new IOException("Invalid map fallback filename: " + name);
+                }
+                // Always refresh these small files, including repairs of identical length.
+                copyCacheFile(sourceCache, localCache, "map-fallback/" + name, true);
+                count++;
+            }
+        }
+        if (count == 0) throw new IOException("No browser map fallbacks in " + manifest);
+        System.out.println("[local-render] Imported " + count + " map fallbacks.");
+    }
+
     private static void copyCacheFile(String fileName) throws IOException {
-        File source = new File(SOURCE_CACHE, fileName);
-        File target = new File(LOCAL_CACHE, fileName);
+        copyCacheFile(SOURCE_CACHE, LOCAL_CACHE, fileName, false);
+    }
+
+    private static void copyCacheFile(File sourceCache, File localCache,
+                                      String fileName, boolean refresh) throws IOException {
+        File source = new File(sourceCache, fileName);
+        File target = new File(localCache, fileName);
         if (!source.isFile()) {
             throw new IOException("Missing staged cache file: " + source);
         }
         // This prototype uses file lengths to avoid recopying the cache on reload.
         // Delete the site's browser storage when testing changes of identical length.
-        if (target.isFile() && target.length() == source.length()) {
+        if (!refresh && target.isFile() && target.length() == source.length()) {
             return;
         }
 
