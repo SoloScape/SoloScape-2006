@@ -4,69 +4,44 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>SoloScape — experimental LAN browser renderer</title>
+  <title>SoloScape</title>
   <style>
-    html, body { margin: 0; min-height: 100%; background: #131313; color: #f5f5f5; font: 15px system-ui, sans-serif; }
-    main { max-width: 820px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 1.25rem; margin: 0 0 8px; }
-    p { line-height: 1.5; color: #ccc; }
-    button { background: #e4b85b; color: #171717; border: 0; border-radius: 6px; font-weight: 700; padding: 11px 15px; cursor: pointer; }
-    #status { margin: 10px 0; padding: 10px 12px; border: 1px solid #484848; border-radius: 6px; white-space: pre-wrap; }
+    html, body { margin: 0; min-height: 100%; background: black; }
+    body { display: flex; justify-content: center; }
     #display { max-width: 100%; overflow-x: auto; background: black; }
-    .note { font-size: 12px; color: #a7a7a7; }
   </style>
   <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
   <script src="local-render-bridge.js"></script>
 </head>
 <body>
-<main>
-  <h1>SoloScape — browser-local renderer (LAN experiment)</h1>
-  <p>The revision-443 Java client runs and renders in your browser via CheerpJ. Your Linux machine runs the unchanged game server and a lightweight WebSocket-to-TCP relay. No Tailscale or external game-server access is needed.</p>
-  <p>Game connection: <code id="relay"></code> to Linux TCP 127.0.0.1:43594</p>
-  <button id="start" type="button">Try local rendering</button>
-  <div role="status" id="status">Start the experiment with the game server running on Linux.</div>
-  <div id="display"></div>
-  <p class="note">Experimental: audio is disabled to prevent a loading freeze. A full mobile play session, Java AWT rendering and touch controls are not verified. CheerpJ still downloads its runtime from its external CDN, so internet access is required for uncached assets. Keep port 8082 LAN-only; do not port-forward it. The original streamed client remains on port 8081.</p>
-</main>
+<div id="display"></div>
 <script>
-(() => {
+(async () => {
   'use strict';
-  const button = document.getElementById('start');
-  const status = document.getElementById('status');
-  const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  document.getElementById('relay').textContent = scheme + '//' + location.host + '/game';
-  button.addEventListener('click', async () => {
+  try {
     if (typeof cheerpjInit !== 'function') {
-      status.textContent = 'CheerpJ runtime did not load. Check access to its CDN.';
-      return;
+      throw new Error('CheerpJ runtime did not load. Check access to its CDN.');
     }
-    button.disabled = true;
-    status.textContent = 'Initializing Java in this browser…';
-    try {
-      await cheerpjInit({
-        version: 8,
-        status: 'default',
-        natives: window.localRenderSocketNatives,
-        javaProperties: [
-          'client.host=127.0.0.1', // Only used to parse a host; no browser-loopback TCP.
-          'client.port=43594',
-          'client.transport=lan-websocket'
-        ]
-      });
-      status.textContent = 'Java initialized. Importing cache, then launching SoloScape…';
-      cheerpjCreateDisplay(765, 503, document.getElementById('display'));
-      const exitCode = await cheerpjRunMain(
-        'unpackaged.BrowserClientBootstrap',
-        '/app/client.jar',
-        '1', 'local', 'live', 'highmem', 'members', 'english'
-      );
-      status.textContent = 'Local Java client exited with code ' + exitCode + '. Check the browser console for diagnostics.';
-    } catch (error) {
-      status.textContent = 'Local rendering failed: ' + (error && error.message || String(error)) +
-        '. Check the browser console for details.';
-      console.error(error);
-    }
-  });
+    await cheerpjInit({
+      version: 8,
+      status: 'default',
+      natives: window.localRenderSocketNatives,
+      javaProperties: [
+        'client.host=127.0.0.1', // Only used to parse a host; no browser-loopback TCP.
+        'client.port=43594',
+        'client.transport=lan-websocket'
+      ]
+    });
+    cheerpjCreateDisplay(765, 503, document.getElementById('display'));
+    const exitCode = await cheerpjRunMain(
+      'unpackaged.BrowserClientBootstrap',
+      '/app/client.jar',
+      '1', 'local', 'live', 'highmem', 'members', 'english'
+    );
+    console.info('[local-render] Java client exited with code ' + exitCode);
+  } catch (error) {
+    console.error('[local-render] Startup failed:', error);
+  }
 })();
 </script>
 </body>
