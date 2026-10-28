@@ -32,6 +32,7 @@ const handlers = {};
 const calls = [];
 let now = 0;
 let frame = 0;
+let autoRender = true;
 let allowHover = true;
 let hoveredPoint = null;
 let consumeAfter = 2;
@@ -50,11 +51,11 @@ const context = {
       calls.push({ id, button, x, y, frame, consumed: consumePolls >= consumeAfter });
       if (id === 501) consumePolls = 0;
       if (id === 503) hoveredPoint = { x, y };
-      return 0;
+      return frame;
     },
-    async sceneHoverReady(x, y) {
-      frame++;
-      return allowHover && frame >= 2 && hoveredPoint.x === x && hoveredPoint.y === y;
+    async sceneHoverReady(x, y, afterFrame) {
+      if (autoRender) frame++;
+      return allowHover && frame > afterFrame && hoveredPoint.x === x && hoveredPoint.y === y;
     },
     async clickConsumed() { return ++consumePolls >= consumeAfter; },
     async zoom(steps) { calls.push({ zoom: steps }); }
@@ -87,8 +88,24 @@ async function settle() {
   pointer('pointerup', 1, 100, 100);
   await settle();
   assert.ok(down.prevented && down.stopped, 'CheerpJ must not also synthesize a touch click');
-  assert.deepEqual(calls.map(e => [e.id, e.button]), [[503, 0], [503, 0], [501, 1], [502, 1]]);
-  assert.ok(calls[2].frame >= 2, 'Ground tap pressed before scene picking rendered');
+  assert.deepEqual(calls.map(e => [e.id, e.button]), [[503, 0], [501, 1], [502, 1]]);
+  assert.ok(calls[1].frame > calls[0].frame, 'Ground tap pressed before scene picking rendered');
+
+  calls.length = 0;
+  autoRender = false;
+  pointer('pointerdown', 16, 150, 150);
+  await settle();
+  frame++; // A slow phone renders the hover while the finger is still down.
+  const liftTime = now;
+  pointer('pointerup', 16, 150, 150);
+  await settle();
+  assert.equal(calls.filter(e => e.id === 503).length, 1,
+      'Finger lift unnecessarily restarted hover and waited for another frame');
+  assert.equal(calls.filter(e => e.id === 501).length, 1,
+      'A warmed tap must click without requiring any more rendered frames');
+  assert.ok(now - liftTime <= 16,
+      'Already rendered tap waited for a scene polling timer after finger lift');
+  autoRender = true;
 
   calls.length = 0;
   pointer('pointerdown', 11, 100, 100);
