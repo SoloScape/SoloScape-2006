@@ -246,6 +246,110 @@ SoloScape aims to recreate the **18 December 2006 (revision 443)** experience. T
 
 **Important:** Some skills marked ⛔ already have working mechanics in the server. This tracker deliberately does **not** equate ⛔ with “no code exists”; it means the skill has not yet been marked fully implemented and historically verified. Woodcutting is shown as 🚧, as in the proposed tracker. Update statuses as features are tested and completed.
 
+### Bosses & major encounters
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| King Black Dragon | 🚧 | Kalphite Queen | 🚧 |
+| Barrows brothers | 🚧 | TzTok-Jad (Fight Caves) | 🚧 |
+| Dagannoth Kings | ⛔ | Chaos Elemental | ⛔ |
+| Giant Mole / Wyson rewards | ⛔ |  |  |
+
+Bosses marked 🚧 have related combat, reward, or encounter code in the repository, **not verified end-to-end boss mechanics**. The remaining bosses need an implementation and/or live-play audit.
+
+### Quests
+
+<details>
+<summary><strong>Existing quest scripts (34 entries) — expand tracker</strong></summary>
+
+These quests have dedicated source files under `Server/src/main/java/com/rs2/model/quest/impl/`. Their 🚧 status means **a script exists**, not that every stage, requirement, reward, and dialogue is fully playable.
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| Black Knights' Fortress | 🚧 | Cook's Assistant | 🚧 |
+| Demon Slayer | 🚧 | Doric's Quest | 🚧 |
+| Dragon Slayer | 🚧 | Druidic Ritual | 🚧 |
+| Elemental Workshop | 🚧 | Ernest the Chicken | 🚧 |
+| Family Crest | 🚧 | Gertrude's Cat | 🚧 |
+| Goblin Diplomacy | 🚧 | Heroes' Quest | 🚧 |
+| Holy Grail | 🚧 | Imp Catcher | 🚧 |
+| Jungle Potion | 🚧 | Lost City | 🚧 |
+| Merlin's Crystal | 🚧 | Monkey Madness | 🚧 |
+| Pirate's Treasure | 🚧 | Priest in Peril | 🚧 |
+| Prince Ali Rescue | 🚧 | Romeo & Juliet | 🚧 |
+| Rune Mysteries | 🚧 | Scorpion Catcher | 🚧 |
+| Sheep Shearer | 🚧 | Shield of Arrav | 🚧 |
+| The Fremennik Trials | 🚧 | The Grand Tree | 🚧 |
+| The Knight's Sword | 🚧 | The Restless Ghost | 🚧 |
+| Tree Gnome Village | 🚧 | Vampire Slayer | 🚧 |
+| Witch's House | 🚧 | Witch's Potion | 🚧 |
+
+</details>
+
+<details>
+<summary><strong>Missing late-2006 quest coverage (12 entries) — expand tracker</strong></summary>
+
+The [historical audit](AUDIT_2006-12-18.md) identified these target-date quests as missing from the **older quest dataset**. ⛔ means they are not yet marked complete; their present-day runtime status should be rechecked before claiming they are fully absent.
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| Royal Trouble | ⛔ | Death to the Dorgeshuun | ⛔ |
+| Fairy Tale II — Cure a Queen | ⛔ | Lunar Diplomacy | ⛔ |
+| The Eyes of Glouphrie | ⛔ | Darkness of Hallowvale | ⛔ |
+| The Slug Menace | ⛔ | Elemental Workshop II | ⛔ |
+| My Arm's Big Adventure | ⛔ | Enlightened Journey | ⛔ |
+| Eagles' Peak | ⛔ | Animal Magnetism | ⛔ |
+
+</details>
+
+The above lists track identified quest scripts and late-2006 gaps; they are **not an exhaustive list of all 116 official quests** available by 18 December 2006. A complete quest-by-quest acceptance pass is still needed. **Tutorial Island** is tracked below as a separate onboarding feature.
+
+### Minigames & activities
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| Barrows | 🚧 | Castle Wars | 🚧 |
+| Duel Arena | 🚧 | TzHaar Fight Caves | 🚧 |
+| Mage Training Arena | 🚧 | Tai Bwo Wannai Cleanup | 🚧 |
+| Falador Party Room | 🚧 | Pest Control | ⛔ |
+| TzHaar Fight Pits | ⛔ | Pyramid Plunder | ⛔ |
+| Rogues' Den | ⛔ | Trouble Brewing | ⛔ |
+| Temple Trekking | ⛔ | Blast Furnace | ⛔ |
+| Fishing Trawler | ⛔ | Rat Pits | ⛔ |
+| Stronghold of Security | ⛔ | Warriors' Guild | ⛔ |
+| Brimhaven Agility Arena | ⛔ | Gnome Restaurant | ⛔ |
+
+🚧 means there are dedicated controllers or partial mechanics in source; ⛔ means there is no confirmed complete gameplay loop in the repository audit. In particular, a transport route, dialogue, area flag, or cache asset does **not** establish a working minigame.
+
+### Combat, world & economy
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| Melee / Ranged / Magic combat | 🚧 | PvP / Wilderness combat | 🚧 |
+| Prayer & special attacks | 🚧 | NPC combat and drops | 🚧 |
+| Player trading | 🚧 | Banking & equipment | 🚧 |
+| Shops & prices | 🚧 | Treasure Trails / clue scrolls | 🚧 |
+| Random events | 🚧 | Slayer masters & tasks | 🚧 |
+| NPC dialogue & world interactions | 🚧 | Quest progression & rewards | 🚧 |
+| Movement, teleports & travel | 🚧 | 2006 Christmas rescue | 🚧 |
+| Fairy rings | ⛔ | Player-owned houses (POH) | ⛔ |
+| 2006 skill tutors | ⛔ | Capes of Accomplishment | ⛔ |
+| Grand Exchange (released 2007) | ➖ | Modern bank tabs (released 2008) | ➖ |
+| God Wars Dungeon (released 2007) | ➖ | Modern Ironman modes | ➖ |
+
+Entries marked ➖ are deliberately **outside the strict 18 December 2006 target**, even where optional or later-era code already exists.
+
+### Client, tools & supporting systems
+
+| Content | Status | Content | Status |
+| --- | :---: | --- | :---: |
+| Java 8 setup and Windows launchers | 🚧 | Client / server revision 443 support | 🚧 |
+| Character JSON saves & migration | 🚧 | Optional SQLite save backend | 🚧 |
+| World simulation & bot AI | 🚧 | Web / mobile client streaming | 🚧 |
+| Client developer tools / MCP | 🚧 | Automated content audits & checks | 🚧 |
+
+These systems have supporting code or launchers; 🚧 does not imply the associated workflow has passed testing on every supported computer or client configuration.
+
 ### Other development priorities
 
 - **Historical accuracy:** Isolate later RuneScape systems, secure progression commands, and audit post-2006 items, drops, spawns, and death mechanics.
