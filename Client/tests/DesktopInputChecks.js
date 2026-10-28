@@ -10,6 +10,10 @@ const controls = script.slice(script.indexOf('  // Desktop input controls.'),
 assert.ok(controls.includes('setKeyDown'), 'Desktop controls are missing');
 const displayHandlers = {}, windowHandlers = {}, calls = [];
 let now = 1000;
+let nextFrame = 1;
+const frames = new Map();
+let blockMove = false;
+let releaseMove;
 const display = {
   addEventListener(type, fn) { (displayHandlers[type] ||= []).push(fn); },
   getBoundingClientRect() { return { left: 10, top: 20, width: 1530, height: 1006 }; },
@@ -19,10 +23,15 @@ vm.runInNewContext(controls + '\nclient = bridge;', {
   document: { getElementById: () => display },
   window: { addEventListener(type, fn) { (windowHandlers[type] ||= []).push(fn); } },
   performance: { now: () => now },
+  requestAnimationFrame(fn) { const id = nextFrame++; frames.set(id, fn); return id; },
+  cancelAnimationFrame(id) { frames.delete(id); },
   console,
   bridge: {
     async setKeyDown(code, down) { calls.push({ key: code, down }); },
-    async sendMouse(id, button, x, y) { calls.push({ id, button, x, y }); },
+    async sendMouse(id, button, x, y) {
+      calls.push({ id, button, x, y });
+      if (id === 506 && blockMove) await new Promise(resolve => { releaseMove = resolve; });
+    },
     async zoom(steps) { calls.push({ zoom: steps }); }
   }
 });
@@ -38,7 +47,14 @@ function dispatch(handlers, type, extra = {}) {
   }
   return e;
 }
-async function settle() { for (let n = 0; n < 150; n++) await Promise.resolve(); }
+async function settle() {
+  for (let n = 0; n < 150; n++) {
+    const pending = Array.from(frames.values());
+    frames.clear();
+    for (const fn of pending) fn();
+    await Promise.resolve();
+  }
+}
 (async () => {
   const arrow = dispatch(windowHandlers, 'keydown', { key: 'ArrowLeft' });
   dispatch(windowHandlers, 'keydown', { key: 'ArrowLeft', repeat: true });
@@ -62,6 +78,39 @@ async function settle() { for (let n = 0; n < 150; n++) await Promise.resolve();
   assert.ok(dispatch(displayHandlers, 'auxclick').prevented, 'Middle click opened browser autoscroll');
   assert.ok(!dispatch(displayHandlers, 'pointerdown', { button: 0 }).prevented,
       'Normal game clicks must pass through');
+
+  calls.length = 0;
+  dispatch(displayHandlers, 'pointerdown');
+  await settle();
+  blockMove = true;
+  dispatch(displayHandlers, 'pointermove', { clientX: 290, clientY: 260 });
+  await settle();
+  for (let n = 1; n <= 100; n++) {
+    dispatch(displayHandlers, 'pointermove', { clientX: 210 + n * 4, clientY: 220 + n });
+  }
+  await settle();
+  assert.equal(calls.filter(e => e.id === 506).length, 1,
+      'Fast mouse movement accumulated camera calls behind an in-flight move');
+  blockMove = false;
+  releaseMove();
+  await settle();
+  const moves = calls.filter(e => e.id === 506);
+  assert.equal(moves.length, 2, 'Pending movement was not coalesced to the latest position');
+  assert.deepEqual([moves[1].x, moves[1].y], [300, 150],
+      'Coalescing lost the final mouse position');
+  dispatch(displayHandlers, 'pointerup');
+  await settle();
+  assert.equal(calls.at(-1).id, 502, 'Mouse release was not ordered after final camera movement');
+
+  calls.length = 0;
+  dispatch(displayHandlers, 'pointerdown');
+  dispatch(displayHandlers, 'pointermove', { clientX: -100, clientY: -100 });
+  await settle();
+  dispatch(displayHandlers, 'pointermove', { clientX: 250, clientY: 220 });
+  dispatch(displayHandlers, 'pointerup');
+  await settle();
+  assert.deepEqual(calls.filter(e => e.id === 506).map(e => [e.x, e.y]), [[0, 0], [120, 100]],
+      'Leaving and re-entering the canvas resumed from a stale interior coordinate');
 
   calls.length = 0;
   now += 200;
