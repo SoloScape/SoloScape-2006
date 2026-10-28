@@ -32,7 +32,9 @@ public final class WebGateway {
         ServerSocket listener = null;
         int httpPort = requestedHttpPort;
         BindException lastBindError = null;
-        for (int candidate = requestedHttpPort; candidate <= requestedHttpPort + 20; candidate++) {
+        boolean strictPort = "strict".equalsIgnoreCase(arg(args, 5, ""));
+        for (int candidate = requestedHttpPort;
+             candidate <= requestedHttpPort + (strictPort ? 0 : 20); candidate++) {
             ServerSocket attempt = new ServerSocket();
             attempt.setReuseAddress(true);
             try {
@@ -87,6 +89,12 @@ public final class WebGateway {
             if (request == null) return;
 
             if ("websocket".equalsIgnoreCase(request.headers.get("upgrade")) && "/game".equals(request.path)) {
+                // This unauthenticated TCP relay must not be reachable from other web origins.
+                if (!sameOrigin(request)) {
+                    writeHttp(out, 403, "text/plain; charset=utf-8",
+                            "WebSocket origin not allowed".getBytes(StandardCharsets.UTF_8), true);
+                    return;
+                }
                 upgradeAndRelay(socket, in, out, request);
                 return;
             }
@@ -134,6 +142,14 @@ public final class WebGateway {
         return new HttpRequest(first[0], path, headers);
     }
 
+    private static boolean sameOrigin(HttpRequest request) {
+        String origin = request.headers.get("origin");
+        String host = request.headers.get("host");
+        return origin != null && host != null && (
+                origin.equalsIgnoreCase("http://" + host)
+                || origin.equalsIgnoreCase("https://" + host));
+    }
+
     private static void serveStatic(OutputStream out, HttpRequest request) throws IOException {
         if (!"GET".equals(request.method) && !"HEAD".equals(request.method)) {
             writeHttp(out, 405, "text/plain; charset=utf-8", "Method Not Allowed".getBytes(StandardCharsets.UTF_8), true);
@@ -145,12 +161,30 @@ public final class WebGateway {
             writeHttp(out, 404, "text/plain; charset=utf-8", "Not Found".getBytes(StandardCharsets.UTF_8), true);
             return;
         }
-        byte[] body = Files.readAllBytes(file);
-        writeHttp(out, 200, contentType(file.getFileName().toString()), body, "GET".equals(request.method));
+        // Cache archives can be large; avoid reading each entire file into the heap.
+        long length = Files.size(file);
+        String headers = "HTTP/1.1 200 OK\r\n"
+                + "Content-Type: " + contentType(file.getFileName().toString()) + "\r\n"
+                + "Content-Length: " + length + "\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "X-Content-Type-Options: nosniff\r\n"
+                + "Connection: close\r\n\r\n";
+        out.write(headers.getBytes(StandardCharsets.ISO_8859_1));
+        if ("GET".equals(request.method)) {
+            try (InputStream fileIn = Files.newInputStream(file)) {
+                byte[] chunk = new byte[65536];
+                int count;
+                while ((count = fileIn.read(chunk)) != -1) {
+                    out.write(chunk, 0, count);
+                }
+            }
+        }
+        out.flush();
     }
 
     private static void writeHttp(OutputStream out, int status, String type, byte[] body, boolean includeBody) throws IOException {
-        String reason = status == 200 ? "OK" : status == 404 ? "Not Found" : "Method Not Allowed";
+        String reason = status == 200 ? "OK" : status == 404 ? "Not Found"
+                : status == 403 ? "Forbidden" : "Method Not Allowed";
         String headers = "HTTP/1.1 " + status + " " + reason + "\r\n"
                 + "Content-Type: " + type + "\r\n"
                 + "Content-Length: " + body.length + "\r\n"
