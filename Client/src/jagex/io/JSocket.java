@@ -247,6 +247,65 @@ public class JSocket implements Runnable {
         }
     }
 
+    /**
+     * Castle Wars replacement offers use the native two-choice parchment.
+     * Move only its small sword ornaments outward; keep the red heading and
+     * the clickable option rows at their stock positions.
+     *
+     * This runs after the title packet arrives as well as on initial load,
+     * and restores stock geometry when another two-choice dialogue opens.
+     */
+    static void configureCastleWarsOfferSwords() {
+        if (Class62_Sub1.widgets == null || Class62_Sub1.widgets.length <= 228) {
+            return;
+        }
+        Widget[] group = Class62_Sub1.widgets[228];
+        if (group == null || group.length <= 3 || group[0] == null) {
+            return;
+        }
+
+        Widget title = group[0];
+        boolean castleWarsOffer = isCastleWarsOfferTitle(title.aClass3_2029);
+        Widget leftSword = null;
+        Widget rightSword = null;
+        for (Widget widget : group) {
+            if (widget == null || widget.type != 5
+                    || widget.quadWidth <= 0 || widget.quadWidth > 48
+                    || widget.quadHeight <= 0 || widget.quadHeight > 40
+                    || Math.abs(widget.anInt2024 - title.anInt2024) > 28) {
+                continue;
+            }
+            if (leftSword == null || widget.anInt2090 < leftSword.anInt2090) {
+                leftSword = widget;
+            }
+            if (rightSword == null || widget.anInt2090 > rightSword.anInt2090) {
+                rightSword = widget;
+            }
+        }
+        // Do not disturb unrelated sprite decorations if the cache's title
+        // has no distinct pair of swords around its heading.
+        if (leftSword == null || rightSword == null || leftSword == rightSword
+                || rightSword.anInt2090 - leftSword.anInt2090 < 100) {
+            return;
+        }
+        int spread = castleWarsOffer ? 24 : 0;
+        leftSword.anInt2091 = leftSword.anInt2090 - spread;
+        rightSword.anInt2091 = rightSword.anInt2090 + spread;
+    }
+
+    private static boolean isCastleWarsOfferTitle(JString title) {
+        String prefix = "A place is available on the ";
+        if (title == null || title.bytes == null || title.length < prefix.length()) {
+            return false;
+        }
+        for (int i = 0; i < prefix.length(); ++i) {
+            if ((title.bytes[i] & 0xff) != prefix.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static void applyTutorialDialogueGeometry(int groupId) {
         int[] textY = getTutorialDialogueTextY(groupId);
         if (textY == null || groupId < 0 || groupId >= Class62_Sub1.widgets.length) {
@@ -935,6 +994,9 @@ public class JSocket implements Runnable {
             } else {
                 applyTutorialDialogueGeometry(parent);
             }
+            if (parent == 228) {
+                configureCastleWarsOfferSwords();
+            }
             return true;
         }
         if (!Class39_Sub5_Sub16.wigetFileLoader.hasArchive(parent)) {
@@ -976,6 +1038,9 @@ public class JSocket implements Runnable {
             configureWorldTeleportButtons();
         } else {
             applyTutorialDialogueGeometry(parent);
+        }
+        if (parent == 228) {
+            configureCastleWarsOfferSwords();
         }
         Class39_Sub5_Sub4.widgetsLoaded[parent] = true;
         return true;
