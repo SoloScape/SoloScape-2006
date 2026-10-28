@@ -365,9 +365,11 @@ public final class CastleWarsBotRoleAi {
         if (state.role == Role.UNDERGROUND) {
             state.phase = Phase.UNDERGROUND_DESCEND;
         } else if (state.role == Role.DEFENDER) {
-            state.phase = Phase.GROUND_DEFENCE;
-            state.defenderPatrolTarget = null;
-            state.defenderPatrolTicks = 0;
+            // Defender barricades are deployed in the upper flag room.
+            // GROUND_DEFENCE never reaches processDefender(), so bots carried
+            // three barricades all game without placing any.
+            state.phase = Phase.DEFENDER_CLIMB;
+            state.repathDelay = 0;
         } else if (state.role == Role.WALL_GUARD) {
             state.phase = Phase.WALL_GUARD_PATROL;
             state.wallPatrolTarget = null;
