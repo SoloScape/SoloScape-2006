@@ -14,17 +14,113 @@
       overflow: hidden;
     }
     #display { position: relative; width: 100%; height: 100%; background: black; }
+    #keyboard {
+      position: fixed; z-index: 10000; top: 50%;
+      right: max(8px, env(safe-area-inset-right)); transform: translateY(-50%);
+      width: 44px; height: 44px; padding: 8px; border: 1px solid #9a8357;
+      border-radius: 8px; background: #201c15e6; color: #f1d695; cursor: pointer;
+      touch-action: manipulation;
+    }
+    #keyboard:disabled { opacity: .4; }
+    #keyboard[aria-pressed="true"] { background: #66512b; }
+    #phone-input {
+      position: fixed; bottom: 0; left: 0; width: 1px; height: 1px;
+      opacity: 0; border: 0; padding: 0; font-size: 16px; pointer-events: none;
+    }
   </style>
   <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
   <script src="local-render-bridge.js"></script>
 </head>
 <body>
 <div id="viewport"><div id="display"></div></div>
+<button id="keyboard" type="button" aria-label="Toggle keyboard" aria-pressed="false" title="Keyboard" disabled>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <path d="M5 9h2m2 0h2m2 0h2m2 0h2M5 12h2m2 0h2m2 0h2m2 0h2M7 16h10"/>
+  </svg>
+</button>
+<textarea id="phone-input" aria-label="Game keyboard input" inputmode="text" enterkeyhint="enter"
+  autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" tabindex="-1"></textarea>
 <script>
 (async () => {
   'use strict';
   const viewport = document.getElementById('viewport');
   const display = document.getElementById('display');
+  const keyboard = document.getElementById('keyboard');
+  const phoneInput = document.getElementById('phone-input');
+  let clientBridge;
+  let pendingKeys = Promise.resolve();
+  function sendKey(code, character) {
+    if (!clientBridge) return;
+    pendingKeys = pendingKeys.then(() => clientBridge.sendKey(code, character))
+      .catch(error => console.error('[local-render] Keyboard input failed:', error));
+  }
+  function resetInput() {
+    // A placeholder gives mobile keyboards something to backspace over.
+    phoneInput.value = ' ';
+    phoneInput.setSelectionRange(1, 1);
+  }
+  keyboard.addEventListener('pointerdown', event => event.preventDefault());
+  keyboard.addEventListener('click', () => {
+    if (document.activeElement === phoneInput) {
+      phoneInput.blur();
+    } else {
+      resetInput();
+      // Focus synchronously inside the user's tap so mobile browsers open the keyboard.
+      phoneInput.focus({ preventScroll: true });
+    }
+  });
+  phoneInput.addEventListener('focus', () => keyboard.setAttribute('aria-pressed', 'true'));
+  phoneInput.addEventListener('blur', () => {
+    keyboard.setAttribute('aria-pressed', 'false');
+    phoneInput.value = '';
+  });
+  display.addEventListener('pointerdown', () => phoneInput.blur(), { capture: true });
+  phoneInput.addEventListener('beforeinput', event => {
+    if (event.isComposing) return;
+    if (event.inputType.startsWith('delete')) {
+      event.preventDefault();
+      sendKey(8, 8);
+      resetInput();
+    } else if (event.inputType === 'insertLineBreak' || event.inputType === 'insertParagraph') {
+      event.preventDefault();
+      sendKey(10, 10);
+      resetInput();
+    }
+  });
+  function forwardText() {
+    const text = phoneInput.value.startsWith(' ') ? phoneInput.value.slice(1) : phoneInput.value;
+    for (const character of text) {
+      const value = character.charCodeAt(0);
+      if (character === '\\n') sendKey(10, 10);
+      else sendKey(0, value);
+    }
+    resetInput();
+  }
+  phoneInput.addEventListener('input', event => {
+    if (event.isComposing) return;
+    // Fallback for keyboards that omit a cancellable beforeinput deletion event.
+    if (event.inputType.startsWith('delete')) {
+      sendKey(8, 8);
+      resetInput();
+    } else {
+      forwardText();
+    }
+  });
+  phoneInput.addEventListener('compositionend', forwardText);
+  phoneInput.addEventListener('keydown', event => {
+    event.stopPropagation();
+    if (event.isComposing) return;
+    const code = { Enter: 10, Tab: 9, Backspace: 8, ArrowLeft: 37, ArrowRight: 39,
+      ArrowUp: 38, ArrowDown: 40, Delete: 127 }[event.key];
+    if (code) {
+      event.preventDefault();
+      sendKey(code, code === 10 || code === 8 ? code : 0);
+      resetInput();
+    }
+  });
+  phoneInput.addEventListener('keyup', event => event.stopPropagation());
+  phoneInput.addEventListener('keypress', event => event.stopPropagation());
   function fitClient() {
     const visible = window.visualViewport;
     // Visual viewport follows mobile browser bars, rotation and the on-screen keyboard.
@@ -56,12 +152,10 @@
       ]
     });
     cheerpjCreateDisplay(-1, -1, display);
-    const exitCode = await cheerpjRunMain(
-      'unpackaged.BrowserClientBootstrap',
-      '/app/client.jar',
-      '1', 'local', 'live', 'highmem', 'members', 'english'
-    );
-    console.info('[local-render] Java client exited with code ' + exitCode);
+    const library = await cheerpjRunLibrary('/app/client.jar');
+    clientBridge = await library.unpackaged.BrowserClientBootstrap;
+    await clientBridge.start();
+    keyboard.disabled = false;
   } catch (error) {
     console.error('[local-render] Startup failed:', error);
   }
