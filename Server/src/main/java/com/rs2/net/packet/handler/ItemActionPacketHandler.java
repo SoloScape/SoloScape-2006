@@ -2003,7 +2003,9 @@ implements PacketHandler {
                     player.packetSender.sendGameMessage("You can only use these in Castle Wars.");
                     return;
                 }
-                if (!player.getSkillManager().tryStartActionDelay(1800) || player.getCurrentHitpoints() <= 0) {
+                // Castle Wars bandages have no use-to-use cooldown; unlike food,
+                // they must not start or depend on the shared action delay.
+                if (player.getCurrentHitpoints() <= 0) {
                     return;
                 }
                 if (!player.getInventoryManager().removeItemFromSlot(selectedItem, player.getSelectedItemSlot())) {
