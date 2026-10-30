@@ -40,7 +40,7 @@ implements PacketHandler {
             case 136:
             case 139: {
                 int targetIndex = incomingPacket.getReader().readSignedShort(true, ByteOrder.LITTLE);
-                if (targetIndex < 0 || targetIndex > World.getPlayers().length) {
+                if (targetIndex < 0 || targetIndex >= World.getPlayers().length) {
                     return;
                 }
                 Player targetPlayer = World.getPlayers()[targetIndex];
