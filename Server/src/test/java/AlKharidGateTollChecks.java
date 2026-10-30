@@ -136,6 +136,12 @@ public final class AlKharidGateTollChecks {
         player.getInventoryManager().getContainer().setItem(0, new ItemStack(995, 20));
         player.setInteractionTargetId(borderGuardId);
 
+        System.out.println("Border Guard npc=" + guard.getNpcId()
+                + " player-overlaps=" + player.isOverlapping(guard)
+                + " line-of-sight=" + com.rs2.util.GameUtil.hasClearPath(
+                        player.getPosition(), guard.getPosition(), true)
+                + " player-moving=" + player.isMoving()
+                + " npc-name=" + guard.getDefinition().getName());
         new FirstNpcActionTask(1, true, player, player.nextActionSequence(), guard).execute();
         require(player.getDialogueManager().getDialogueId() == 9999,
                 "Talking to border guard did not open toll dialogue");
