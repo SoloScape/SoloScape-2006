@@ -1,8 +1,23 @@
 name: Verify Castle Wars Catapult 443
 on:
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/InterfaceActionPacketHandler.java'
+      - 'Server/src/test/java/CastleWarsCatapult443Checks.java'
+      - 'Server/src/test/java/CastleWarsCatapultWidgetCacheChecks.java'
+      - '.github/workflows/verify-castlewars-catapult.yml'
   push:
     branches:
-      - fix/castlewars-443-manual-catapult-aim
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/InterfaceActionPacketHandler.java'
+      - 'Server/src/test/java/CastleWarsCatapult443Checks.java'
+      - 'Server/src/test/java/CastleWarsCatapultWidgetCacheChecks.java'
+      - '.github/workflows/verify-castlewars-catapult.yml'
   workflow_dispatch:
 jobs:
   catapult:
