@@ -329,6 +329,15 @@ public final class ObjectManager {
             case 2609: 
             case 8744: 
             case 9319: {
+                // The Wizards' Tower basement ladder faces west into a blocked
+                // wall. Players approach it from the east, where the descent
+                // from the ground floor also lands.
+                if (objectId == 2148 && value2 == 3103 && value32 == 9576
+                        && player.getPosition().getPlane() == 0) {
+                    player.interactionApproachX = 3104;
+                    player.interactionApproachY = 9576;
+                    return;
+                }
                 int objectOrientation = SkillActionHelper.getObjectOrientation(objectId, value2, value32, 0);
                 player.interactionApproachX = value2 + (objectOrientation == 1 ? 1 : (objectOrientation == 3 ? -1 : 0));
                 player.interactionApproachY = value32 + (objectOrientation == 0 ? 1 : (objectOrientation == 2 ? -1 : 0));
