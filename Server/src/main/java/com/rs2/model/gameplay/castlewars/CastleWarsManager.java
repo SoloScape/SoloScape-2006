@@ -2,6 +2,7 @@ package com.rs2.model.gameplay.castlewars;
 
 import com.rs2.bot.combat.BotCombatHelper;
 import com.rs2.model.Position;
+import com.rs2.model.EntityTargetMovement;
 import com.rs2.model.GameplayHelper;
 import com.rs2.model.combat.CombatType;
 import com.rs2.model.combat.effect.PoisonEffect;
@@ -239,6 +240,8 @@ public final class CastleWarsManager {
     public static final int GAME_DURATION_SECONDS = 20 * 60;
 
     private static final long DROPPED_FLAG_AUTO_RETURN_MILLIS = 45_000L;
+    public static final long TEAMMATE_FLAG_TAKE_DELAY_MILLIS = 180_000L;
+    private static final int TEAMMATE_FLAG_TAKE_OPTION = 4;
 
     private static final int WAITING_INTERFACE_ID = 6673;
     private static final int WAITING_TIMER_TEXT_ID = 6570;
@@ -312,6 +315,8 @@ public final class CastleWarsManager {
     private static boolean zamorakFlagAtBase = true;
     private static Player saradominFlagHolder;
     private static Player zamorakFlagHolder;
+    private static long saradominFlagHeldSinceMillis;
+    private static long zamorakFlagHeldSinceMillis;
     private static GroundItem saradominDroppedFlag;
     private static GroundItem zamorakDroppedFlag;
     private static long saradominDroppedFlagReturnMillis;
@@ -428,6 +433,7 @@ public final class CastleWarsManager {
             }
         }
 
+        refreshTeammateFlagTakeOptions(now);
         updateWaitingRoomInterfaces(now);
         updateGameInterfaces(now);
     }
@@ -708,6 +714,68 @@ public final class CastleWarsManager {
         Team firstTeam = gamePlayers.get(first);
         Team secondTeam = gamePlayers.get(second);
         return firstTeam != null && firstTeam == secondTeam;
+    }
+
+    /** Eligibility is calculated using the current holder, never an old pickup timestamp. */
+    public static boolean canTakeEnemyFlagFromTeammate(Player taker, Player carrier, long now) {
+        Team takerTeam = gamePlayers.get(taker);
+        if (!gameInProgress || taker == null || carrier == null || taker == carrier
+                || takerTeam == null || takerTeam != gamePlayers.get(carrier)
+                || isCarryingFlag(taker)) {
+            return false;
+        }
+
+        Team enemyFlagTeam = takerTeam == Team.SARADOMIN ? Team.ZAMORAK : Team.SARADOMIN;
+        long heldSince = getFlagHeldSinceMillis(enemyFlagTeam);
+        return getFlagHolder(enemyFlagTeam) == carrier
+                && heldSince > 0L && now >= heldSince
+                && now - heldSince >= TEAMMATE_FLAG_TAKE_DELAY_MILLIS;
+    }
+
+    /** The client uses a shared option slot; the server always validates the chosen target. */
+    public static boolean takeEnemyFlagFromTeammate(Player taker, Player carrier) {
+        if (!canTakeEnemyFlagFromTeammate(taker, carrier, System.currentTimeMillis())
+                || !isOnline(taker) || !isOnline(carrier)
+                || taker.isDead() || carrier.isDead()
+                || !taker.isWithinReach(carrier, 1) || taker.isOverlapping(carrier)
+                || EntityTargetMovement.isDiagonalTo(taker.getPosition(), carrier.getPosition())) {
+            return false;
+        }
+
+        Team team = gamePlayers.get(taker);
+        Team enemyFlagTeam = team == Team.SARADOMIN ? Team.ZAMORAK : Team.SARADOMIN;
+        int flagId = enemyFlagTeam == Team.SARADOMIN ? SARADOMIN_FLAG_ID : ZAMORAK_FLAG_ID;
+        if (carrier.getEquipmentManager().getItemIdAtSlot(3) != flagId
+                || isFlagItemId(taker.getEquipmentManager().getItemIdAtSlot(3))
+                || !canEquipFlag(taker)) {
+            return false;
+        }
+
+        // Clear the old carrier's weapon before equipping the new one. The flag
+        // remains taken, and no inventory or ground-item copy is created.
+        clearFlagWeapon(carrier);
+        equipFlag(taker, enemyFlagTeam);
+        setFlagAtBase(enemyFlagTeam, false, taker);
+        taker.getPacketSender().sendGameMessage(
+                "You take the " + getTeamName(enemyFlagTeam) + " flag from " + carrier.getUsername() + ".");
+        carrier.getPacketSender().sendGameMessage(
+                taker.getUsername() + " takes the " + getTeamName(enemyFlagTeam) + " flag from you.");
+        refreshTeammateFlagTakeOptions(System.currentTimeMillis());
+        return true;
+    }
+
+    private static void refreshTeammateFlagTakeOptions(long now) {
+        for (Player player : gamePlayers.keySet()) {
+            if (player == null || player.isBot || !isOnline(player)) {
+                continue;
+            }
+            Team team = gamePlayers.get(player);
+            Team enemyFlagTeam = team == Team.SARADOMIN ? Team.ZAMORAK : Team.SARADOMIN;
+            Player carrier = getFlagHolder(enemyFlagTeam);
+            boolean eligible = canTakeEnemyFlagFromTeammate(player, carrier, now);
+            player.getPacketSender().sendPlayerOption(
+                    eligible ? "Take from" : "null", TEAMMATE_FLAG_TAKE_OPTION, false);
+        }
     }
 
     public static void leaveWaitingRoom(Player player) {
@@ -1148,11 +1216,23 @@ public final class CastleWarsManager {
         player.setAppearanceUpdateRequired(true);
     }
 
+    private static long getFlagHeldSinceMillis(Team flagTeam) {
+        return flagTeam == Team.SARADOMIN
+                ? saradominFlagHeldSinceMillis : zamorakFlagHeldSinceMillis;
+    }
+
     private static void setFlagAtBase(Team flagTeam, boolean atBase, Player holder) {
+        long now = System.currentTimeMillis();
         if (flagTeam == Team.SARADOMIN) {
+            if (saradominFlagHolder != holder) {
+                saradominFlagHeldSinceMillis = holder == null ? 0L : now;
+            }
             saradominFlagAtBase = atBase;
             saradominFlagHolder = holder;
         } else {
+            if (zamorakFlagHolder != holder) {
+                zamorakFlagHeldSinceMillis = holder == null ? 0L : now;
+            }
             zamorakFlagAtBase = atBase;
             zamorakFlagHolder = holder;
         }
@@ -2468,6 +2548,8 @@ public final class CastleWarsManager {
         CastleWarsEngineeringManager.resetForGame();
         saradominFlagHolder = null;
         zamorakFlagHolder = null;
+        saradominFlagHeldSinceMillis = 0L;
+        zamorakFlagHeldSinceMillis = 0L;
         saradominDroppedFlag = null;
         zamorakDroppedFlag = null;
         saradominDroppedFlagReturnMillis = 0L;
@@ -2676,6 +2758,9 @@ public final class CastleWarsManager {
             return;
         }
         player.getPacketSender().sendPlayerOption(enabled ? "Attack" : "null", 1, false);
+        if (!enabled) {
+            player.getPacketSender().sendPlayerOption("null", TEAMMATE_FLAG_TAKE_OPTION, false);
+        }
     }
 
     private static void removeTemporaryCastleWarsInventoryItems(Player player) {
