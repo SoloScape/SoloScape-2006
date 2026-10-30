@@ -2043,7 +2043,11 @@ public final class CastleWarsEngineeringManager {
         return -1;
     }
 
+    /** Optional bot-only automatic targeting; human operators use the aim panel. */
     public static boolean fireCatapult(Player player) {
+        if (player == null || !player.isBot) {
+            return false;
+        }
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
         if (team == null) {
             return false;
