@@ -54,6 +54,24 @@ public final class CastleWarsSupplyOwnershipChecks {
         CastleWarsEngineeringManager.cleanupPlayerSupplies(fullInventory);
         requireAmount(fullInventory, pickaxe, 27);
 
+        // Reissuing after all match-granted copies have been consumed must not
+        // leave stale issued quantities that can erase an owned item.
+        Player replenished = new Player(null);
+        require(replenished.getInventoryManager().addItemPartial(new ItemStack(pickaxe, 1)) == 1,
+                "Could not stage replenished player's owned pickaxe");
+        require(CastleWarsEngineeringManager.issueSupply(replenished, pickaxe, 2) == 2,
+                "Could not issue initial replenishment");
+        require(replenished.getInventoryManager().removeItem(new ItemStack(pickaxe, 2)),
+                "Could not consume initial replenishment");
+        require(CastleWarsEngineeringManager.issueSupply(replenished, pickaxe, 2) == 2,
+                "Could not reissue consumed supplies");
+        CastleWarsEngineeringManager.cleanupPlayerSupplies(replenished);
+        requireAmount(replenished, pickaxe, 1);
+
+        require(CastleWarsEngineeringManager.issueSupply(replenished, 995, 1) == 0,
+                "Unrelated items must not be issued as match supplies");
+        requireAmount(replenished, 995, 0);
+
         Player secondPlayer = new Player(null);
         require(secondPlayer.getInventoryManager().addItemPartial(new ItemStack(pickaxe, 1)) == 1,
                 "Could not stage second player's item");
