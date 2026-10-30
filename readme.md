@@ -33,7 +33,7 @@ The following functionality is **present in the current repository**, with launc
 - **Live development:** Java source watching/HotSwap, client screenshots and state inspection, a localhost MCP endpoint, and an activity dashboard.
 - **Diagnostics and tests:** Packet/interaction debug traces, targeted Java regression checks, strict-content and interaction audit tools, and GitHub Actions workflows.
 
-For deeper implementation details, see [the server guide](Server/README.md), [client developer tools](Client/DEVELOPER-TOOLS.md), and the [browser client guide](Client/WebClient/README.md).
+For deeper implementation details, see [the server guide](Server/README.md), [client developer tools](docs/Client/DEVELOPER-TOOLS.md), and the [browser client guide](Client/WebClient/README.md).
 
 ## Requirements
 
@@ -135,7 +135,7 @@ With the client developer launcher running, open:
 | Developer activity dashboard | [http://127.0.0.1:7780/](http://127.0.0.1:7780/) |
 | MCP endpoint | `http://127.0.0.1:7780/mcp` |
 
-These endpoints are local to the machine running the client and are **disabled during normal play**. The tools can inspect client state, widgets, inventories, NPCs, objects, dialogue, screenshots, and interaction outcomes. See [Client/DEVELOPER-TOOLS.md](Client/DEVELOPER-TOOLS.md) for configuration, tool names, and examples.
+These endpoints are local to the machine running the client and are **disabled during normal play**. The tools can inspect client state, widgets, inventories, NPCs, objects, dialogue, screenshots, and interaction outcomes. See [docs/Client/DEVELOPER-TOOLS.md](docs/Client/DEVELOPER-TOOLS.md) for configuration, tool names, and examples.
 
 ### Repository layout
 
@@ -145,8 +145,7 @@ SoloScape-2006/
 │   ├── src/                   Java client and assets
 │   ├── tests/                 Client regression checks
 │   ├── WebClient/             Browser/phone streaming bridge
-│   ├── Build-Client.bat
-│   └── DEVELOPER-TOOLS.md
+│   └── Build-Client.bat
 ├── Server/
 │   ├── src/main/java/         Server and control-panel source
 │   ├── src/test/              Server checks
@@ -154,8 +153,7 @@ SoloScape-2006/
 │   ├── data/                  Content, settings, and player data
 │   ├── lib/                   Bundled Java dependencies
 │   ├── Build-Server.bat
-│   ├── README.md
-│   └── CHARACTER-SAVES.md
+│   └── README.md
 ├── tools/                     Build helpers and audit scripts
 ├── docs/                      Additional development notes
 ├── .github/workflows/         Automated verification workflows
@@ -194,7 +192,7 @@ Older binary character files are migrated to JSON automatically. If an existing 
 
 **Back up your saves before upgrading or editing them.** Stop the server before editing a character, and never commit player saves to a public repository: they may contain account information, including credentials in the project's legacy representation.
 
-Read [Server/CHARACTER-SAVES.md](Server/CHARACTER-SAVES.md) before migrating or manually changing character data.
+Read [docs/Server/CHARACTER-SAVES.md](docs/Server/CHARACTER-SAVES.md) before migrating or manually changing character data.
 
 ## Testing and audits
 
@@ -208,7 +206,7 @@ Selected regression checks run through [GitHub Actions](.github/workflows/). Loc
 
 These commands check different parts of the client and content; they are **not** a substitute for logging in and verifying gameplay. The strict content audit deliberately flags unresolved IDs and source-review candidates, so its output may contain outstanding work rather than an all-green report.
 
-See [the interaction migration notes](Server/README.md#interaction-coverage-and-revision-443-routing) and [strict content check notes](tools/strict-content-checks.md).
+See [the interaction migration notes](Server/README.md#interaction-coverage-and-revision-443-routing) and [strict content check notes](docs/tools/strict-content-checks.md).
 
 ## Project status
 
@@ -219,7 +217,7 @@ SoloScape is an **actively developed and audited recreation**, not a claim of co
 - Existing game systems provide a foundation, but **not every NPC, item action, quest, or minigame has been fully verified**.
 - Automated checks cover selected behaviors; a passing check does not prove that all gameplay is historically accurate.
 
-For detailed implementation notes and limitations, see [Server/README.md](Server/README.md) and the [revision audit](AUDIT_2006-12-18.md).
+For detailed implementation notes and limitations, see [Server/README.md](Server/README.md) and the [revision audit](docs/AUDIT_2006-12-18.md).
 
 ## Roadmap
 
@@ -289,7 +287,7 @@ These quests have dedicated source files under `Server/src/main/java/com/rs2/mod
 <details>
 <summary><strong>Missing late-2006 quest coverage (12 entries) — expand tracker</strong></summary>
 
-The [historical audit](AUDIT_2006-12-18.md) identified these target-date quests as missing from the **older quest dataset**. ⛔ means they are not yet marked complete; their present-day runtime status should be rechecked before claiming they are fully absent.
+The [historical audit](docs/AUDIT_2006-12-18.md) identified these target-date quests as missing from the **older quest dataset**. ⛔ means they are not yet marked complete; their present-day runtime status should be rechecked before claiming they are fully absent.
 
 | Content | Status | Content | Status |
 | --- | :---: | --- | :---: |
@@ -357,7 +355,7 @@ These systems have supporting code or launchers; 🚧 does not imply the associa
 - **Content completion:** Extend quests, Lunar magic, random events, activities, Slayer, Treasure Trails, and other late-2006 systems.
 - **Quality and parity:** Fix period-specific combat, Prayer, weapon and food behavior; finish interaction coverage and add live client/server acceptance tests.
 
-These are priorities, **not release commitments**. The [historical audit](AUDIT_2006-12-18.md) and [ordered fix plan](fix-order.md) provide the detailed backlog; because they document an earlier code snapshot, recheck each finding before treating it as unresolved. The [Current Working Features](#current-working-features) section lists systems already present in the repository.
+These are priorities, **not release commitments**. The [historical audit](docs/AUDIT_2006-12-18.md) and [ordered fix plan](docs/fix-order.md) provide the detailed backlog; because they document an earlier code snapshot, recheck each finding before treating it as unresolved. The [Current Working Features](#current-working-features) section lists systems already present in the repository.
 
 ## Troubleshooting
 
