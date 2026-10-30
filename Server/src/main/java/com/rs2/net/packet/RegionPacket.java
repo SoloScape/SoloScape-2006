@@ -10,6 +10,11 @@ public final class RegionPacket {
 
     public static void write(PacketWriter packet, IsaacCipher cipher, int centerX,
                              int centerY, int localX, int localY, int plane) {
+        // The revision-443 client indexes four plane arrays with this value.
+        // Reject corrupt source locations before serializing any bytes.
+        if (plane < 0 || plane >= 4) {
+            throw new IllegalArgumentException("Invalid region map plane: " + plane);
+        }
         packet.startVariableShortPacket(cipher, 121);
         packet.writeShort(centerX, ByteOrder.LITTLE);
         packet.writeShort(localY, ByteOrder.LITTLE);
