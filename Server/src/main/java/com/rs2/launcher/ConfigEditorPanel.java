@@ -61,6 +61,12 @@ public final class ConfigEditorPanel extends JPanel {
         "RELOG_FROZEN_BOTS"
     ));
 
+    private static final ConfigEntry[] ADDITIONAL_SERVER_ENTRIES = new ConfigEntry[]{
+        new ConfigEntry("2007_CONTENT", "0", "1 = enable 2007 content, 0 = disable."),
+        new ConfigEntry("CLUE_MERCHANT", "0;1;50", "1 = enable, 0 = disable; clue level; price in coins."),
+        new ConfigEntry("WILDERNESS_SLAYER", "0", "1 = enable Wilderness Slayer, 0 = disable.")
+    };
+
     private final Font controlFont;
     private final ConfigSourcePanel serverPanel;
     private final ConfigSourcePanel clientPanel;
@@ -358,6 +364,13 @@ public final class ConfigEditorPanel extends JPanel {
                         + "Game simulation remains at 50 Hz; this only makes camera motion/redrawing smoother."
                 ));
             }
+            if (this.serverConfig) {
+                for (ConfigEntry entry : ADDITIONAL_SERVER_ENTRIES) {
+                    if (!entriesByKey.containsKey(entry.key)) {
+                        entriesByKey.put(entry.key, entry);
+                    }
+                }
+            }
             return new ArrayList<ConfigEntry>(entriesByKey.values());
         }
 
@@ -455,6 +468,7 @@ public final class ConfigEditorPanel extends JPanel {
                     reader.close();
                 }
 
+                Set<String> writtenKeys = new HashSet<String>();
                 boolean cameraRefreshRateWritten = false;
                 for (int lineIndex = 0; lineIndex < lines.size(); ++lineIndex) {
                     String trimmed = lines.get(lineIndex).trim();
@@ -463,6 +477,7 @@ public final class ConfigEditorPanel extends JPanel {
                     }
                     int closingBracket = trimmed.indexOf(']');
                     String key = trimmed.substring(1, closingBracket);
+                    writtenKeys.add(key);
                     JTextField valueField = this.valueFields.get(key);
                     if (valueField != null) {
                         lines.set(lineIndex, "[" + key + "];" + valueField.getText().trim());
@@ -481,6 +496,19 @@ public final class ConfigEditorPanel extends JPanel {
                         lines.add("//Game simulation remains at 50 Hz; this only makes camera motion/redrawing smoother.");
                         lines.add("");
                         lines.add("[CAMERA_REFRESH_RATE];" + cameraRefreshRateField.getText().trim());
+                    }
+                }
+
+                if (this.serverConfig) {
+                    for (ConfigEntry entry : ADDITIONAL_SERVER_ENTRIES) {
+                        JTextField valueField = this.valueFields.get(entry.key);
+                        if (!writtenKeys.contains(entry.key) && valueField != null) {
+                            lines.add("");
+                            lines.add("//" + entry.key + " - Parameters for customization:");
+                            lines.add("//" + entry.description);
+                            lines.add("");
+                            lines.add("[" + entry.key + "];" + valueField.getText().trim());
+                        }
                     }
                 }
 
