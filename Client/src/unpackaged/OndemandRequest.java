@@ -40,8 +40,24 @@ public class OndemandRequest extends SubNode
 	aClass3_1716 = null;
     }
     
+    /**
+     * The map scene has exactly four planes. A bad region packet used to set
+     * NameTable.height to values such as 246, causing Class65 to crash while
+     * rebuilding every ground-item tile. Log the corrupt value and recover on
+     * the surface rather than allowing an invalid plane into the scene.
+     */
+    public static int safeRegionPlane(int plane) {
+        if (plane >= 0 && plane < 4) {
+            return plane;
+        }
+        System.err.println("[443-REGION] Invalid map plane " + plane
+                + " received; recovering on plane 0 (check server region packet)");
+        return 0;
+    }
+
     public static void method486(int i, int i_0_, byte i_1_, int i_2_,
 				 int i_3_, int i_4_) {
+        i = safeRegionPlane(i);
 	if (i_4_ != Class62_Sub2.anInt1597 || i_0_ != Class65.anInt1147
 	    || i != JImage.anInt1573 && Class45.aBoolean867) {
 	    Class62_Sub2.anInt1597 = i_4_;

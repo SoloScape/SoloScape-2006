@@ -35,6 +35,12 @@ public class Class65 {
     public static int anInt1147;
 
     public static void updateGroundItems(int x, int y) {
+        // Corrupt region-plane packets must not crash the client while loading
+        // thousands of ground-item tiles. The packet readers log and recover.
+        if (Class20.groundItems == null || NameTable.height < 0
+                || NameTable.height >= Class20.groundItems.length) {
+            return;
+        }
         Deque deque = Class20.groundItems[NameTable.height][x][y];
         if (deque == null) {
             Class44.aClass38_836.method373(NameTable.height, x, y);
