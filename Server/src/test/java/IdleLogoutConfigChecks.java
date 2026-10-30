@@ -1,4 +1,5 @@
 import com.rs2.Server;
+import com.rs2.model.player.Player;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -23,10 +24,26 @@ public final class IdleLogoutConfigChecks {
     }
 
     public static void main(String[] args) throws Exception {
+        // The old five-minute timeout must not remain in the actual runtime policy.
+        check(Player.IDLE_LOGOUT_TIMEOUT_MILLIS == 90_000L,
+                "AFK logout is configured for 90 seconds");
+        long lastInputMillis = 1_000_000L;
+        check(!Player.hasIdleLogoutTimedOut(lastInputMillis, lastInputMillis),
+                "input immediately resets AFK duration");
+        check(!Player.hasIdleLogoutTimedOut(lastInputMillis, lastInputMillis + 89_999L),
+                "89.999 seconds is not timed out");
+        check(Player.hasIdleLogoutTimedOut(lastInputMillis, lastInputMillis + 90_000L),
+                "exactly 90 seconds is timed out");
+        check(Player.hasIdleLogoutTimedOut(lastInputMillis, lastInputMillis + 300_000L),
+                "AFK timeout remains active after 90 seconds");
+        check(!Player.hasIdleLogoutTimedOut(0L, 999_999L),
+                "uninitialized input clock must not force logout");
+        check(!Player.hasIdleLogoutTimedOut(lastInputMillis, lastInputMillis - 1L),
+                "backward clock must not force logout");
         check(Boolean.FALSE.equals(parse("[IDLE_LOGOUT];0\n")),
-                "zero disables the five-minute idle logout");
+                "zero disables the 90-second idle logout");
         check(Boolean.TRUE.equals(parse("[IDLE_LOGOUT];1\n")),
-                "one enables the five-minute idle logout");
+                "one enables the 90-second idle logout");
         check(Boolean.FALSE.equals(parse(
                 "// A server.cfg comment\n[IDLE_LOGOUT];1\n"
                 + "[IDLE_LOGOUT];0\n")), "last config entry wins");
