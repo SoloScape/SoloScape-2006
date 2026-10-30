@@ -2787,20 +2787,29 @@ public final class CastleWarsManager {
         if (player == null || amount <= 0) {
             return false;
         }
-        if (player.getInventoryManager().addItem(new ItemStack(CASTLE_WARS_TICKET_ID, amount))) {
+        // Tickets are marked non-stackable in this cache. addItem() may return
+        // true after dropping overflow on the ground. addItemPartial() reports
+        // the exact number placed in the player's inventory instead.
+        int delivered = player.getInventoryManager().addItemPartial(
+                new ItemStack(CASTLE_WARS_TICKET_ID, amount));
+        if (delivered == amount) {
             return true;
         }
-        // addItem is all-or-nothing for stackable tickets. No inventory space
-        // must never turn a victory into a silent loss of rewards.
+        int missing = amount - delivered;
         int pending = Math.max(0, player.reservedSaveInt3);
-        if (pending > Integer.MAX_VALUE - amount) {
+        if (pending > Integer.MAX_VALUE - missing) {
             throw new IllegalStateException("Castle Wars pending ticket balance overflow");
         }
-        player.reservedSaveInt3 = pending + amount;
+        player.reservedSaveInt3 = pending + missing;
+        if (delivered > 0) {
+            player.getPacketSender().sendGameMessage(
+                    "You receive " + delivered + " Castle Wars ticket"
+                            + (delivered == 1 ? "." : "s."));
+        }
         player.getPacketSender().sendGameMessage(
-                "Your inventory is full. Lanthus will hold " + amount
-                        + " Castle Wars ticket" + (amount == 1 ? "" : "s")
-                        + " for you. Make room and talk to him to claim them.");
+                "Lanthus is holding " + missing + " Castle Wars ticket"
+                        + (missing == 1 ? "" : "s")
+                        + " for you. Make inventory space and talk to him to claim them.");
         return false;
     }
 
@@ -2813,18 +2822,25 @@ public final class CastleWarsManager {
             return false;
         }
         int pending = player.reservedSaveInt3;
-        if (!player.getInventoryManager().addItem(
-                new ItemStack(CASTLE_WARS_TICKET_ID, pending))) {
+        int delivered = player.getInventoryManager().addItemPartial(
+                new ItemStack(CASTLE_WARS_TICKET_ID, pending));
+        if (delivered <= 0) {
             player.getPacketSender().sendGameMessage(
                     "You have " + pending
-                            + " Castle Wars tickets waiting. Free an inventory slot to claim them.");
+                            + " Castle Wars tickets waiting. Free inventory space to claim them.");
             return false;
         }
-        player.reservedSaveInt3 = 0;
+        player.reservedSaveInt3 = pending - delivered;
         player.getPacketSender().sendGameMessage(
-                "Lanthus gives you your " + pending + " unclaimed Castle Wars ticket"
-                        + (pending == 1 ? "." : "s."));
-        return true;
+                "Lanthus gives you " + delivered + " unclaimed Castle Wars ticket"
+                        + (delivered == 1 ? "." : "s."));
+        if (player.reservedSaveInt3 > 0) {
+            player.getPacketSender().sendGameMessage(
+                    "Lanthus is still holding " + player.reservedSaveInt3
+                            + " ticket" + (player.reservedSaveInt3 == 1 ? "" : "s")
+                            + " for you.");
+        }
+        return player.reservedSaveInt3 == 0;
     }
 
     /**
