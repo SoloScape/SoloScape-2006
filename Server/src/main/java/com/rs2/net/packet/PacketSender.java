@@ -1139,6 +1139,22 @@ public final class PacketSender {
     }
 
     public final PacketSender sendMapRegion() {
+        // A negative/corrupt plane is encoded as an unsigned byte in the
+        // revision-443 rebuild packet (e.g. -10 becomes 246). That crashes
+        // the client when it indexes the four-plane ground-item array.
+        if (ServerSettings.clientBuild == 443) {
+            int plane = this.player.getPosition().getPlane();
+            if (plane < 0 || plane >= 4) {
+                int previousPlane = this.player.getLastKnownRegionPosition().getPlane();
+                int safePlane = previousPlane >= 0 && previousPlane < 4
+                        ? previousPlane : 0;
+                System.err.println("[443-REGION] Rejecting invalid plane " + plane
+                        + " for " + this.player.getUsername()
+                        + " at " + this.player.getPosition()
+                        + "; restoring plane " + safePlane);
+                this.player.getPosition().setPlane(safePlane);
+            }
+        }
         this.player.getLastKnownRegionPosition().set(this.player.getPosition());
         this.player.refreshLocalViewArea();
         int lastKnownRegionPosition = this.player.getLastKnownRegionPosition().getRegionX() << 3;
