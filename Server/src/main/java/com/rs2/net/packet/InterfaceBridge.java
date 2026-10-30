@@ -137,10 +137,10 @@ public final class InterfaceBridge {
         put(mappings, 11259, 54, 163); // Close
         // 443 renders each coordinate as two model digits, not text widgets.
         // Dedicated synthetic ids avoid hijacking unrelated 377 components.
-        put(mappings, 19660, 54, 116); // X tens
-        put(mappings, 19661, 54, 117); // X ones
-        put(mappings, 19662, 54, 132); // Y tens
-        put(mappings, 19663, 54, 133); // Y ones
+        put(mappings, 19700, 54, 116); // X tens
+        put(mappings, 19701, 54, 117); // X ones
+        put(mappings, 19702, 54, 132); // Y tens
+        put(mappings, 19703, 54, 133); // Y ones
 
         // Native Castle Wars HUD (group 59): stock text components.
         // Score and flag icons are driven by varps 377/378 instead.
