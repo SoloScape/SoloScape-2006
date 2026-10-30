@@ -56,6 +56,20 @@ public final class World {
         taskScheduler.schedule(reloginTask);
     }
 
+    /**
+     * Revision 443 intentionally bypasses Player.process() to avoid legacy
+     * side effects. Keep essential passive timers alive, however: prayer
+     * drain normally runs inside Player.process(), so leaving it out made
+     * activated prayers free for every human revision-443 player.
+     */
+    static void processRevision443Player(Player player) {
+        player.getPrayerManager().drainPrayerPoints();
+        // NPCs may move after the client's initial click route.
+        // Continue pursuing the target without invoking legacy Player.process().
+        player.getTargetMovement().process();
+        player.processConnectionTimeout();
+    }
+
     public static synchronized void processTick() {
         Object value;
         Object value2;
@@ -114,10 +128,7 @@ public final class World {
                         if (ServerSettings.clientBuild != 443 || ((Player)value2).isBot) {
                             ((Player)value2).process();
                         } else {
-                            // NPCs can move after the client's initial click route.
-                            // Keep pending interactions following their live target.
-                            ((Player)value2).getTargetMovement().process();
-                            ((Player)value2).processConnectionTimeout();
+                            processRevision443Player((Player)value2);
                         }
                     }
                     catch (Exception exception) {
