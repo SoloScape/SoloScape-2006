@@ -12,6 +12,11 @@ public final class Revision443PrayerDrainChecks {
         // Suppress network writes in the headless test while exercising the
         // actual revision-443 logic directly.
         player.isBot = true;
+        // World.registerPlayer assigns both values to real players. Their
+        // encoded player bit is required by getCombatBonus().
+        player.setIndex(1);
+        player.setEncodedIndex(32769);
+        player.setCombatBonus(11, 0);
         player.setPosition(new Position(2441, 3090, 0));
         player.getSkillManager().setCurrentLevel(5, 20);
 
