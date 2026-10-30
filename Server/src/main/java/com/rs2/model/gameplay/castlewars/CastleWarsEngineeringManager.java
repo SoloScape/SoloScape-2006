@@ -93,6 +93,13 @@ public final class CastleWarsEngineeringManager {
     private static final int CATAPULT_AIM_LEFT_BUTTON_ID = 11324;
     private static final int CATAPULT_FIRE_BUTTON_ID = 11329;
     private static final int CATAPULT_MAX_AIM = 30;
+    // Native 443 group 54: coordinate widgets are type-6 models, not text.
+    // Cache digit models 4857..4866 represent 0..9.
+    private static final int CATAPULT_443_ZERO_DIGIT_MODEL_ID = 4857;
+    private static final int CATAPULT_443_X_TENS_COMPONENT_ID = 19700;
+    private static final int CATAPULT_443_X_ONES_COMPONENT_ID = 19701;
+    private static final int CATAPULT_443_Y_TENS_COMPONENT_ID = 19702;
+    private static final int CATAPULT_443_Y_ONES_COMPONENT_ID = 19703;
     private static final int CATAPULT_AIM_SCALE = 2;
     private static final int CATAPULT_MISS_RADIUS = 1;
 
@@ -490,8 +497,25 @@ public final class CastleWarsEngineeringManager {
     }
 
     private static void refreshCatapultAimInterface(Player player, CatapultAim aim) {
+        if (ServerSettings.clientBuild == 443) {
+            // The native 443 panel draws separate tens/ones 3D digit models.
+            // Legacy sendInterfaceText() does not update these widgets.
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_X_TENS_COMPONENT_ID, catapultDigitModelId(aim.x / 10));
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_X_ONES_COMPONENT_ID, catapultDigitModelId(aim.x % 10));
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_Y_TENS_COMPONENT_ID, catapultDigitModelId(aim.y / 10));
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_Y_ONES_COMPONENT_ID, catapultDigitModelId(aim.y % 10));
+            return;
+        }
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.x), CATAPULT_AIM_X_TEXT_ID);
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.y), CATAPULT_AIM_Y_TEXT_ID);
+    }
+
+    private static int catapultDigitModelId(int digit) {
+        return CATAPULT_443_ZERO_DIGIT_MODEL_ID + digit;
     }
 
     private static String twoDigitAimValue(int value) {
