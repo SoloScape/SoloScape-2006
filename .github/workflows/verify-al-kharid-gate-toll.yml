@@ -9,6 +9,7 @@ on:
       - 'Server/src/main/java/com/rs2/model/interaction/AlKharidGateToll.java'
       - 'Server/src/main/java/com/rs2/model/interaction/FirstNpcActionTask.java'
       - 'Server/src/main/java/com/rs2/model/interaction/SecondObjectActionTask.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/FourthObjectActionTask.java'
       - 'Server/src/main/java/com/rs2/model/dialogue/DialogueManager.java'
       - 'Server/src/test/java/AlKharidGateTollChecks.java'
       - '.github/workflows/verify-al-kharid-gate-toll.yml'
