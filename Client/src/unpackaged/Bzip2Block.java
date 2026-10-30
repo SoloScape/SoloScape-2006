@@ -929,7 +929,7 @@ public class Bzip2Block {
                 int i_88_ = Class39_Sub5_Sub11.gameBuffer.method804(68);
                 int i_89_ = Class39_Sub5_Sub11.gameBuffer.method815((byte) -63);
                 int i_90_ = Class39_Sub5_Sub11.gameBuffer.method815((byte) 100);
-                NameTable.height = i_90_ >> 1;
+                NameTable.height = OndemandRequest.safeRegionPlane(i_90_ >> 1);
                 Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109.method508(i_89_, (i_90_ & 0x1) == 1, (byte) -119, i_88_);
                 Class4.frameId = -1;
                 return true;
