@@ -9,7 +9,6 @@ import com.rs2.model.Entity;
 import com.rs2.model.GameplayHelper;
 import com.rs2.model.World;
 import com.rs2.model.clue.PuzzleBoxHandler;
-import com.rs2.model.gameplay.godwars.GodWarsDungeonManager;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.objects.functions.FlourMillHandler;
 import com.rs2.model.player.CharacterFileBankTab;
@@ -66,6 +65,8 @@ import org.joda.time.DateTime;
 import org.joda.time.base.AbstractDateTime;
 
 public final class CharacterFileManager {
+    // Retain the retired rope slot to preserve legacy character-save layouts.
+    private static final int LEGACY_GOD_WARS_ROPE_CONFIG_ID = 1048;
     public static int[] musicUnlockConfigIds = new int[]{20, 21, 22, 23, 24, 25, 298, 311, 346, 414, 464, 598, 662, 721};
     private static ConcurrentHashMap loginIpReservations = new ConcurrentHashMap();
     public static ArrayList deadHardcoreIronmanRecords = new ArrayList();
@@ -1300,7 +1301,7 @@ public final class CharacterFileManager {
             ((DataOutputStream)value6).writeByte(((Player)value).gameMode);
             ((DataOutputStream)value6).writeInt(((Player)value).barrowsRunsCompleted);
             ((DataOutputStream)value6).writeLong(((Player)value).godWarsLastAltarBlessingMillis);
-            ((DataOutputStream)value6).writeInt(((Player)value).configStates[GodWarsDungeonManager.ropeShortcutConfigId]);
+            ((DataOutputStream)value6).writeInt(((Player)value).configStates[LEGACY_GOD_WARS_ROPE_CONFIG_ID]);
             value3 = 0;
             while (value3 < ((Player)value).godWarsKillCounts.length) {
                 ((DataOutputStream)value6).writeInt(((Player)value).godWarsKillCounts[value3]);
@@ -2110,7 +2111,7 @@ public final class CharacterFileManager {
             ((DataOutputStream)value3).writeByte(((CharacterFileRecord)value).gameMode);
             ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).barrowsRunsCompleted);
             ((DataOutputStream)value3).writeLong(((CharacterFileRecord)value).godWarsLastAltarBlessingMillis);
-            ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).configStates[GodWarsDungeonManager.ropeShortcutConfigId]);
+            ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).configStates[LEGACY_GOD_WARS_ROPE_CONFIG_ID]);
             index6 = 0;
             while (index6 < ((CharacterFileRecord)value).godWarsKillCounts.length) {
                 ((DataOutputStream)value3).writeInt(((CharacterFileRecord)value).godWarsKillCounts[index6]);
@@ -4137,7 +4138,7 @@ public final class CharacterFileManager {
                     }
                     if (s >= 21) {
                         ((CharacterFileRecord)value2).godWarsLastAltarBlessingMillis = dataInputStream.readLong();
-                        ((CharacterFileRecord)value2).configStates[GodWarsDungeonManager.ropeShortcutConfigId] = dataInputStream.readInt();
+                        ((CharacterFileRecord)value2).configStates[LEGACY_GOD_WARS_ROPE_CONFIG_ID] = dataInputStream.readInt();
                         index = 0;
                         while (index < ((CharacterFileRecord)value2).godWarsKillCounts.length) {
                             ((CharacterFileRecord)value2).godWarsKillCounts[index] = dataInputStream.readInt();
@@ -4523,7 +4524,7 @@ public final class CharacterFileManager {
         }
         player.barrowsRunsCompleted = record.barrowsRunsCompleted;
         player.godWarsLastAltarBlessingMillis = record.godWarsLastAltarBlessingMillis;
-        player.configStates[GodWarsDungeonManager.ropeShortcutConfigId] = record.configStates[GodWarsDungeonManager.ropeShortcutConfigId];
+        player.configStates[LEGACY_GOD_WARS_ROPE_CONFIG_ID] = record.configStates[LEGACY_GOD_WARS_ROPE_CONFIG_ID];
         CharacterFileManager.copy(record.godWarsKillCounts, player.godWarsKillCounts);
         player.craftingThreadUseCount = record.craftingThreadUseCount;
         player.membershipExpiresMillis = record.membershipExpiresMillis;

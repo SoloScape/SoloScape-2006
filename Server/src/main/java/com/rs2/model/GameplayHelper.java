@@ -29,7 +29,6 @@ import com.rs2.model.combat.CombatManager;
 import com.rs2.model.dialogue.DialogueManager;
 import com.rs2.model.gameplay.PositionRange;
 import com.rs2.model.gameplay.barrows.BarrowsManager;
-import com.rs2.model.gameplay.godwars.GodWarsDungeonManager;
 import com.rs2.model.ground.GroundItem;
 import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemContainer;
@@ -881,13 +880,7 @@ public class GameplayHelper {
             }
         } else {
             Object value = player2;
-            if (((Entity)value).isInArea(2816, 2943, 5248, 5375)) {
-                GodWarsDungeonManager.refreshKillCountOverlay(player2);
-                if (GameplayHelper.updateWalkableInterface(player2, 19556)) {
-                    value = player2;
-                    ((Player)value).packetSender.sendPlayerOption("null", 1, false);
-                }
-            } else {
+            {
                 value = player2;
                 if (((Entity)value).isInArea(2494, 2569, 3701, 3785)) {
                     if (GameplayHelper.updateWalkableInterface(player2, 11877)) {

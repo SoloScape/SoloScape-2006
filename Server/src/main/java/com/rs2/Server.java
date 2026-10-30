@@ -28,7 +28,6 @@ import com.rs2.model.clue.TreasureTrailManager;
 import com.rs2.model.combat.CombatManager;
 import com.rs2.model.gameplay.castlewars.CastleWarsManager;
 import com.rs2.model.gameplay.duel.DuelSession;
-import com.rs2.model.gameplay.godwars.GodWarsDungeonManager;
 import com.rs2.model.gameplay.magetrainingarena.AlchemistPlaygroundController;
 import com.rs2.model.gameplay.magetrainingarena.CreatureGraveyardController;
 import com.rs2.model.gameplay.magetrainingarena.EnchantmentChamberController;
@@ -443,9 +442,6 @@ implements Runnable {
             for (Object itemStackObject : startingRareItems) {
                 ItemStack itemStack = (ItemStack)itemStackObject;
                 trackedRareItems.add(itemStack);
-            }
-            if (ServerSettings.content2007Enabled) {
-                GodWarsDungeonManager.spawnGodWarsNpcs();
             }
             System.out.println("Online!");
             BotTaskDefinition.initializeProgressiveTaskPool();
