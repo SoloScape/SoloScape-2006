@@ -87,6 +87,7 @@ public final class InterfaceBridge {
         mappings.put(197, 380);   // Wilderness level overlay
         mappings.put(201, 389);   // duel-area overlay
         mappings.put(4535, 24);   // Barrows overlay
+        mappings.put(11169, 54); // Native revision-443 Castle Wars catapult controls
         mappings.put(6673, 57);  // Castle Wars waiting room overlay
         mappings.put(11344, 59); // Castle Wars in-game status overlay
         mappings.put(12414, 96);  // cave darkness, light (opacity 50)
@@ -126,6 +127,21 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        // Stock revision-443 catapult group 54. Use the native aiming arrows,
+        // fire and close controls rather than the legacy 377 widget ids.
+        put(mappings, 11321, 54, 150); // Aim up
+        put(mappings, 11322, 54, 151); // Aim down
+        put(mappings, 11323, 54, 152); // Aim right
+        put(mappings, 11324, 54, 153); // Aim left
+        put(mappings, 11329, 54, 158); // Fire Catapult
+        put(mappings, 11259, 54, 163); // Close
+        // 443 renders each coordinate as two model digits, not text widgets.
+        // Dedicated synthetic ids avoid hijacking unrelated 377 components.
+        put(mappings, 19660, 54, 116); // X tens
+        put(mappings, 19661, 54, 117); // X ones
+        put(mappings, 19662, 54, 132); // Y tens
+        put(mappings, 19663, 54, 133); // Y ones
+
         // Native Castle Wars HUD (group 59): stock text components.
         // Score and flag icons are driven by varps 377/378 instead.
         put(mappings, 11346, 59, 1);  // Saradomin score label
