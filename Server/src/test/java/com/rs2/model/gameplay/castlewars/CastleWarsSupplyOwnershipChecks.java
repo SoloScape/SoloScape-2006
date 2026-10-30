@@ -6,7 +6,7 @@ import com.rs2.model.player.Player;
 /** Supply cleanup must remove issued quantities without consuming player-owned items. */
 public final class CastleWarsSupplyOwnershipChecks {
     public static void main(String[] args) {
-        Player player = new Player(null);
+        Player player = newInventoryPlayer();
         int pickaxe = CastleWarsEngineeringManager.BRONZE_PICKAXE_ID;
         int rock = CastleWarsEngineeringManager.ROCK_ITEM_ID;
         int tinderbox = CastleWarsEngineeringManager.TINDERBOX_ITEM_ID;
@@ -46,7 +46,7 @@ public final class CastleWarsSupplyOwnershipChecks {
         CastleWarsEngineeringManager.cleanupPlayerSupplies(player);
         requireAmount(player, pickaxe, 1);
 
-        Player fullInventory = new Player(null);
+        Player fullInventory = newInventoryPlayer();
         require(fullInventory.getInventoryManager().addItemPartial(new ItemStack(pickaxe, 27)) == 27,
                 "Could not fill the inventory");
         require(CastleWarsEngineeringManager.issueSupply(fullInventory, pickaxe, 5) == 1,
@@ -54,7 +54,25 @@ public final class CastleWarsSupplyOwnershipChecks {
         CastleWarsEngineeringManager.cleanupPlayerSupplies(fullInventory);
         requireAmount(fullInventory, pickaxe, 27);
 
-        Player secondPlayer = new Player(null);
+        // Reissuing after all match-granted copies have been consumed must not
+        // leave stale issued quantities that can erase an owned item.
+        Player replenished = newInventoryPlayer();
+        require(replenished.getInventoryManager().addItemPartial(new ItemStack(pickaxe, 1)) == 1,
+                "Could not stage replenished player's owned pickaxe");
+        require(CastleWarsEngineeringManager.issueSupply(replenished, pickaxe, 2) == 2,
+                "Could not issue initial replenishment");
+        require(replenished.getInventoryManager().removeItem(new ItemStack(pickaxe, 2)),
+                "Could not consume initial replenishment");
+        require(CastleWarsEngineeringManager.issueSupply(replenished, pickaxe, 2) == 2,
+                "Could not reissue consumed supplies");
+        CastleWarsEngineeringManager.cleanupPlayerSupplies(replenished);
+        requireAmount(replenished, pickaxe, 1);
+
+        require(CastleWarsEngineeringManager.issueSupply(replenished, 995, 1) == 0,
+                "Unrelated items must not be issued as match supplies");
+        requireAmount(replenished, 995, 0);
+
+        Player secondPlayer = newInventoryPlayer();
         require(secondPlayer.getInventoryManager().addItemPartial(new ItemStack(pickaxe, 1)) == 1,
                 "Could not stage second player's item");
         require(CastleWarsEngineeringManager.issueSupply(player, rock, 1) == 1,
@@ -66,6 +84,13 @@ public final class CastleWarsSupplyOwnershipChecks {
         requireAmount(player, rock, 0);
 
         System.out.println("Castle Wars issued supply ownership checks passed");
+    }
+
+    private static Player newInventoryPlayer() {
+        Player player = new Player(null);
+        // Exercise real inventory operations without sending packets to a null socket.
+        player.isBot = true;
+        return player;
     }
 
     private static void requireAmount(Player player, int itemId, int expected) {
