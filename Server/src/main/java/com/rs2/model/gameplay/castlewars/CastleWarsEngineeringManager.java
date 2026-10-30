@@ -289,8 +289,8 @@ public final class CastleWarsEngineeringManager {
             }
         }
 
-        // Using a catapult rock directly on a working catapult should be
-        // equivalent to operating it, including the revision-443 fallback.
+        // Using a catapult rock directly on a working catapult should open
+        // the same manual aiming controls as operating it.
         if (itemId == ROCK_ITEM_ID
                 && (objectId == SARADOMIN_CATAPULT_ID || objectId == ZAMORAK_CATAPULT_ID)) {
             return operateCatapult(player, objectId);
@@ -387,22 +387,9 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
-        // The old 377 aiming panel (11169) has no revision-443 widget
-        // mapping. showInterface silently drops it for build 443, leaving
-        // players unable to fire at all. Until a native 443 aiming panel is
-        // available, a click fires at an automatically selected battlefield
-        // target using the normal rock/reload/damage rules.
-        if (ServerSettings.clientBuild == 443) {
-            if (fireCatapult(player)) {
-                player.getPacketSender().sendGameMessage(
-                        "You fire the catapult at the battlefield!");
-            } else {
-                player.getPacketSender().sendGameMessage(
-                        "The catapult is still reloading.");
-            }
-            return true;
-        }
-
+        // Open the same manual aiming state machine on both revisions.
+        // PacketSender maps this legacy panel to native group 54 for 443.
+        // Ammunition is consumed only by the Fire button handler.
         CatapultAim aim = new CatapultAim(team);
         catapultAims.put(player, aim);
         player.getPacketSender().showInterface(CATAPULT_INTERFACE_ID);
@@ -2296,6 +2283,11 @@ public final class CastleWarsEngineeringManager {
     }
 
     public static boolean fireCatapult(Player player) {
+        // Automatic target selection is reserved for bots. Human players
+        // must choose their target using the catapult aiming interface.
+        if (player == null || !player.isBot) {
+            return false;
+        }
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
         if (team == null) {
             return false;
