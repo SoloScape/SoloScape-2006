@@ -121,6 +121,8 @@ public final class AlKharidGateTollChecks {
 
         Npc guard = new Npc(borderGuardId);
         guard.setPosition(new Position(3267, 3226, 0));
+        // A manually instantiated non-combat NPC may have zero configured HP.
+        guard.setCurrentHitpoints(1);
         require(AlKharidGateToll.isBorderGuard(guard), "Gate guard not recognized");
         guard.setPosition(new Position(3200, 3226, 0));
         require(!AlKharidGateToll.isBorderGuard(guard), "Remote border guard incorrectly matched");
@@ -141,6 +143,8 @@ public final class AlKharidGateTollChecks {
                 + " line-of-sight=" + com.rs2.util.GameUtil.hasClearPath(
                         player.getPosition(), guard.getPosition(), true)
                 + " player-moving=" + player.isMoving()
+                + " player-reach=" + player.isWithinReach(guard, 1)
+                + " npc-dead=" + guard.isDead()
                 + " npc-name=" + guard.getDefinition().getName());
         new FirstNpcActionTask(1, true, player, player.nextActionSequence(), guard).execute();
         require(player.getDialogueManager().getDialogueId() == 9999,
