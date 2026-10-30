@@ -89,17 +89,12 @@ public final class CastleWarsEngineeringManager {
     private static final int CATAPULT_AIM_RIGHT_BUTTON_ID = 11323;
     private static final int CATAPULT_AIM_LEFT_BUTTON_ID = 11324;
     private static final int CATAPULT_FIRE_BUTTON_ID = 11329;
-    // Synthetic ids for the four native 443 3D digit widgets (group 54).
-    private static final int CATAPULT_443_X_TENS = 19700;
-    private static final int CATAPULT_443_X_ONES = 19701;
-    private static final int CATAPULT_443_Y_TENS = 19702;
-    private static final int CATAPULT_443_Y_ONES = 19703;
-    private static final int CATAPULT_443_ZERO_MODEL = 4857;
     private static final int CATAPULT_MAX_AIM = 30;
     private static final int CATAPULT_AIM_SCALE = 2;
     private static final int CATAPULT_MISS_RADIUS = 1;
 
     private static final int MAIN_DOOR_MAX_HITPOINTS = 100;
+    public static final int BARRICADE_MAX_HITPOINTS = 50;
     private static final int MAIN_DOOR_PLANE = 0;
     private static final int THIEVING_SKILL_INDEX = 17;
     private static final int SIDE_DOOR_MIN_THIEVING_LEVEL = 1;
@@ -144,15 +139,13 @@ public final class CastleWarsEngineeringManager {
             new IdentityHashMap<Player, Long>();
     private static final Map<Player, CatapultAim> catapultAims =
             new IdentityHashMap<Player, CatapultAim>();
-    // Keep match-issued supplies separate from the player's existing inventory.
-    // A player's first grant of each item ID establishes the quantity to protect.
-    private static final Map<Player, Map<Integer, IssuedSupply>> issuedSupplies =
-            new IdentityHashMap<Player, Map<Integer, IssuedSupply>>();
     private static int catapultAimUpButtonId = CATAPULT_AIM_UP_BUTTON_ID;
     private static int catapultAimDownButtonId = CATAPULT_AIM_DOWN_BUTTON_ID;
     private static int catapultAimLeftButtonId = CATAPULT_AIM_LEFT_BUTTON_ID;
     private static int catapultAimRightButtonId = CATAPULT_AIM_RIGHT_BUTTON_ID;
     private static final Map<Player, Long> mainDoorAttackReadyAt =
+            new IdentityHashMap<Player, Long>();
+    private static final Map<Player, Long> barricadeAttackReadyAt =
             new IdentityHashMap<Player, Long>();
     private static final MainDoorState saradominMainDoor = new MainDoorState(
             CastleWarsManager.Team.SARADOMIN,
@@ -206,7 +199,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
-        issuedSupplies.clear();
+        barricadeAttackReadyAt.clear();
     }
 
     public static void cleanupAfterGame() {
@@ -223,7 +216,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
-        issuedSupplies.clear();
+        barricadeAttackReadyAt.clear();
     }
 
     public static boolean handleSupplyTable(Player player, int objectId) {
@@ -257,9 +250,7 @@ public final class CastleWarsEngineeringManager {
             player.getPacketSender().sendGameMessage("Not enough space in your inventory.");
             return true;
         }
-        if (issueSupply(player, itemId, 1) == 0) {
-            return true;
-        }
+        player.getInventoryManager().addItem(new ItemStack(itemId, 1));
         player.getUpdateState().setAnimation(881);
         player.getPacketSender().sendGameMessage(message);
         return true;
@@ -384,9 +375,22 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
-        // Both revisions expose a player-controlled aiming panel. The
-        // interface bridge maps legacy 11169 to native group 54 for build 443.
-        // Automatic battlefield targeting remains reserved for specialist bots.
+        // The old 377 aiming panel (11169) has no revision-443 widget
+        // mapping. showInterface silently drops it for build 443, leaving
+        // players unable to fire at all. Until a native 443 aiming panel is
+        // available, a click fires at an automatically selected battlefield
+        // target using the normal rock/reload/damage rules.
+        if (ServerSettings.clientBuild == 443) {
+            if (fireCatapult(player)) {
+                player.getPacketSender().sendGameMessage(
+                        "You fire the catapult at the battlefield!");
+            } else {
+                player.getPacketSender().sendGameMessage(
+                        "The catapult is still reloading.");
+            }
+            return true;
+        }
+
         CatapultAim aim = new CatapultAim(team);
         catapultAims.put(player, aim);
         player.getPacketSender().showInterface(CATAPULT_INTERFACE_ID);
@@ -487,20 +491,6 @@ public final class CastleWarsEngineeringManager {
     }
 
     private static void refreshCatapultAimInterface(Player player, CatapultAim aim) {
-        if (ServerSettings.clientBuild == 443) {
-            // Native group 54 uses 3D numeral models for the X/Y counters.
-            // The stock zero model is 4857; successive numeral models are
-            // used for the digits 1-9.
-            player.getPacketSender().sendInterfaceModelId(
-                    CATAPULT_443_X_TENS, CATAPULT_443_ZERO_MODEL + aim.x / 10);
-            player.getPacketSender().sendInterfaceModelId(
-                    CATAPULT_443_X_ONES, CATAPULT_443_ZERO_MODEL + aim.x % 10);
-            player.getPacketSender().sendInterfaceModelId(
-                    CATAPULT_443_Y_TENS, CATAPULT_443_ZERO_MODEL + aim.y / 10);
-            player.getPacketSender().sendInterfaceModelId(
-                    CATAPULT_443_Y_ONES, CATAPULT_443_ZERO_MODEL + aim.y % 10);
-            return;
-        }
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.x), CATAPULT_AIM_X_TEXT_ID);
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.y), CATAPULT_AIM_Y_TEXT_ID);
     }
@@ -1302,53 +1292,18 @@ public final class CastleWarsEngineeringManager {
                 && itemId != BRONZE_PICKAXE_ID && itemId != TOOLKIT_ID) {
             return 0;
         }
-        return issueSupply(player, itemId, amount);
-    }
-
-    // Package-private so the ownership regression checks can exercise the
-    // real grant path without requiring a running Castle Wars match.
-    static int issueSupply(Player player, int itemId, int amount) {
-        if (player == null || amount <= 0) {
-            return 0;
-        }
-        int before = player.getInventoryManager().getItemAmount(itemId);
-        int granted = player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
-        if (granted <= 0) {
-            return 0;
-        }
-
-        Map<Integer, IssuedSupply> supplies = issuedSupplies.get(player);
-        if (supplies == null) {
-            supplies = new HashMap<Integer, IssuedSupply>();
-            issuedSupplies.put(player, supplies);
-        }
-        IssuedSupply supply = supplies.get(itemId);
-        if (supply == null) {
-            supply = new IssuedSupply(before);
-            supplies.put(itemId, supply);
-        }
-        supply.granted += granted;
-        return granted;
+        return player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
     }
 
     public static void cleanupPlayerSupplies(Player player) {
-        if (player == null) {
-            return;
-        }
-        Map<Integer, IssuedSupply> supplies = issuedSupplies.remove(player);
-        if (supplies == null) {
-            return;
-        }
-        for (Map.Entry<Integer, IssuedSupply> entry : supplies.entrySet()) {
-            int itemId = entry.getKey();
-            IssuedSupply supply = entry.getValue();
-            int current = player.getInventoryManager().getItemAmount(itemId);
-            // Supplies can be used or dropped during play. Never take the
-            // quantity the player already owned before Castle Wars issued any.
-            int extra = Math.max(0, current - supply.protectedAmount);
-            int toRemove = Math.min(extra, supply.granted);
-            if (toRemove > 0) {
-                player.getInventoryManager().removeItem(new ItemStack(itemId, toRemove));
+        barricadeAttackReadyAt.remove(player);
+        int[] ids = new int[]{ROCK_ITEM_ID, EXPLOSIVE_POTION_ID, BARRICADE_ITEM_ID,
+                CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, BRONZE_PICKAXE_ID,
+                TINDERBOX_ITEM_ID, EMPTY_BUCKET_ITEM_ID, BUCKET_OF_WATER_ITEM_ID};
+        for (int id : ids) {
+            int amount = player.getInventoryManager().getItemAmount(id);
+            if (amount > 0) {
+                player.getInventoryManager().removeItem(new ItemStack(id, amount));
             }
         }
     }
@@ -1737,6 +1692,77 @@ public final class CastleWarsEngineeringManager {
         return true;
     }
 
+    public static boolean isBarricadeObject(int objectId) {
+        return objectId == BARRICADE_OBJECT_SARADOMIN
+                || objectId == BARRICADE_OBJECT_ZAMORAK;
+    }
+
+    public static int getBarricadeHitpoints(Position position) {
+        BarricadeState state = position == null ? null : barricades.get(key(position));
+        return state == null ? 0 : state.getHitpoints();
+    }
+
+    static long barricadeAttackDelayMillis(int weaponDelayTicks) {
+        return Math.max(1, weaponDelayTicks) * GAME_TICK_MILLIS;
+    }
+
+    /**
+     * Called each interaction tick until the target is destroyed or the player
+     * interrupts the action. Returns true while melee attacks should continue.
+     */
+    public static boolean attackBarricade(Player player, int objectId, Position position) {
+        if (player == null || position == null || !isBarricadeObject(objectId)
+                || player.isDead() || player.isStunned()
+                || !CastleWarsManager.isInGame(player)) {
+            return false;
+        }
+        BarricadeState state = barricades.get(key(position));
+        if (state == null || state.objectId != objectId
+                || !isInInteractionRange(player, state.position, 1)) {
+            return false;
+        }
+
+        int fightMode = player.getFightMode();
+        AttackStyleDefinition[] styles =
+                player.getWeaponProfile().getInterfaceDefinition().getAttackStyles();
+        if (fightMode < 0 || fightMode >= styles.length
+                || fightMode >= player.getWeaponProfile().getAttackAnimations().length) {
+            return false;
+        }
+        if (styles[fightMode].getCombatType() != CombatType.MELEE) {
+            player.getPacketSender().sendGameMessage(
+                    "You need to use a melee attack to damage a barricade.");
+            return false;
+        }
+
+        // The target occupies a blocked tile. Never path through it while attacking.
+        player.getMovementQueue().clear();
+        player.getMovementQueue().clearMovementActions();
+        long now = System.currentTimeMillis();
+        Long readyAt = barricadeAttackReadyAt.get(player);
+        if (readyAt != null && now < readyAt.longValue()) {
+            return true;
+        }
+        player.getUpdateState().setFacePosition(position.centerForSize(1));
+        player.getUpdateState().setAnimation(
+                player.getWeaponProfile().getAttackAnimations()[fightMode]);
+        barricadeAttackReadyAt.put(player, Long.valueOf(now
+                + barricadeAttackDelayMillis(player.getWeaponProfile().getAttackDelay())));
+
+        // Use melee max-hit calculation without hitting an entity or awarding XP.
+        WeaponCombatAttack attack =
+                new WeaponCombatAttack(player, player, player.getWeaponProfile());
+        int maxHit = Math.max(1,
+                (int) CombatManager.calculateMeleeMaxHit(player, attack));
+        int damage = GameUtil.randomInt(maxHit + 1);
+        if (damage > 0 && state.takeDamage(damage) == 0) {
+            removeBarricade(state);
+            player.getPacketSender().sendGameMessage("You destroy the barricade.");
+            return false;
+        }
+        return true;
+    }
+
     public static Position findNearestEnemyBarricade(Player player, int radius) {
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
         if (team == null) {
@@ -2087,11 +2113,7 @@ public final class CastleWarsEngineeringManager {
         return -1;
     }
 
-    /** Optional bot-only automatic targeting; human operators use the aim panel. */
     public static boolean fireCatapult(Player player) {
-        if (player == null || !player.isBot) {
-            return false;
-        }
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
         if (team == null) {
             return false;
@@ -2585,15 +2607,6 @@ public final class CastleWarsEngineeringManager {
         }
     }
 
-    private static final class IssuedSupply {
-        private final int protectedAmount;
-        private int granted;
-
-        private IssuedSupply(int protectedAmount) {
-            this.protectedAmount = protectedAmount;
-        }
-    }
-
     private static final class ClimbingRopeState {
         private final Position position;
         private final Position objectPosition;
@@ -2607,17 +2620,29 @@ public final class CastleWarsEngineeringManager {
         }
     }
 
-    private static final class BarricadeState {
+    static final class BarricadeState {
         private final CastleWarsManager.Team team;
         private final Position position;
         private final int objectId;
+        private int hitpoints = BARRICADE_MAX_HITPOINTS;
         private boolean burning;
         private long burnExpiresAt;
 
-        private BarricadeState(CastleWarsManager.Team team, Position position, int objectId) {
+        BarricadeState(CastleWarsManager.Team team, Position position, int objectId) {
             this.team = team;
             this.position = position.copy();
             this.objectId = objectId;
+        }
+
+        int getHitpoints() {
+            return hitpoints;
+        }
+
+        int takeDamage(int damage) {
+            if (damage > 0) {
+                hitpoints = Math.max(0, hitpoints - damage);
+            }
+            return hitpoints;
         }
     }
 }
