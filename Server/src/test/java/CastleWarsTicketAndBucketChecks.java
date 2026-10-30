@@ -87,7 +87,7 @@ public final class CastleWarsTicketAndBucketChecks {
 
         // A partially successful match reward must also credit only its
         // undelivered remainder, not all-or-nothing.
-        require(player.getInventoryManager().addItem(new ItemStack(EMPTY, 1)),
+        require(player.getInventoryManager().removeItem(new ItemStack(EMPTY, 1)),
                 "Could not prepare one free inventory slot");
         require(!CastleWarsManager.awardCastleWarsTickets(player, 2)
                         && player.reservedSaveInt3 == 1
