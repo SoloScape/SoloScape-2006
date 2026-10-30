@@ -1421,6 +1421,15 @@ extends Entity {
         }
     }
 
+    /** Original-era AFK logout interval; separate from lost-connection and Castle Wars timers. */
+    public static final long IDLE_LOGOUT_TIMEOUT_MILLIS = 90_000L;
+
+    /** Pure timeout check; runtime configuration, permissions and combat checks remain in the caller. */
+    public static boolean hasIdleLogoutTimedOut(long lastInputMillis, long nowMillis) {
+        return lastInputMillis > 0L && nowMillis >= lastInputMillis
+                && nowMillis - lastInputMillis >= IDLE_LOGOUT_TIMEOUT_MILLIS;
+    }
+
     public final void processConnectionTimeout() {
         if (this.isBot || this.getConnectionState() != PlayerConnectionState.IN_GAME) {
             return;
@@ -1433,7 +1442,7 @@ extends Entity {
                     + (now - this.lastPacketReceivedMillis) + "ms (60s threshold)");
             this.disconnect();
         } else if (ServerSettings.idleLogoutEnabled && this.getPlayerRights() < 2
-                && this.lastPlayerInputMillis != 0L && now - this.lastPlayerInputMillis >= 300000L
+                && hasIdleLogoutTimedOut(this.lastPlayerInputMillis, now)
                 && this.getSingleCombatTimer().hasElapsed()) {
             System.out.println("[idle-logout] player=" + this.getUsername()
                     + " idleFor=" + (now - this.lastPlayerInputMillis)
