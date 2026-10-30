@@ -134,6 +134,10 @@ public final class CastleWarsEngineeringManager {
     private static final int[] rockslideRevisions = new int[ROCKSLIDE_POSITIONS.length];
     private static final Map<Player, RockslideMiningTask> activeRockslideMining =
             new IdentityHashMap<Player, RockslideMiningTask>();
+    // Inventory item IDs do not distinguish a player's items from match-issued copies.
+    // Keep a per-player ledger rather than deleting all matching IDs on death or exit.
+    private static final Map<Player, Map<Integer, IssuedSupply>> issuedSupplies =
+            new IdentityHashMap<Player, Map<Integer, IssuedSupply>>();
     private static boolean saradominCatapultOperational = true;
     private static boolean zamorakCatapultOperational = true;
     private static boolean saradominCatapultBurning;
@@ -255,11 +259,10 @@ public final class CastleWarsEngineeringManager {
         } else {
             return false;
         }
-        if (player.getInventoryManager().getContainer().getFreeSlots() <= 0) {
-            player.getPacketSender().sendGameMessage("Not enough space in your inventory.");
+        // Only animate a successful grant. issueSupply also handles full inventories.
+        if (issueSupply(player, itemId, 1) == 0) {
             return true;
         }
-        player.getInventoryManager().addItem(new ItemStack(itemId, 1));
         player.getUpdateState().setAnimation(881);
         player.getPacketSender().sendGameMessage(message);
         return true;
@@ -1292,6 +1295,58 @@ public final class CastleWarsEngineeringManager {
         bucketSupplySpawns.clear();
     }
 
+    private static boolean isSupplyItem(int itemId) {
+        return itemId == ROCK_ITEM_ID || itemId == EXPLOSIVE_POTION_ID
+                || itemId == BARRICADE_ITEM_ID || itemId == CLIMBING_ROPE_ITEM_ID
+                || itemId == BRONZE_PICKAXE_ID || itemId == TOOLKIT_ID
+                || itemId == TINDERBOX_ITEM_ID || itemId == EMPTY_BUCKET_ITEM_ID
+                || itemId == BUCKET_OF_WATER_ITEM_ID;
+    }
+
+    private static final class IssuedSupply {
+        private int ownedAmount;
+        private int outstandingAmount;
+
+        private IssuedSupply(int ownedAmount, int outstandingAmount) {
+            this.ownedAmount = ownedAmount;
+            this.outstandingAmount = outstandingAmount;
+        }
+    }
+
+    /**
+     * Grant supplies and record only the amount actually placed in this player's
+     * inventory. Kept separate from giveSupply's in-game guard for ownership tests.
+     */
+    public static int issueSupply(Player player, int itemId, int amount) {
+        if (player == null || amount <= 0 || !isSupplyItem(itemId)) {
+            return 0;
+        }
+
+        int before = player.getInventoryManager().getItemAmount(itemId);
+        player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
+        int granted = Math.max(0, player.getInventoryManager().getItemAmount(itemId) - before);
+        if (granted == 0) {
+            return 0;
+        }
+
+        Map<Integer, IssuedSupply> supplies = issuedSupplies.get(player);
+        if (supplies == null) {
+            supplies = new HashMap<Integer, IssuedSupply>();
+            issuedSupplies.put(player, supplies);
+        }
+        IssuedSupply supply = supplies.get(Integer.valueOf(itemId));
+        if (supply == null) {
+            supplies.put(Integer.valueOf(itemId), new IssuedSupply(before, granted));
+        } else {
+            // A consumed issued item must not remain in the removal budget.
+            // Keep the originally owned quantity (or less if it was depleted).
+            supply.ownedAmount = Math.min(supply.ownedAmount, before);
+            supply.outstandingAmount = Math.min(supply.outstandingAmount,
+                    Math.max(0, before - supply.ownedAmount)) + granted;
+        }
+        return granted;
+    }
+
     public static int giveSupply(Player player, int itemId, int amount) {
         if (!CastleWarsManager.isInGame(player) || amount <= 0) {
             return 0;
@@ -1301,18 +1356,28 @@ public final class CastleWarsEngineeringManager {
                 && itemId != BRONZE_PICKAXE_ID && itemId != TOOLKIT_ID) {
             return 0;
         }
-        return player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
+        return issueSupply(player, itemId, amount);
     }
 
     public static void cleanupPlayerSupplies(Player player) {
+        if (player == null) {
+            return;
+        }
         barricadeAttackReadyAt.remove(player);
-        int[] ids = new int[]{ROCK_ITEM_ID, EXPLOSIVE_POTION_ID, BARRICADE_ITEM_ID,
-                CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, BRONZE_PICKAXE_ID,
-                TINDERBOX_ITEM_ID, EMPTY_BUCKET_ITEM_ID, BUCKET_OF_WATER_ITEM_ID};
-        for (int id : ids) {
-            int amount = player.getInventoryManager().getItemAmount(id);
-            if (amount > 0) {
-                player.getInventoryManager().removeItem(new ItemStack(id, amount));
+        Map<Integer, IssuedSupply> supplies = issuedSupplies.remove(player);
+        if (supplies == null) {
+            return;
+        }
+        for (Map.Entry<Integer, IssuedSupply> entry : supplies.entrySet()) {
+            int id = entry.getKey().intValue();
+            IssuedSupply supply = entry.getValue();
+            int inInventory = player.getInventoryManager().getItemAmount(id);
+            // Identical item IDs are fungible; reserve the pre-issuance owned
+            // quantity and remove no more than the outstanding match supply.
+            int removable = Math.min(supply.outstandingAmount,
+                    Math.max(0, inInventory - supply.ownedAmount));
+            if (removable > 0) {
+                player.getInventoryManager().removeItem(new ItemStack(id, removable));
             }
         }
     }
