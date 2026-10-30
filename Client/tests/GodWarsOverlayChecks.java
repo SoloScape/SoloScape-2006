@@ -55,7 +55,7 @@ public final class GodWarsOverlayChecks {
         overlayPacket(506);
         Class68.method1112(19556, (byte)110);
         Class68.method1112(65535, (byte)110);
-        require("40".equals(count.aClass3_2029.toString()), "counter survives close and reopen");
+        require(count.aClass3_2029.isEqual(GrandExchangeWidgets.literal("40")), "counter survives close and reopen");
         System.out.println("God Wars overlay packet and lifecycle checks passed.");
     }
 }
