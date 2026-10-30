@@ -132,6 +132,9 @@ public final class CastleWarsLegacyFlagTakeRoutingChecks {
         Player player = new Player(null);
         player.isBot = true; // Packet sender skips network writes for this fixture.
         player.setIndex(index);
+        // In a live session player entity IDs have the high player bit set.
+        // Without this, Entity.setInteractionTarget casts the fixture as an NPC.
+        player.setEncodedIndex(32768 + index);
         player.setPosition(position);
         return player;
     }
