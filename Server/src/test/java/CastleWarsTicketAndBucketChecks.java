@@ -55,7 +55,11 @@ public final class CastleWarsTicketAndBucketChecks {
                 "Claiming pending tickets with free space failed");
         require(player.getInventoryManager().getItemAmount(TICKETS) == 3
                         && player.reservedSaveInt3 == 0,
-                "Claim did not deliver all tickets and clear pending balance");
+                "Claim did not deliver all tickets and clear pending balance"
+                        + " (tickets=" + player.getInventoryManager().getItemAmount(TICKETS)
+                        + ", pending=" + player.reservedSaveInt3
+                        + ", ticketStackable=" + new ItemStack(TICKETS, 1).getDefinition().isStackable()
+                        + ", freeSlots=" + player.getInventoryManager().getContainer().getFreeSlots() + ")");
         require(!CastleWarsManager.claimPendingCastleWarsTickets(player)
                         && player.getInventoryManager().getItemAmount(TICKETS) == 3,
                 "Repeated claim duplicated tickets");
