@@ -1755,7 +1755,8 @@ extends TickTask {
                 break;
             }
             case 2147: {
-                AttackStyleDefinition.startDelayedObjectMove(this.player, new Position(3104, 9576, 0));
+                // The Wizards' Tower ladder descends into the basement.
+                AttackStyleDefinition.startDelayedObjectMove(this.player, new Position(3104, 9576, 0), 827);
                 break;
             }
             case 4568: 
