@@ -66,38 +66,45 @@ extends TickTask {
             }
             return;
         }
+        // A large door is attacked repeatedly at the equipped weapon's speed,
+        // just like a barricade. Check the live door state before world-object
+        // lookup: breaking the door replaces its original closed object ID.
+        if (CastleWarsEngineeringManager.isClosedMainDoorObject(this.objectId)) {
+            if (!CastleWarsEngineeringManager.canContinueMainDoorAttack(
+                    this.player, this.objectId, this.objectX, this.objectY)) {
+                this.stop();
+                return;
+            }
+            Position approach = CastleWarsEngineeringManager.getMainDoorInteractionApproach(
+                    this.player, this.objectId, this.objectX, this.objectY);
+            if (approach == null) {
+                this.stop();
+                return;
+            }
+            if (CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                    this.player, this.objectId, this.objectX, this.objectY)) {
+                this.player.getMovementQueue().clear();
+                this.player.getMovementQueue().clearMovementActions();
+                if (!CastleWarsManager.handleSecondObjectAction(
+                        this.player, this.objectId, this.objectX, this.objectY)
+                        || !CastleWarsEngineeringManager.canContinueMainDoorAttack(
+                                this.player, this.objectId, this.objectX, this.objectY)) {
+                    this.stop();
+                }
+                return;
+            }
+            PathFinder.getInstance();
+            if (!PathFinder.findPath(this.player, approach.getX(), approach.getY(),
+                    false, 0, 0)) {
+                this.stop();
+            }
+            return;
+        }
         WorldObject worldObject = SkillActionHelper.findWorldObjectById(this.objectId, this.objectX, this.objectY, this.objectPlane);
         if (worldObject == null) {
             return;
         }
         Object interactionTargetId = ObjectDefinition.forId(this.player.getInteractionTargetId());
-        Position castleWarsMainDoorApproach =
-                CastleWarsEngineeringManager.getMainDoorInteractionApproach(
-                        this.player, this.objectId, this.objectX, this.objectY);
-        if (castleWarsMainDoorApproach != null) {
-            // Both leaves share a doorway: a player already next to either
-            // leaf can attack the clicked leaf without stepping forward or
-            // being rerouted to stand directly in front of that specific leaf.
-            if (CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
-                    this.player, this.objectId, this.objectX, this.objectY)) {
-                this.player.getMovementQueue().clear();
-                this.player.getMovementQueue().clearMovementActions();
-                if (CastleWarsManager.handleSecondObjectAction(
-                        this.player, this.objectId, this.objectX, this.objectY)) {
-                    this.stop();
-                    return;
-                }
-            }
-
-            PathFinder.getInstance();
-            boolean foundPath = PathFinder.findPath(this.player,
-                    castleWarsMainDoorApproach.getX(), castleWarsMainDoorApproach.getY(),
-                    false, 0, 0);
-            if (!foundPath) {
-                this.stop();
-            }
-            return;
-        }
 
         Position position = this.player.getPosition();
         if (!InteractionDispatcher.canReachObjectInteraction(this.player, worldObject)) {

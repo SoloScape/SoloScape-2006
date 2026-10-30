@@ -4,6 +4,7 @@ import com.rs2.ServerSettings;
 import com.rs2.cache.InterfaceDefinition;
 import com.rs2.model.Position;
 import com.rs2.model.World;
+import com.rs2.model.combat.AttackBonusType;
 import com.rs2.model.combat.AttackStyleDefinition;
 import com.rs2.model.combat.CombatManager;
 import com.rs2.model.combat.CombatType;
@@ -874,6 +875,40 @@ public final class CastleWarsEngineeringManager {
         return true;
     }
 
+    /** Continue only while the targeted closed leaf is still enemy-owned. */
+    public static boolean canContinueMainDoorAttack(Player player, int objectId,
+                                                     int objectX, int objectY) {
+        if (player == null || player.isDead() || player.isStunned()) {
+            return false;
+        }
+        MainDoorState door = findMainDoor(objectId, objectX, objectY);
+        CastleWarsManager.Team playerTeam = CastleWarsManager.getGameTeam(player);
+        return door != null && door.mode == MainDoorMode.CLOSED
+                && isClosedMainDoorObject(objectId)
+                && playerTeam != null && playerTeam != door.team;
+    }
+
+    /**
+     * Crush is most effective against a large door; slash is resisted, and
+     * stab more strongly resisted. Exact Jagex multipliers are not published,
+     * so these ratios are explicitly tunable approximations.
+     */
+    public static int calculateMainDoorStyleDamage(int rolledHit, AttackBonusType attackType) {
+        if (rolledHit <= 0) {
+            return 0;
+        }
+        if (attackType == AttackBonusType.CRUSH) {
+            return (rolledHit * 3 + 1) / 2;
+        }
+        if (attackType == AttackBonusType.SLASH) {
+            return Math.max(1, rolledHit * 3 / 4);
+        }
+        if (attackType == AttackBonusType.STAB) {
+            return Math.max(1, rolledHit / 2);
+        }
+        return rolledHit;
+    }
+
     public static boolean attackMainDoor(Player player, int objectId, int objectX, int objectY) {
         MainDoorState door = findMainDoor(objectId, objectX, objectY);
         if (door == null || door.mode != MainDoorMode.CLOSED
@@ -923,7 +958,8 @@ public final class CastleWarsEngineeringManager {
                 new WeaponCombatAttack(player, player, player.getWeaponProfile());
         int maxHit = Math.max(1,
                 (int) CombatManager.calculateMeleeMaxHit(player, attack));
-        int damage = GameUtil.randomInt(maxHit + 1);
+        int damage = calculateMainDoorStyleDamage(
+                GameUtil.randomInt(maxHit + 1), attackStyle.getAttackBonusType());
         if (damage <= 0) {
             player.getPacketSender().sendGameMessage("Your attack glances off the main doors.");
             return true;
@@ -1196,7 +1232,7 @@ public final class CastleWarsEngineeringManager {
         return null;
     }
 
-    private static boolean isClosedMainDoorObject(int objectId) {
+    public static boolean isClosedMainDoorObject(int objectId) {
         return objectId == SARADOMIN_MAIN_DOOR_LEFT_CLOSED_ID
                 || objectId == SARADOMIN_MAIN_DOOR_RIGHT_CLOSED_ID
                 || objectId == ZAMORAK_MAIN_DOOR_LEFT_CLOSED_ID
@@ -2469,6 +2505,14 @@ public final class CastleWarsEngineeringManager {
                 target.getX(), target.getY(), 0, 0);
         setCatapultOperational(enemy, false);
         return true;
+    }
+
+    /** Preserve a distinct burning state in the in-match castle status panel. */
+    public static String getCatapultStatusText(CastleWarsManager.Team team) {
+        if (team == null || !isCatapultOperational(team)) {
+            return "Destroyed";
+        }
+        return isCatapultBurning(team) ? "Burning" : "Operational";
     }
 
     public static boolean isCatapultOperational(CastleWarsManager.Team team) {
