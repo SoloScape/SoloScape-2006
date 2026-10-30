@@ -1,0 +1,40 @@
+name: Verify Castle Wars Prayer Drain
+
+on:
+  push:
+    branches:
+      - fix/castlewars-prayer-drain-443
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/World.java'
+      - 'Server/src/main/java/com/rs2/model/skill/prayer/PrayerManager.java'
+      - 'Server/src/test/java/com/rs2/model/Revision443PrayerDrainChecks.java'
+      - '.github/workflows/verify-castlewars-prayer-drain.yml'
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/World.java'
+      - 'Server/src/main/java/com/rs2/model/skill/prayer/PrayerManager.java'
+      - 'Server/src/test/java/com/rs2/model/Revision443PrayerDrainChecks.java'
+      - '.github/workflows/verify-castlewars-prayer-drain.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prayer-drain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile and test revision-443 prayer tick
+        working-directory: Server
+        run: |
+          mkdir -p /tmp/castlewars-prayer-classes
+          find src/main/java -name '*.java' > /tmp/castlewars-prayer-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d /tmp/castlewars-prayer-classes @/tmp/castlewars-prayer-sources.txt
+          javac -encoding UTF-8 -cp '/tmp/castlewars-prayer-classes:lib/*' -d /tmp/castlewars-prayer-classes src/test/java/com/rs2/model/Revision443PrayerDrainChecks.java
+          java -Djava.awt.headless=true -cp '/tmp/castlewars-prayer-classes:lib/*' com.rs2.model.Revision443PrayerDrainChecks
