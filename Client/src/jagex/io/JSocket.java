@@ -973,6 +973,7 @@ public class JSocket implements Runnable {
     }
 
     public static boolean loadWidget(int parent) {
+        if (unpackaged.GodWarsWidgets.load(parent)) return true;
         if (unpackaged.ChristmasEventSnow.loadOverlayWidget(parent)) return true;
         if (unpackaged.GrandExchangeWidgets.load(parent)) return true;
         if (parent < 0

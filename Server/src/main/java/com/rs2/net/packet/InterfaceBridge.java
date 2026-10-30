@@ -26,6 +26,7 @@ public final class InterfaceBridge {
         mappings.put(19018, 503);
         mappings.put(19101, 504);
         mappings.put(19103, 505); // developer item search
+        mappings.put(19556, 506); // runtime God Wars kill-count overlay
         mappings.put(3917, 320); // skills
         mappings.put(8714, 308); // legacy skill guide -> revision 443 skill guide
         mappings.put(638, 274);  // quest journal
@@ -126,6 +127,7 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
+        putRange(mappings, 19557, 506, 1, 9); // God Wars labels and kill counts
         // Native Castle Wars HUD (group 59): stock text components.
         // Score and flag icons are driven by varps 377/378 instead.
         put(mappings, 11346, 59, 1);  // Saradomin score label
@@ -631,7 +633,6 @@ public final class InterfaceBridge {
     private static Set<Integer> createCustomFlatGroups() {
         Set<Integer> ids = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
         ids.add(11877); // legacy snow overlay retained by the hybrid client
-        ids.add(19556); // custom God Wars kill-count overlay in client runtime cache
         ids.add(18890); // custom Grand Exchange offer overview
         ids.add(18939); // custom Grand Exchange offer editor
         ids.add(18984); // custom Grand Exchange offer status
@@ -643,7 +644,6 @@ public final class InterfaceBridge {
 
     private static Set<Integer> createCustomFlatComponents() {
         Set<Integer> ids = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
-        for (int id = 19557; id <= 19565; id++) ids.add(id);
         // Legacy quest-journal rows 19103 and 19497 do not exist in the stock
         // 443 widget cache. Sending either as a flat component makes the client
         // interpret it as group 0 with a huge child index and crash on login.

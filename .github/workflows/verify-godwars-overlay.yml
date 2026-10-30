@@ -1,0 +1,37 @@
+name: Verify God Wars Overlay
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Client/src/unpackaged/GodWarsWidgets.java'
+      - 'Client/src/unpackaged/Class68.java'
+      - 'Client/src/unpackaged/Class37.java'
+      - 'Client/src/jagex/io/JSocket.java'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Client/tests/GodWarsOverlayChecks.java'
+      - '.github/workflows/verify-godwars-overlay.yml'
+  pull_request:
+    paths:
+      - 'Client/src/**'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Client/tests/GodWarsOverlayChecks.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  godwars-overlay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile client and server and verify overlay packets
+        working-directory: Server
+        run: |
+          mkdir -p /tmp/godwars-overlay-classes
+          find src/main/java ../Client/src -name '*.java' > /tmp/godwars-overlay-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d /tmp/godwars-overlay-classes @/tmp/godwars-overlay-sources.txt
+          javac -encoding UTF-8 -cp '/tmp/godwars-overlay-classes:lib/*' -d /tmp/godwars-overlay-classes ../Client/tests/GodWarsOverlayChecks.java
+          java -Djava.awt.headless=true -cp '/tmp/godwars-overlay-classes:lib/*:../Client/src' unpackaged.GodWarsOverlayChecks

@@ -82,7 +82,10 @@ public class Class68
     
     public static void method1112(int i, byte i_2_) {
         // Runtime exchange groups have no corresponding cache archive to unload.
-        if (i >= 500 && i <= 505) return;
+        if (i >= 500 && i <= 506) return;
+        if (i < 0 || Class39_Sub5_Sub4.widgetsLoaded == null
+                || i >= Class39_Sub5_Sub4.widgetsLoaded.length
+                || Class62_Sub1.widgets == null || i >= Class62_Sub1.widgets.length) return;
 	if (i != -1 && Class39_Sub5_Sub4.widgetsLoaded[i]) {
 	    Class39_Sub5_Sub16.wigetFileLoader.removeChildBuffers(i);
 	    if (Class62_Sub1.widgets[i] != null) {
