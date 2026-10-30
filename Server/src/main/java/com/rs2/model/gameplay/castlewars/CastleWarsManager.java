@@ -28,8 +28,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 public final class CastleWarsManager {
@@ -237,6 +239,8 @@ public final class CastleWarsManager {
     public static final int MINIMUM_PLAYERS_PER_TEAM = 1;
     public static final int WAITING_DURATION_SECONDS = 5 * 60;
     public static final int GAME_DURATION_SECONDS = 20 * 60;
+    // Provisional: the modern Wiki records two minutes; the exact Dec-2006 threshold is unverified.
+    public static final long RECONNECT_GRACE_MILLIS = 2 * 60 * 1000L;
 
     private static final long DROPPED_FLAG_AUTO_RETURN_MILLIS = 45_000L;
 
@@ -292,6 +296,9 @@ public final class CastleWarsManager {
 
     private static final Map<Player, Team> waitingPlayers = new IdentityHashMap<Player, Team>();
     private static final Map<Player, Team> gamePlayers = new IdentityHashMap<Player, Team>();
+    private static final Map<String, DisconnectedParticipant> disconnectedParticipants =
+            new HashMap<String, DisconnectedParticipant>();
+    private static long gameGeneration;
     private static final Map<Player, ReplacementOffer> replacementOffers = new IdentityHashMap<Player, ReplacementOffer>();
     private static final Map<Player, Long> replacementOfferCooldowns = new IdentityHashMap<Player, Long>();
 
@@ -338,36 +345,151 @@ public final class CastleWarsManager {
         GameplayHelper.spawnNpc(LANTHUS_NPC_ID, 2440, 3089, 0, 2);
     }
 
+    public enum ReconnectDestination {
+        ARENA, WAITING_ROOM, LOBBY
+    }
+
+    /** Pure policy helper so timeout boundaries and match-end behaviour can be regression tested. */
+    public static ReconnectDestination reconnectDestination(boolean sameActiveMatch,
+            long logoutMillis, long matchEndMillis, long nowMillis) {
+        if (!sameActiveMatch || nowMillis >= matchEndMillis) {
+            return ReconnectDestination.LOBBY;
+        }
+        if (logoutMillis >= 0L && nowMillis >= logoutMillis
+                && nowMillis - logoutMillis <= RECONNECT_GRACE_MILLIS) {
+            return ReconnectDestination.ARENA;
+        }
+        return ReconnectDestination.WAITING_ROOM;
+    }
+
+    private static String reconnectKey(Player player) {
+        return player == null || player.getUsername() == null
+                ? null : player.getUsername().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * The character is saved immediately after this on the game-loop thread.
+     * Capture participation before the old Player object is unregistered, and
+     * return a carried flag so it cannot survive as equipment in the save.
+     */
+    public static void handlePlayerLogout(Player player) {
+        if (player == null) {
+            return;
+        }
+        waitingPlayers.remove(player);
+        replacementOffers.remove(player);
+        replacementOfferCooldowns.remove(player);
+        clearWaitingRoomGodTransformation(player);
+        Team team = gamePlayers.remove(player);
+        if (team != null) {
+            rememberDisconnectedParticipant(player, team, System.currentTimeMillis());
+        }
+    }
+
+    private static void rememberDisconnectedParticipant(Player player, Team team, long now) {
+        String key = reconnectKey(player);
+        if (!player.isBot && key != null && team != null && gameInProgress
+                && isCastleWarsMinigamePosition(player.getPosition())) {
+            long logoutMillis = now;
+            // disconnect() records this deadline before the disconnect queue
+            // saves the player (combat can delay that queue by up to 15 seconds).
+            long disconnectDeadline = player.getDisconnectGraceExpiresAtMillis();
+            if (disconnectDeadline >= 15_000L && disconnectDeadline - 15_000L <= now) {
+                logoutMillis = disconnectDeadline - 15_000L;
+            }
+            Position position = player.getPosition();
+            disconnectedParticipants.put(key, new DisconnectedParticipant(team, gameGeneration,
+                    logoutMillis, new Position(position.getX(), position.getY(), position.getPlane())));
+        }
+        returnCarriedFlagToBase(player);
+        clearFlagWeapon(player);
+        removeTemporaryCastleWarsInventoryItems(player);
+    }
+
+    private static int reservedReconnectSlots(Team team, long now) {
+        int reserved = 0;
+        for (DisconnectedParticipant participant : disconnectedParticipants.values()) {
+            if (participant.team == team && reconnectDestination(
+                    gameInProgress && participant.generation == gameGeneration,
+                    participant.logoutMillis, gameEndMillis, now) == ReconnectDestination.ARENA) {
+                ++reserved;
+            }
+        }
+        return reserved;
+    }
+
+    private static void setLoginPosition(Player player, Position destination) {
+        Position position = player.getPosition();
+        position.set(destination);
+        position.setPreviousX(destination.getX());
+        position.setPreviousY(destination.getY() + 1);
+    }
+
     public static boolean relocatePlayerOnLogin(Player player) {
-        if (player == null || !isCastleWarsMinigamePosition(player.getPosition())) {
+        if (player == null) {
             return false;
         }
 
-        // Purge any stale session entry left by the character that logged out.
+        // A newly loaded Player has a different identity from the logged-out one.
         cleanupWaitingPlayers();
         cleanupGamePlayers();
+        String key = reconnectKey(player);
+        DisconnectedParticipant participant = key == null ? null : disconnectedParticipants.remove(key);
+        if (!isCastleWarsMinigamePosition(player.getPosition())) {
+            return false;
+        }
+
         waitingPlayers.remove(player);
         gamePlayers.remove(player);
         replacementOffers.remove(player);
         replacementOfferCooldowns.remove(player);
         clearWaitingRoomGodTransformation(player);
-
-        returnCarriedFlagToBase(player);
+        // Never restore an old flag: its stand was reset on disconnection.
         clearFlagWeapon(player);
+        removeTemporaryCastleWarsInventoryItems(player);
+
+        ReconnectDestination destination = participant == null
+                ? ReconnectDestination.LOBBY
+                : reconnectDestination(gameInProgress && participant.generation == gameGeneration,
+                        participant.logoutMillis, gameEndMillis, System.currentTimeMillis());
+        if (destination == ReconnectDestination.ARENA
+                && getGamePlayerCountInternal(participant.team) < gameTeamCapacity) {
+            gamePlayers.put(player, participant.team);
+            equipTeamColours(player, participant.team);
+            setLoginPosition(player, participant.position);
+            player.getPacketSender().sendGameMessage("You rejoin your Castle Wars match.");
+            return true;
+        }
+
+        setCastleWarsAttackOption(player, false);
         removeTeamColours(player);
         removeBandages(player);
-        removeTemporaryCastleWarsInventoryItems(player);
         CastleWarsEngineeringManager.cleanupPlayerSupplies(player);
         restorePlayerAfterCastleWars(player);
 
-        // This runs before World.registerPlayer(), so update the saved position
-        // directly instead of using moveTo/applyTeleportPosition (which assume a
-        // registered player index).
-        Position position = player.getPosition();
-        position.set(CASTLE_WARS_LOBBY);
-        position.setPreviousX(CASTLE_WARS_LOBBY.getX());
-        position.setPreviousY(CASTLE_WARS_LOBBY.getY() + 1);
+        if (destination != ReconnectDestination.LOBBY && gameInProgress) {
+            waitingPlayers.put(player, participant.team);
+            equipTeamColours(player, participant.team);
+            setLoginPosition(player, participant.team == Team.SARADOMIN
+                    ? SARADOMIN_WAITING_ROOM : ZAMORAK_WAITING_ROOM);
+            player.getPacketSender().sendGameMessage(
+                    "Your Castle Wars reconnect window expired. You return to the waiting room.");
+            return true;
+        }
+
+        setLoginPosition(player, CASTLE_WARS_LOBBY);
         return true;
+    }
+
+    /** Restore the correct overlay after normal login packets have been sent. */
+    public static void refreshPlayerInterfaceOnLogin(Player player) {
+        Team team = gamePlayers.get(player);
+        if (team != null) {
+            setCastleWarsAttackOption(player, true);
+            updateGameInterface(player, System.currentTimeMillis());
+        } else if (waitingPlayers.containsKey(player)) {
+            updateWaitingRoomInterface(player, System.currentTimeMillis());
+        }
     }
 
     public static boolean isCastleWarsMinigamePosition(Position position) {
@@ -2464,6 +2586,8 @@ public final class CastleWarsManager {
         }
 
         IdentityHashMap<Player, Team> starters = new IdentityHashMap<Player, Team>(waitingPlayers);
+        ++gameGeneration;
+        disconnectedParticipants.clear();
         waitingPlayers.clear();
         replacementOffers.clear();
         replacementOfferCooldowns.clear();
@@ -2521,6 +2645,7 @@ public final class CastleWarsManager {
 
         IdentityHashMap<Player, Team> finishers = new IdentityHashMap<Player, Team>(gamePlayers);
         gamePlayers.clear();
+        disconnectedParticipants.clear();
         closeAllReplacementOfferInterfaces();
         replacementOffers.clear();
         replacementOfferCooldowns.clear();
@@ -2821,7 +2946,8 @@ public final class CastleWarsManager {
     private static boolean hasReplacementVacancy(Team team) {
         return gameInProgress
                 && gameTeamCapacity > 0
-                && getGamePlayerCountInternal(team) < gameTeamCapacity;
+                && getGamePlayerCountInternal(team)
+                        + reservedReconnectSlots(team, System.currentTimeMillis()) < gameTeamCapacity;
     }
 
     private static void processReplacementOffers(long now) {
@@ -2871,7 +2997,8 @@ public final class CastleWarsManager {
             }
         }
 
-        int vacancies = gameTeamCapacity - getGamePlayerCountInternal(team) - reserved;
+        int vacancies = gameTeamCapacity - getGamePlayerCountInternal(team)
+                - reservedReconnectSlots(team, now) - reserved;
         if (vacancies <= 0) {
             return;
         }
@@ -2949,7 +3076,7 @@ public final class CastleWarsManager {
         while (iterator.hasNext()) {
             Map.Entry<Player, Team> entry = iterator.next();
             if (!isOnline(entry.getKey())) {
-                returnCarriedFlagToBase(entry.getKey());
+                rememberDisconnectedParticipant(entry.getKey(), entry.getValue(), System.currentTimeMillis());
                 iterator.remove();
             }
         }
@@ -2965,6 +3092,20 @@ public final class CastleWarsManager {
     private static void closeAllReplacementOfferInterfaces() {
         for (Player player : replacementOffers.keySet()) {
             closeReplacementOfferInterface(player);
+        }
+    }
+
+    private static final class DisconnectedParticipant {
+        private final Team team;
+        private final long generation;
+        private final long logoutMillis;
+        private final Position position;
+
+        private DisconnectedParticipant(Team team, long generation, long logoutMillis, Position position) {
+            this.team = team;
+            this.generation = generation;
+            this.logoutMillis = logoutMillis;
+            this.position = position;
         }
     }
 

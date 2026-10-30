@@ -3509,8 +3509,6 @@ extends Entity {
             this.setAppearanceUpdateRequired(true);
             this.getUpdateState().setUpdateRequired(true);
             this.registered = true;
-            this.packetSender.sendMapRegion();
-            InitialVarps.send(this);
         }
         if (this.expiredMembershipRelocationRequired) {
             Player player2 = this;
@@ -3518,6 +3516,11 @@ extends Entity {
             player2.applyTeleportPosition(TeleportManager.RESPAWN_TELEPORT_POSITION);
         }
         boolean relocatedFromCastleWars = CastleWarsManager.relocatePlayerOnLogin(this);
+        // The revision-443 initial map region must use the final reconnect/lobby coordinates.
+        if (ServerSettings.clientBuild == 443) {
+            this.packetSender.sendMapRegion();
+            InitialVarps.send(this);
+        }
         Player player3 = this;
         int index = 0;
         if (ServerSettings.clientBuild != 443) {
@@ -3536,7 +3539,8 @@ extends Entity {
         if (ServerSettings.clientBuild != 443) {
             World.registerPlayer(this);
         }
-        if (relocatedFromCastleWars) {
+        if (relocatedFromCastleWars && !CastleWarsManager.isInGame(this)
+                && !CastleWarsManager.isWaitingPlayer(this)) {
             this.packetSender.sendGameMessage("You logged out during Castle Wars and have been returned to the lobby.");
         }
         this.packetSender.sendPostLoginState().syncPlayerConfigs();
@@ -3649,6 +3653,7 @@ extends Entity {
         if (this.isBot && this.botMode == 4 && this.totalPlaytimeMillis > 0L) {
             this.executeCheatCommand("bot", null, false);
         }
+        CastleWarsManager.refreshPlayerInterfaceOnLogin(this);
         if (ServerSettings.clientBuild == 443 && !this.isBot) {
             // The 443 client stops its locally started title theme when login succeeds.
             // Send the area's normal music immediately so players do not have to move

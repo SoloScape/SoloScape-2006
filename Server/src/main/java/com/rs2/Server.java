@@ -821,6 +821,7 @@ implements Runnable {
                         if (disconnectingPlayer.isInArea(1790, 2045, 4800, 4915)) {
                             disconnectingPlayer.moveTo(new Position(3053, 3246, 0));
                         }
+                        CastleWarsManager.handlePlayerLogout(disconnectingPlayer);
                         CharacterFileManager.savePlayer(disconnectingPlayer);
                         CharacterFileManager.refreshLiveHiscoreRecord(disconnectingPlayer);
                         if (ServerSettings.sqliteHiscoresEnabled) {
