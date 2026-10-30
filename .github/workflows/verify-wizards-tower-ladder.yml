@@ -5,6 +5,8 @@ on:
       - fix/issue-4-wizards-tower-basement-ladder
   pull_request:
     paths:
+      - 'Server/src/main/java/com/rs2/model/combat/AttackStyleDefinition.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/FirstObjectActionTask.java'
       - 'Server/src/main/java/com/rs2/model/objects/ObjectManager.java'
       - 'Server/src/main/java/com/rs2/model/interaction/InteractionDispatcher.java'
       - 'Server/src/test/java/WizardsTowerLadderChecks.java'
