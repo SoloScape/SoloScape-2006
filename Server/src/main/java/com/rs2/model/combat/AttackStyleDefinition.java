@@ -30,12 +30,21 @@ public class AttackStyleDefinition {
         startDelayedObjectMove(player, position, null);
     }
 
+    public static void startDelayedObjectMove(Player player, Position position, int animationId) {
+        startDelayedObjectMove(player, position, null, animationId);
+    }
+
     public static void startDelayedObjectMove(Player player, Position position, Runnable onArrival) {
+        startDelayedObjectMove(player, position, onArrival, 828);
+    }
+
+    private static void startDelayedObjectMove(Player player, Position position,
+                                               Runnable onArrival, int animationId) {
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("object travel delayed-move scheduled player=" + GameplayTrace.describe(player) + " destination=" + formatPosition(position) + " targetObjectId=" + player.getInteractionTargetId() + " targetX=" + player.getInteractionTargetX() + " targetY=" + player.getInteractionTargetY());
         }
         player.setActionLocked(true);
-        player.getUpdateState().setAnimation(828);
+        player.getUpdateState().setAnimation(animationId);
         // Tutorial travel replaces its instructions on arrival. Closing the
         // panel here exposes the normal chatbox during the climb animation.
         if (onArrival == null || player.getOpenInterfaceId() != 6179) {
