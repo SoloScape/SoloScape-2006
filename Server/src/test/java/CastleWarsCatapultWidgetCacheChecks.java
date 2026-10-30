@@ -24,6 +24,33 @@ public final class CastleWarsCatapultWidgetCacheChecks {
                 }
             }
             if (word.length() >= 5) strings.append(" [").append(word).append("]");
+            if (c.childId == 116 || c.childId == 117 || c.childId == 132
+                    || c.childId == 133 || c.childId == 146 || c.childId == 147
+                    || c.childId == 148 || c.childId == 149) {
+                java.nio.ByteBuffer b = java.nio.ByteBuffer.wrap(c.getData());
+                b.position(17); // legacy widget header: through hover target
+                int conditionCount = b.get() & 255;
+                StringBuilder conditions = new StringBuilder();
+                for (int i = 0; i < conditionCount; i++) {
+                    conditions.append(" ").append(b.get() & 255)
+                            .append("=").append(b.getShort() & 0xffff);
+                }
+                int scripts = b.get() & 255;
+                StringBuilder scriptsText = new StringBuilder();
+                for (int i = 0; i < scripts; i++) {
+                    int length = b.getShort() & 0xffff;
+                    scriptsText.append(" {");
+                    for (int j = 0; j < length; j++)
+                        scriptsText.append(j == 0 ? "" : ",").append(b.getShort() & 0xffff);
+                    scriptsText.append("}");
+                }
+                if (c.type == 6) {
+                    StringBuilder models = new StringBuilder();
+                    for (int i = 0; i < 7; i++) models.append(" ").append(b.getShort() & 0xffff);
+                    System.out.println("   model/details: conditions=" + conditions
+                            + " scripts=" + scriptsText + " modelFields=" + models);
+                }
+            }
             System.out.println("54:" + c.childId + " type=" + c.type
                     + " action=" + c.actionType + " xy=(" + c.x + "," + c.y
                     + ") size=" + c.width + "x" + c.height
