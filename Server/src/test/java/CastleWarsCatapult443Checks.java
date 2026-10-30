@@ -27,7 +27,7 @@ public final class CastleWarsCatapult443Checks {
                     "Wrong reverse catapult mapping for child " + CHILDREN[i]);
         }
         for (int i = 0; i < 4; i++) {
-            require(InterfaceBridge.translate(19660 + i)
+            require(InterfaceBridge.translate(19700 + i)
                             == (GROUP << 16 | new int[]{116, 117, 132, 133}[i]),
                     "Wrong native digit model mapping " + i);
         }
