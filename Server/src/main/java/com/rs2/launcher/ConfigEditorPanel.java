@@ -123,13 +123,13 @@ public final class ConfigEditorPanel extends JPanel {
         File workingDirectory = new File(System.getProperty("user.dir", ".")).getAbsoluteFile();
         File parentDirectory = workingDirectory.getParentFile();
         File siblingRuntimeConfig = parentDirectory == null
-            ? new File("../2006sp-Client/runtime/userConfig.cfg")
-            : new File(parentDirectory, "2006sp-Client/runtime/userConfig.cfg");
+            ? new File("../Client/runtime/userConfig.cfg")
+            : new File(parentDirectory, "Client/runtime/userConfig.cfg");
 
         File[] candidates = new File[]{
             siblingRuntimeConfig,
-            new File("../2006sp-Client/runtime/userConfig.cfg"),
-            new File("../2006sp-Client/userConfig.cfg"),
+            new File("../Client/runtime/userConfig.cfg"),
+            new File("../Client/userConfig.cfg"),
             new File("runtime/userConfig.cfg"),
             new File("userConfig.cfg")
         };
