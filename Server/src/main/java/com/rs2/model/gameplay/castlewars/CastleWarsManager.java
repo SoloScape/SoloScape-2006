@@ -992,12 +992,17 @@ public final class CastleWarsManager {
         return player.getInventoryManager().addItemPartial(new ItemStack(4049, amount));
     }
 
+    /** Castle Wars bandages heal 10% of maximum Hitpoints, rounded down. */
+    public static int calculateBandageHealing(int maxHitpoints) {
+        return Math.max(0, maxHitpoints / 10);
+    }
+
     public static boolean useBandage(Player player) {
         if (!isInGame(player) || player.getInventoryManager().getItemAmount(4049) <= 0) {
             return false;
         }
         int maxHitpoints = player.getMaxHitpoints();
-        int healAmount = Math.max(1, (int)Math.ceil(maxHitpoints * 0.10));
+        int healAmount = calculateBandageHealing(maxHitpoints);
         int healed = Math.min(maxHitpoints, player.getCurrentHitpoints() + healAmount);
         player.getInventoryManager().removeItem(new ItemStack(4049, 1));
         player.setCurrentHitpoints(healed);
