@@ -3,7 +3,9 @@ import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.interaction.AlKharidGateToll;
 import com.rs2.model.interaction.InteractionDispatcher;
-import com.rs2.model.interaction.SecondObjectActionTask;
+import com.rs2.model.interaction.FourthObjectActionTask;
+import com.rs2.model.interaction.ObjectActionRouter;
+import com.rs2.model.interaction.InteractionType;
 import com.rs2.model.interaction.FirstNpcActionTask;
 import com.rs2.model.dialogue.DialogueManager;
 import com.rs2.model.npc.Npc;
@@ -42,6 +44,10 @@ public final class AlKharidGateTollChecks {
                     System.out.println("Gate " + gateId + " menu slot " + (slot + 1)
                             + " action=" + definition.getAction(slot));
                 }
+                require("Pay-toll(10gp)".equals(definition.getAction(3)),
+                        "Pay-toll must be the gate's actual fourth cache action");
+                require(ObjectActionRouter.legacyRoute(4) == InteractionType.FOURTH_OBJECT,
+                        "Revision 443 fourth object option was misrouted");
             }
             require(WorldObjectLookup.findObjectByIdAt(2882, 3268, 3227, 0) != null,
                     "South gate leaf missing from cache");
@@ -62,7 +68,8 @@ public final class AlKharidGateTollChecks {
             require(AlKharidGateToll.isTollGate(2882, 3268, 3228, 0),
                     "Alternate north gate-leaf mapping should accept pay-toll");
 
-            // The actual second object action must be wired, not just the guard dialogue.
+            // The cached Pay-toll menu is the FOURTH object option, not the second.
+            // Exercise the actual fourth-click handler (both leaves and sides).
             checkPayTollClick(2882, 3227, 3267, 0, 20, 10, true);
             checkPayTollClick(2883, 3228, 3268, 0, 20, 10, true);
             checkPayTollClick(2882, 3227, 3267, 0, 9, 9, false);
@@ -98,11 +105,11 @@ public final class AlKharidGateTollChecks {
         player.setInteractionTargetPlane(0);
         ObjectManager.prepareObjectInteractionMovement(player, gateId, 3268, gateY);
         WorldObject gate = com.rs2.model.skill.SkillActionHelper.findWorldObjectById(gateId, 3268, gateY, 0);
-        require(gate != null, "Gate not found for second-click");
+        require(gate != null, "Gate not found for fourth-click");
         require(InteractionDispatcher.canReachObjectInteraction(player, gate),
                 "Pay-toll cannot be reached from x=" + playerX);
 
-        new SecondObjectActionTask(1, true, player, player.nextActionSequence(),
+        new FourthObjectActionTask(1, true, player, player.nextActionSequence(),
                 gateId, 3268, gateY, 0).execute();
         require(player.getInventoryManager().getItemAmount(995) == expectedCoins,
                 "Wrong toll for quest stage " + questStage + " from x=" + playerX);
