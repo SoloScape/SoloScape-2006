@@ -134,6 +134,8 @@ public final class AlKharidGateTollChecks {
         socket.set(player, transport);
         player.setOutboundCipher(new IsaacCipher(new int[4]));
         player.setPosition(new Position(3266, 3226, 0));
+        player.setSize(1);
+        guard.setSize(1);
         player.setQuestState(11, 0);
         player.getInventoryManager().getContainer().setItem(0, new ItemStack(995, 20));
         player.setInteractionTargetId(borderGuardId);
