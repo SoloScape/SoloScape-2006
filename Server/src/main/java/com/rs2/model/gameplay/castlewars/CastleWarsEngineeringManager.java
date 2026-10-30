@@ -1702,6 +1702,10 @@ public final class CastleWarsEngineeringManager {
         return state == null ? 0 : state.getHitpoints();
     }
 
+    static long barricadeAttackDelayMillis(int weaponDelayTicks) {
+        return Math.max(1, weaponDelayTicks) * GAME_TICK_MILLIS;
+    }
+
     /**
      * Called each interaction tick until the target is destroyed or the player
      * interrupts the action. Returns true while melee attacks should continue.
@@ -1743,7 +1747,7 @@ public final class CastleWarsEngineeringManager {
         player.getUpdateState().setAnimation(
                 player.getWeaponProfile().getAttackAnimations()[fightMode]);
         barricadeAttackReadyAt.put(player, Long.valueOf(now
-                + Math.max(1, player.getWeaponProfile().getAttackDelay()) * GAME_TICK_MILLIS));
+                + barricadeAttackDelayMillis(player.getWeaponProfile().getAttackDelay())));
 
         // Use melee max-hit calculation without hitting an entity or awarding XP.
         WeaponCombatAttack attack =
