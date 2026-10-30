@@ -94,6 +94,7 @@ public final class CastleWarsEngineeringManager {
     private static final int CATAPULT_MISS_RADIUS = 1;
 
     private static final int MAIN_DOOR_MAX_HITPOINTS = 100;
+    public static final int BARRICADE_MAX_HITPOINTS = 50;
     private static final int MAIN_DOOR_PLANE = 0;
     private static final int THIEVING_SKILL_INDEX = 17;
     private static final int SIDE_DOOR_MIN_THIEVING_LEVEL = 1;
@@ -143,6 +144,8 @@ public final class CastleWarsEngineeringManager {
     private static int catapultAimLeftButtonId = CATAPULT_AIM_LEFT_BUTTON_ID;
     private static int catapultAimRightButtonId = CATAPULT_AIM_RIGHT_BUTTON_ID;
     private static final Map<Player, Long> mainDoorAttackReadyAt =
+            new IdentityHashMap<Player, Long>();
+    private static final Map<Player, Long> barricadeAttackReadyAt =
             new IdentityHashMap<Player, Long>();
     private static final MainDoorState saradominMainDoor = new MainDoorState(
             CastleWarsManager.Team.SARADOMIN,
@@ -196,6 +199,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
+        barricadeAttackReadyAt.clear();
     }
 
     public static void cleanupAfterGame() {
@@ -212,6 +216,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
+        barricadeAttackReadyAt.clear();
     }
 
     public static boolean handleSupplyTable(Player player, int objectId) {
@@ -1291,6 +1296,7 @@ public final class CastleWarsEngineeringManager {
     }
 
     public static void cleanupPlayerSupplies(Player player) {
+        barricadeAttackReadyAt.remove(player);
         int[] ids = new int[]{ROCK_ITEM_ID, EXPLOSIVE_POTION_ID, BARRICADE_ITEM_ID,
                 CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, BRONZE_PICKAXE_ID,
                 TINDERBOX_ITEM_ID, EMPTY_BUCKET_ITEM_ID, BUCKET_OF_WATER_ITEM_ID};
@@ -1683,6 +1689,73 @@ public final class CastleWarsEngineeringManager {
                 position.getPlane(), 0, 10, true);
         barricades.put(key, new BarricadeState(team, position, objectId));
         player.getUpdateState().setAnimation(827);
+        return true;
+    }
+
+    public static boolean isBarricadeObject(int objectId) {
+        return objectId == BARRICADE_OBJECT_SARADOMIN
+                || objectId == BARRICADE_OBJECT_ZAMORAK;
+    }
+
+    public static int getBarricadeHitpoints(Position position) {
+        BarricadeState state = position == null ? null : barricades.get(key(position));
+        return state == null ? 0 : state.getHitpoints();
+    }
+
+    /**
+     * Called each interaction tick until the target is destroyed or the player
+     * interrupts the action. Returns true while melee attacks should continue.
+     */
+    public static boolean attackBarricade(Player player, int objectId, Position position) {
+        if (player == null || position == null || !isBarricadeObject(objectId)
+                || player.isDead() || player.isStunned()
+                || !CastleWarsManager.isInGame(player)) {
+            return false;
+        }
+        BarricadeState state = barricades.get(key(position));
+        if (state == null || state.objectId != objectId
+                || !isInInteractionRange(player, state.position, 1)) {
+            return false;
+        }
+
+        int fightMode = player.getFightMode();
+        AttackStyleDefinition[] styles =
+                player.getWeaponProfile().getInterfaceDefinition().getAttackStyles();
+        if (fightMode < 0 || fightMode >= styles.length
+                || fightMode >= player.getWeaponProfile().getAttackAnimations().length) {
+            return false;
+        }
+        if (styles[fightMode].getCombatType() != CombatType.MELEE) {
+            player.getPacketSender().sendGameMessage(
+                    "You need to use a melee attack to damage a barricade.");
+            return false;
+        }
+
+        // The target occupies a blocked tile. Never path through it while attacking.
+        player.getMovementQueue().clear();
+        player.getMovementQueue().clearMovementActions();
+        long now = System.currentTimeMillis();
+        Long readyAt = barricadeAttackReadyAt.get(player);
+        if (readyAt != null && now < readyAt.longValue()) {
+            return true;
+        }
+        player.getUpdateState().setFacePosition(position.centerForSize(1));
+        player.getUpdateState().setAnimation(
+                player.getWeaponProfile().getAttackAnimations()[fightMode]);
+        barricadeAttackReadyAt.put(player, Long.valueOf(now
+                + Math.max(1, player.getWeaponProfile().getAttackDelay()) * GAME_TICK_MILLIS));
+
+        // Use melee max-hit calculation without hitting an entity or awarding XP.
+        WeaponCombatAttack attack =
+                new WeaponCombatAttack(player, player, player.getWeaponProfile());
+        int maxHit = Math.max(1,
+                (int) CombatManager.calculateMeleeMaxHit(player, attack));
+        int damage = GameUtil.randomInt(maxHit + 1);
+        if (damage > 0 && state.takeDamage(damage) == 0) {
+            removeBarricade(state);
+            player.getPacketSender().sendGameMessage("You destroy the barricade.");
+            return false;
+        }
         return true;
     }
 
@@ -2543,17 +2616,29 @@ public final class CastleWarsEngineeringManager {
         }
     }
 
-    private static final class BarricadeState {
+    static final class BarricadeState {
         private final CastleWarsManager.Team team;
         private final Position position;
         private final int objectId;
+        private int hitpoints = BARRICADE_MAX_HITPOINTS;
         private boolean burning;
         private long burnExpiresAt;
 
-        private BarricadeState(CastleWarsManager.Team team, Position position, int objectId) {
+        BarricadeState(CastleWarsManager.Team team, Position position, int objectId) {
             this.team = team;
             this.position = position.copy();
             this.objectId = objectId;
+        }
+
+        int getHitpoints() {
+            return hitpoints;
+        }
+
+        int takeDamage(int damage) {
+            if (damage > 0) {
+                hitpoints = Math.max(0, hitpoints - damage);
+            }
+            return hitpoints;
         }
     }
 }
