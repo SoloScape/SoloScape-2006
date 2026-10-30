@@ -138,6 +138,10 @@ public final class CastleWarsEngineeringManager {
             new IdentityHashMap<Player, Long>();
     private static final Map<Player, CatapultAim> catapultAims =
             new IdentityHashMap<Player, CatapultAim>();
+    // Keep match-issued supplies separate from the player's existing inventory.
+    // A player's first grant of each item ID establishes the quantity to protect.
+    private static final Map<Player, Map<Integer, IssuedSupply>> issuedSupplies =
+            new IdentityHashMap<Player, Map<Integer, IssuedSupply>>();
     private static int catapultAimUpButtonId = CATAPULT_AIM_UP_BUTTON_ID;
     private static int catapultAimDownButtonId = CATAPULT_AIM_DOWN_BUTTON_ID;
     private static int catapultAimLeftButtonId = CATAPULT_AIM_LEFT_BUTTON_ID;
@@ -196,6 +200,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
+        issuedSupplies.clear();
     }
 
     public static void cleanupAfterGame() {
@@ -212,6 +217,7 @@ public final class CastleWarsEngineeringManager {
         catapultReadyAt.clear();
         catapultAims.clear();
         mainDoorAttackReadyAt.clear();
+        issuedSupplies.clear();
     }
 
     public static boolean handleSupplyTable(Player player, int objectId) {
@@ -245,7 +251,9 @@ public final class CastleWarsEngineeringManager {
             player.getPacketSender().sendGameMessage("Not enough space in your inventory.");
             return true;
         }
-        player.getInventoryManager().addItem(new ItemStack(itemId, 1));
+        if (issueSupply(player, itemId, 1) == 0) {
+            return true;
+        }
         player.getUpdateState().setAnimation(881);
         player.getPacketSender().sendGameMessage(message);
         return true;
@@ -1287,17 +1295,53 @@ public final class CastleWarsEngineeringManager {
                 && itemId != BRONZE_PICKAXE_ID && itemId != TOOLKIT_ID) {
             return 0;
         }
-        return player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
+        return issueSupply(player, itemId, amount);
+    }
+
+    // Package-private so the ownership regression checks can exercise the
+    // real grant path without requiring a running Castle Wars match.
+    static int issueSupply(Player player, int itemId, int amount) {
+        if (player == null || amount <= 0) {
+            return 0;
+        }
+        int before = player.getInventoryManager().getItemAmount(itemId);
+        int granted = player.getInventoryManager().addItemPartial(new ItemStack(itemId, amount));
+        if (granted <= 0) {
+            return 0;
+        }
+
+        Map<Integer, IssuedSupply> supplies = issuedSupplies.get(player);
+        if (supplies == null) {
+            supplies = new HashMap<Integer, IssuedSupply>();
+            issuedSupplies.put(player, supplies);
+        }
+        IssuedSupply supply = supplies.get(itemId);
+        if (supply == null) {
+            supply = new IssuedSupply(before);
+            supplies.put(itemId, supply);
+        }
+        supply.granted += granted;
+        return granted;
     }
 
     public static void cleanupPlayerSupplies(Player player) {
-        int[] ids = new int[]{ROCK_ITEM_ID, EXPLOSIVE_POTION_ID, BARRICADE_ITEM_ID,
-                CLIMBING_ROPE_ITEM_ID, TOOLKIT_ID, BRONZE_PICKAXE_ID,
-                TINDERBOX_ITEM_ID, EMPTY_BUCKET_ITEM_ID, BUCKET_OF_WATER_ITEM_ID};
-        for (int id : ids) {
-            int amount = player.getInventoryManager().getItemAmount(id);
-            if (amount > 0) {
-                player.getInventoryManager().removeItem(new ItemStack(id, amount));
+        if (player == null) {
+            return;
+        }
+        Map<Integer, IssuedSupply> supplies = issuedSupplies.remove(player);
+        if (supplies == null) {
+            return;
+        }
+        for (Map.Entry<Integer, IssuedSupply> entry : supplies.entrySet()) {
+            int itemId = entry.getKey();
+            IssuedSupply supply = entry.getValue();
+            int current = player.getInventoryManager().getItemAmount(itemId);
+            // Supplies can be used or dropped during play. Never take the
+            // quantity the player already owned before Castle Wars issued any.
+            int extra = Math.max(0, current - supply.protectedAmount);
+            int toRemove = Math.min(extra, supply.granted);
+            if (toRemove > 0) {
+                player.getInventoryManager().removeItem(new ItemStack(itemId, toRemove));
             }
         }
     }
@@ -2527,6 +2571,15 @@ public final class CastleWarsEngineeringManager {
                 }
             }
             return false;
+        }
+    }
+
+    private static final class IssuedSupply {
+        private final int protectedAmount;
+        private int granted;
+
+        private IssuedSupply(int protectedAmount) {
+            this.protectedAmount = protectedAmount;
         }
     }
 
