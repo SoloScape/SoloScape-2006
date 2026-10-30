@@ -96,13 +96,45 @@ public final class CastleWarsCatapult443Checks {
                     CastleWarsEngineeringManager.ROCK_ITEM_ID) == before,
                     "Aiming must not consume ammunition");
 
+            // Humans must never use the bot-only automatic targeting entry point,
+            // even if they belong to a valid Castle Wars team and have ammunition.
+            player.isBot = false;
+            try {
+                require(!CastleWarsEngineeringManager.fireCatapult(player),
+                        "A human operator must choose manual catapult coordinates");
+            } finally {
+                player.isBot = true;
+            }
+            require(player.getInventoryManager().getItemAmount(
+                    CastleWarsEngineeringManager.ROCK_ITEM_ID) == before,
+                    "Rejecting automatic targeting must not consume a rock");
+
             nativeWidgetButton(player, 158); // Fire at the selected coordinates
             require(player.getInventoryManager().getItemAmount(
                     CastleWarsEngineeringManager.ROCK_ITEM_ID) == before - 1,
                     "Fire Catapult did not consume exactly one rock");
             require(player.getOpenInterfaceId() == ROOT,
                     "Firing should leave the aiming interface open");
+
+            // The legacy client must use exactly the same open/aim state
+            // machine, with no additional ammunition spent on opening.
+            ServerSettings.clientBuild = 377;
+            require(CastleWarsEngineeringManager.operateCatapult(player,
+                    CastleWarsEngineeringManager.SARADOMIN_CATAPULT_ID),
+                    "Operating the legacy catapult failed");
+            require(player.getOpenInterfaceId() == ROOT,
+                    "Legacy catapult must also open the aiming interface");
+            require(aimCoordinate(player, "x") == 15 && aimCoordinate(player, "y") == 15,
+                    "Legacy catapult aim was not centered");
+            require(player.getInventoryManager().getItemAmount(
+                    CastleWarsEngineeringManager.ROCK_ITEM_ID) == before - 1,
+                    "Opening the legacy aiming interface consumed a rock");
+            require(CastleWarsEngineeringManager.handleCatapultButton(player, 11321),
+                    "Legacy aim-up control was not accepted");
+            require(aimCoordinate(player, "x") == 16,
+                    "Legacy aim-up control did not update the target");
         } finally {
+            ServerSettings.clientBuild = 443;
             teams.remove(player);
             World.players[1] = null;
             player.setIndex(-1);
