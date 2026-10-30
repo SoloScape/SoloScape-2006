@@ -40,11 +40,19 @@ implements PacketHandler {
             case 136:
             case 139: {
                 int targetIndex = incomingPacket.getReader().readSignedShort(true, ByteOrder.LITTLE);
-                if (targetIndex < 0 || targetIndex > World.getPlayers().length) {
+                if (targetIndex < 0 || targetIndex >= World.getPlayers().length) {
                     return;
                 }
                 Player targetPlayer = World.getPlayers()[targetIndex];
                 if (targetPlayer == null || !GameUtil.isWithinDistance(player.getPosition(), targetPlayer.getPosition(), 15)) {
+                    return;
+                }
+                // The legacy client's fourth player option is opcode 139.
+                // Castle Wars temporarily replaces its "Trade with" label
+                // with "Take from"; do not turn that click into a trade.
+                if (incomingPacket.getOpcode() == 139
+                        && "Take from".equalsIgnoreCase(player.playerOptionTextCache[3])) {
+                    queueTeammateFlagTake(player, targetPlayer);
                     return;
                 }
                 int actionSequence = player.nextActionSequence();
@@ -249,17 +257,7 @@ implements PacketHandler {
                 player.setMovementTarget(target);
                 World.scheduleTickTask(new TradeRequestTask(null, 1, target, player, player.nextActionSequence()));
             } else if (option == 4 && "Take from".equalsIgnoreCase(label)) {
-                if (!CastleWarsManager.canTakeEnemyFlagFromTeammate(
-                        player, target, System.currentTimeMillis())) {
-                    player.packetSender.sendGameMessage(
-                            "You can only take the enemy flag from a teammate who has held it for three minutes.");
-                    return;
-                }
-                player.setInteractionTarget(target);
-                player.setAttackRange(1);
-                player.setMovementTarget(target);
-                World.scheduleTickTask(new TakeFromTeammateFlagTask(
-                        player, target, player.nextActionSequence()));
+                queueTeammateFlagTake(player, target);
             } else if ("Attack".equalsIgnoreCase(label) || "Challenge".equalsIgnoreCase(label)) {
                 player.setQueuedCombatSpell(null);
                 player.getUpdateState().setFaceEntity(target.getEncodedIndex());
@@ -362,6 +360,25 @@ implements PacketHandler {
                 CombatManager.startCombat(player, target);
             }
         }
+    }
+
+    /**
+     * Queue the same flag-transfer task for legacy option 4 (opcode 139)
+     * and revision-443 option 4. The task and transfer method independently
+     * revalidate the carrier, team, three-minute timer and reach.
+     */
+    private static void queueTeammateFlagTake(Player player, Player carrier) {
+        if (!CastleWarsManager.canTakeEnemyFlagFromTeammate(
+                player, carrier, System.currentTimeMillis())) {
+            player.packetSender.sendGameMessage(
+                    "You can only take the enemy flag from a teammate who has held it for three minutes.");
+            return;
+        }
+        player.setInteractionTarget(carrier);
+        player.setAttackRange(1);
+        player.setMovementTarget(carrier);
+        World.scheduleTickTask(new TakeFromTeammateFlagTask(
+                player, carrier, player.nextActionSequence()));
     }
 
     public static void dispatchDeferredTradeRequest(Player player, Player player2) {

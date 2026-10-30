@@ -1,0 +1,41 @@
+name: Verify Castle Wars Teammate Flag Take
+on:
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/net/packet/handler/PlayerInteractionPacketHandler.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/TakeFromTeammateFlagTask.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsManager.java'
+      - 'Server/src/test/java/CastleWarsLegacyFlagTakeRoutingChecks.java'
+      - 'Server/src/test/java/CastleWarsTeammateFlagTakeChecks.java'
+      - '.github/workflows/verify-castlewars-teammate-flag-take.yml'
+  push:
+    branches:
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/net/packet/handler/PlayerInteractionPacketHandler.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/TakeFromTeammateFlagTask.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsManager.java'
+      - 'Server/src/test/java/CastleWarsLegacyFlagTakeRoutingChecks.java'
+      - 'Server/src/test/java/CastleWarsTeammateFlagTakeChecks.java'
+      - '.github/workflows/verify-castlewars-teammate-flag-take.yml'
+  workflow_dispatch:
+jobs:
+  flag-take:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and verify Castle Wars teammate flag interactions
+        working-directory: Server
+        run: |
+          mkdir -p build-castlewars-flag-take-checks
+          find src/main/java -name '*.java' > /tmp/castlewars-flag-take-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-flag-take-checks @/tmp/castlewars-flag-take-sources.txt
+          javac -encoding UTF-8 -cp 'build-castlewars-flag-take-checks:lib/*' -d build-castlewars-flag-take-checks \
+            src/test/java/CastleWarsTeammateFlagTakeChecks.java \
+            src/test/java/CastleWarsLegacyFlagTakeRoutingChecks.java
+          java -cp 'build-castlewars-flag-take-checks:lib/*' CastleWarsTeammateFlagTakeChecks
+          java -cp 'build-castlewars-flag-take-checks:lib/*' CastleWarsLegacyFlagTakeRoutingChecks
