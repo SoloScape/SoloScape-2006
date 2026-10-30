@@ -35,6 +35,14 @@ public final class AlKharidGateTollChecks {
             ObjectDefinition.loadRevision443();
             WorldObjectLookup.loadWorldObjects();
             WalkingCollisionMap.loadCollisionMaps();
+            for (int gateId : new int[]{2882, 2883}) {
+                ObjectDefinition definition = ObjectDefinition.forId(gateId);
+                System.out.println("Gate definition id=" + gateId + " name=" + definition.getName());
+                for (int slot = 0; slot < 5; slot++) {
+                    System.out.println("Gate " + gateId + " menu slot " + (slot + 1)
+                            + " action=" + definition.getAction(slot));
+                }
+            }
             require(WorldObjectLookup.findObjectByIdAt(2882, 3268, 3227, 0) != null,
                     "South gate leaf missing from cache");
             require(WorldObjectLookup.findObjectByIdAt(2883, 3268, 3228, 0) != null,
