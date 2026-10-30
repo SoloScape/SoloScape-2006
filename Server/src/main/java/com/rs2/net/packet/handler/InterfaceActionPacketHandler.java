@@ -4,6 +4,7 @@ import com.rs2.model.player.EmoteUnlockManager;
 import com.rs2.model.player.Player;
 import com.rs2.model.dialogue.DialogueManager;
 import com.rs2.model.gameplay.castlewars.CastleWarsManager;
+import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.player.BankManager;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
@@ -277,6 +278,16 @@ public final class InterfaceActionPacketHandler implements PacketHandler {
                     }
                     return;
                 }
+            }
+            // Catapult group 54 uses native action-type controls. Some clients
+            // deliver these as WIDGET_SELECT rather than INTERFACE_BUTTON.
+            // Only accept them while the actual catapult panel is open.
+            if ((packedWidgetId >>> 16) == 54 && player.getOpenInterfaceId() == 11169) {
+                int catapultButton = InterfaceBridge.toLegacyComponent(packedWidgetId);
+                if (catapultButton != InterfaceBridge.UNMAPPED) {
+                    buttonHandler.handleButton(player, catapultButton);
+                }
+                return;
             }
             // Native fletching selection widgets are action-type-6 controls.
             // Each of the 1/2/3-item chatbox groups has four actions per item.

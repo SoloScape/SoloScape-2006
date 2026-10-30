@@ -89,6 +89,12 @@ public final class CastleWarsEngineeringManager {
     private static final int CATAPULT_AIM_RIGHT_BUTTON_ID = 11323;
     private static final int CATAPULT_AIM_LEFT_BUTTON_ID = 11324;
     private static final int CATAPULT_FIRE_BUTTON_ID = 11329;
+    // Synthetic ids for the four native 443 3D digit widgets (group 54).
+    private static final int CATAPULT_443_X_TENS = 19700;
+    private static final int CATAPULT_443_X_ONES = 19701;
+    private static final int CATAPULT_443_Y_TENS = 19702;
+    private static final int CATAPULT_443_Y_ONES = 19703;
+    private static final int CATAPULT_443_ZERO_MODEL = 4857;
     private static final int CATAPULT_MAX_AIM = 30;
     private static final int CATAPULT_AIM_SCALE = 2;
     private static final int CATAPULT_MISS_RADIUS = 1;
@@ -378,22 +384,9 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
-        // The old 377 aiming panel (11169) has no revision-443 widget
-        // mapping. showInterface silently drops it for build 443, leaving
-        // players unable to fire at all. Until a native 443 aiming panel is
-        // available, a click fires at an automatically selected battlefield
-        // target using the normal rock/reload/damage rules.
-        if (ServerSettings.clientBuild == 443) {
-            if (fireCatapult(player)) {
-                player.getPacketSender().sendGameMessage(
-                        "You fire the catapult at the battlefield!");
-            } else {
-                player.getPacketSender().sendGameMessage(
-                        "The catapult is still reloading.");
-            }
-            return true;
-        }
-
+        // Both revisions expose a player-controlled aiming panel. The
+        // interface bridge maps legacy 11169 to native group 54 for build 443.
+        // Automatic battlefield targeting remains reserved for specialist bots.
         CatapultAim aim = new CatapultAim(team);
         catapultAims.put(player, aim);
         player.getPacketSender().showInterface(CATAPULT_INTERFACE_ID);
@@ -494,6 +487,20 @@ public final class CastleWarsEngineeringManager {
     }
 
     private static void refreshCatapultAimInterface(Player player, CatapultAim aim) {
+        if (ServerSettings.clientBuild == 443) {
+            // Native group 54 uses 3D numeral models for the X/Y counters.
+            // The stock zero model is 4857; successive numeral models are
+            // used for the digits 1-9.
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_X_TENS, CATAPULT_443_ZERO_MODEL + aim.x / 10);
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_X_ONES, CATAPULT_443_ZERO_MODEL + aim.x % 10);
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_Y_TENS, CATAPULT_443_ZERO_MODEL + aim.y / 10);
+            player.getPacketSender().sendInterfaceModelId(
+                    CATAPULT_443_Y_ONES, CATAPULT_443_ZERO_MODEL + aim.y % 10);
+            return;
+        }
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.x), CATAPULT_AIM_X_TEXT_ID);
         player.getPacketSender().sendInterfaceText(twoDigitAimValue(aim.y), CATAPULT_AIM_Y_TEXT_ID);
     }
@@ -2080,7 +2087,11 @@ public final class CastleWarsEngineeringManager {
         return -1;
     }
 
+    /** Optional bot-only automatic targeting; human operators use the aim panel. */
     public static boolean fireCatapult(Player player) {
+        if (player == null || !player.isBot) {
+            return false;
+        }
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
         if (team == null) {
             return false;
