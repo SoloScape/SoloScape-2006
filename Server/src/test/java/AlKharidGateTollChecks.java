@@ -133,6 +133,7 @@ public final class AlKharidGateTollChecks {
         player.setEncodedIndex(32768);
         socket.set(player, transport);
         player.setOutboundCipher(new IsaacCipher(new int[4]));
+        player.setUsername("TollTester");
         player.setPosition(new Position(3266, 3226, 0));
         player.setSize(1);
         guard.setSize(1);
