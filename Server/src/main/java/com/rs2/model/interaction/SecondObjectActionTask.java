@@ -59,6 +59,14 @@ extends TickTask {
                 || this.player.isStunned()) {
             return;
         }
+        // Barricades are dynamic blocking objects; keep attacking on weapon ticks.
+        if (CastleWarsEngineeringManager.isBarricadeObject(this.objectId)) {
+            if (!CastleWarsEngineeringManager.attackBarricade(this.player, this.objectId,
+                    new Position(this.objectX, this.objectY, this.objectPlane))) {
+                this.stop();
+            }
+            return;
+        }
         WorldObject worldObject = SkillActionHelper.findWorldObjectById(this.objectId, this.objectX, this.objectY, this.objectPlane);
         if (worldObject == null) {
             return;
