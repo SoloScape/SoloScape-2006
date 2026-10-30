@@ -2354,6 +2354,29 @@ extends Entity {
                 this.packetSender.showInterface(19103);
             }
             return;
+        } else if (password.equals("cluemerchant")) {
+            int found = 0;
+            for (Npc npc : World.getNpcs()) {
+                if (npc == null || npc.getNpcId() != 3886 || !npc.isActive() || npc.isDead()) {
+                    continue;
+                }
+                Position position = npc.getPosition();
+                this.packetSender.sendGameMessage("Clue merchant " + (++found) + ": "
+                        + position.getX() + ", " + position.getY()
+                        + ", plane " + position.getPlane());
+            }
+            if (found == 0) {
+                this.packetSender.sendGameMessage(
+                        "No clue merchants are currently spawned.");
+                if (!ServerSettings.clueMerchantEnabled || ServerSettings.freeToPlayWorld) {
+                    this.packetSender.sendGameMessage(
+                            "Clue merchants require CLUE_MERCHANT enabled and P2P_WORLD set to 1.");
+                } else {
+                    this.packetSender.sendGameMessage(
+                            "The spawn task runs every 1500 ticks (about 15 minutes).");
+                }
+            }
+            return;
         } else if (password.equals("pos")) {
             this.packetSender.sendGameMessage(
                     this.getPosition().getX() + ", "
