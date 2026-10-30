@@ -193,6 +193,12 @@ public final class CastleWarsTicketAndBucketChecks {
         Field teamsField = field(CastleWarsManager.class, "gamePlayers");
         Map<Player, Team> teams = (Map<Player, Team>) teamsField.get(null);
         player.setPosition(CastleWarsEngineeringManager.SARADOMIN_CATAPULT.copy());
+        // getGameTeam() evicts disconnected participants; register this fixture
+        // in World.players as the live game loop does.
+        final int fixtureIndex = 31;
+        Player previousPlayer = com.rs2.model.World.players[fixtureIndex];
+        player.setIndex(fixtureIndex);
+        com.rs2.model.World.players[fixtureIndex] = player;
         teams.put(player, Team.ZAMORAK);
         require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
                 "Could not refill bucket for catapult ownership test");
@@ -213,6 +219,8 @@ public final class CastleWarsTicketAndBucketChecks {
         } finally {
             burning.setBoolean(null, original);
             teams.remove(player);
+            com.rs2.model.World.players[fixtureIndex] = previousPlayer;
+            player.setIndex(-1);
         }
     }
 
