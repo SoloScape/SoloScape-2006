@@ -4036,7 +4036,12 @@ public class DialogueManager {
                 break;
             }
             case 9999: {
-                player.getDialogueManager().setDialogueNpcId(926);
+                // Use the actual guard's chathead when talking directly to an NPC.
+                // Gate-object clicks have no NPC target and use the legacy fallback.
+                int guardId = player.getInteractionTargetId();
+                player.getDialogueManager().setDialogueNpcId(
+                        guardId >= 0 && "Border Guard".equalsIgnoreCase(NpcDefinition.forId(guardId).getName())
+                                ? guardId : 926);
                 continueDialogueWithNpcIdControlSwitch2 : switch (player.getDialogueManager().getDialogueStep()) {
                     case 1: {
                         if (player.botEnabled) {
@@ -4110,6 +4115,11 @@ public class DialogueManager {
                         switch (optionIndex) {
                             case 1: {
                                 player.getDialogueManager().showNpcOneLineDialogue("The money goes to the city of Al-Kharid.", 591);
+                                player.getDialogueManager().finishDialogue();
+                                return true;
+                            }
+                            case 2: {
+                                player.getDialogueManager().showPlayerOneLineDialogue("I haven't got that much.", 591);
                                 player.getDialogueManager().finishDialogue();
                                 return true;
                             }
