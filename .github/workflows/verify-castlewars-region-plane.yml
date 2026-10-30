@@ -1,0 +1,46 @@
+name: Verify Castle Wars Region Plane
+
+on:
+  push:
+    branches:
+      - fix/castlewars-region-plane-246-crash
+      - Audit/Castlewars
+    paths:
+      - 'Client/src/unpackaged/Class65.java'
+      - 'Client/src/unpackaged/OndemandRequest.java'
+      - 'Client/src/unpackaged/Bzip2Block.java'
+      - 'Client/tests/RegionPlaneChecks.java'
+      - 'Server/src/main/java/com/rs2/net/packet/RegionPacket.java'
+      - 'Server/src/main/java/com/rs2/net/packet/PacketSender.java'
+      - 'Server/src/test/java/RegionPlanePacketChecks.java'
+      - '.github/workflows/verify-castlewars-region-plane.yml'
+  pull_request:
+    paths:
+      - 'Client/src/unpackaged/Class65.java'
+      - 'Client/src/unpackaged/OndemandRequest.java'
+      - 'Client/src/unpackaged/Bzip2Block.java'
+      - 'Client/tests/RegionPlaneChecks.java'
+      - 'Server/src/main/java/com/rs2/net/packet/RegionPacket.java'
+      - 'Server/src/main/java/com/rs2/net/packet/PacketSender.java'
+      - 'Server/src/test/java/RegionPlanePacketChecks.java'
+      - '.github/workflows/verify-castlewars-region-plane.yml'
+  workflow_dispatch:
+
+jobs:
+  region-plane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile client/server and check region-plane recovery
+        working-directory: Server
+        run: |
+          mkdir -p /tmp/region-plane-check-classes
+          find src/main/java ../Client/src -name '*.java' > /tmp/region-plane-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d /tmp/region-plane-check-classes @/tmp/region-plane-sources.txt
+          javac -encoding UTF-8 -cp '/tmp/region-plane-check-classes:lib/*' -d /tmp/region-plane-check-classes ../Client/tests/RegionPlaneChecks.java src/test/java/RegionPlanePacketChecks.java
+          java -Djava.awt.headless=true -cp '/tmp/region-plane-check-classes:lib/*:../Client/src' unpackaged.RegionPlaneChecks
+          java -Djava.awt.headless=true -cp '/tmp/region-plane-check-classes:lib/*:../Client/src' RegionPlanePacketChecks
