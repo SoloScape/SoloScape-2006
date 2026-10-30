@@ -59,7 +59,7 @@ extends TickTask {
                         break;
                     }
                     this.requestingPlayer.getUpdateState().setAnimation(829);
-                    this.targetPlayer.heal(this.targetPlayer.getMaxHitpoints() / 10);
+                    this.targetPlayer.heal(CastleWarsManager.calculateBandageHealing(this.targetPlayer.getMaxHitpoints()));
                     this.targetPlayer.addRunEnergyPercent(30);
                     this.targetPlayer.packetSender.sendRunEnergy();
                     this.targetPlayer.setPoisonDamage(0.0);
