@@ -1,0 +1,37 @@
+name: Verify Castle Wars Audit Fixes
+
+on:
+  push:
+    branches:
+      - fix/castlewars-audit-six-findings
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/interaction/SecondObjectActionTask.java'
+      - 'Server/src/test/java/CastleWarsAuditFixChecks.java'
+      - '.github/workflows/verify-castlewars-audit-fixes.yml'
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/interaction/SecondObjectActionTask.java'
+      - 'Server/src/test/java/CastleWarsAuditFixChecks.java'
+      - '.github/workflows/verify-castlewars-audit-fixes.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and run October 2026 audit regressions
+        working-directory: Server
+        run: |
+          mkdir -p build-castlewars-audit-checks
+          find src/main/java -name '*.java' > /tmp/castlewars-audit-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-audit-checks @/tmp/castlewars-audit-sources.txt
+          javac -encoding UTF-8 -cp 'build-castlewars-audit-checks:lib/*' -d build-castlewars-audit-checks src/test/java/CastleWarsAuditFixChecks.java
+          java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsAuditFixChecks
