@@ -194,16 +194,16 @@ public final class CastleWarsTicketAndBucketChecks {
         Map<Player, Team> teams = (Map<Player, Team>) teamsField.get(null);
         player.setPosition(CastleWarsEngineeringManager.SARADOMIN_CATAPULT.copy());
         teams.put(player, Team.ZAMORAK);
+        require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
+                "Could not refill bucket for catapult ownership test");
         burning.setBoolean(null, true);
         try {
             require(CastleWarsEngineeringManager.extinguishOwnCatapult(
                             player, CastleWarsEngineeringManager.SARADOMIN_BURNING_CATAPULT_ID),
                     "Enemy catapult ownership was not handled");
-            require(player.getInventoryManager().getItemAmount(EMPTY) == 1,
-                    "Opponent may not spend a bucket on an enemy catapult");
+            require(player.getInventoryManager().getItemAmount(WATER) == 1,
+                    "Opponent may not spend water on an enemy catapult");
             teams.put(player, Team.SARADOMIN);
-            require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
-                    "Could not refill bucket for catapult");
             require(CastleWarsEngineeringManager.extinguishOwnCatapult(
                             player, CastleWarsEngineeringManager.SARADOMIN_BURNING_CATAPULT_ID),
                     "Owner could not extinguish burning catapult");
