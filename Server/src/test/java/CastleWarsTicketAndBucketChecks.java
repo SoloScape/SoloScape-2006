@@ -5,6 +5,7 @@ import com.rs2.model.gameplay.castlewars.CastleWarsManager.Team;
 import com.rs2.model.ground.GroundItem;
 import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemStack;
+import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.player.CharacterFileRecord;
 import com.rs2.model.player.Player;
 import com.rs2.util.CharacterJsonCodec;
@@ -24,9 +25,18 @@ public final class CastleWarsTicketAndBucketChecks {
     private static final int WATER = CastleWarsEngineeringManager.BUCKET_OF_WATER_ITEM_ID;
 
     public static void main(String[] args) throws Exception {
-        testTicketClaims();
-        testBucketSpawnsAndFirefighting();
-        System.out.println("Castle Wars ticket claims and bucket supplies OK");
+        ObjectDefinition[] oldDefinitions = ObjectDefinition.definitionsById;
+        if (oldDefinitions == null) {
+            // The isolated test does not run the game cache bootstrap.
+            ObjectDefinition.definitionsById = new ObjectDefinition[10000];
+        }
+        try {
+            testTicketClaims();
+            testBucketSpawnsAndFirefighting();
+            System.out.println("Castle Wars ticket claims and bucket supplies OK");
+        } finally {
+            ObjectDefinition.definitionsById = oldDefinitions;
+        }
     }
 
     private static void testTicketClaims() throws Exception {
@@ -147,7 +157,7 @@ public final class CastleWarsTicketAndBucketChecks {
         Player player = botPlayer(new Position(2414, 3088, 0));
         require(player.getInventoryManager().addItem(new ItemStack(EMPTY, 1)),
                 "Could not obtain an empty bucket for the water source test");
-        require(player.getCookingManager().handleWaterSourceItem(EMPTY, 879),
+        require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
                 "Generic fountain/water-source route did not fill a bucket");
         require(player.getInventoryManager().getItemAmount(WATER) == 1
                         && player.getInventoryManager().getItemAmount(EMPTY) == 0,
@@ -192,7 +202,7 @@ public final class CastleWarsTicketAndBucketChecks {
             require(player.getInventoryManager().getItemAmount(EMPTY) == 1,
                     "Opponent may not spend a bucket on an enemy catapult");
             teams.put(player, Team.SARADOMIN);
-            require(player.getCookingManager().handleWaterSourceItem(EMPTY, 879),
+            require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
                     "Could not refill bucket for catapult");
             require(CastleWarsEngineeringManager.extinguishOwnCatapult(
                             player, CastleWarsEngineeringManager.SARADOMIN_BURNING_CATAPULT_ID),
