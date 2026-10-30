@@ -33,6 +33,21 @@ public final class ClueMerchantCommandChecks {
     }
 
     public static void main(String[] args) throws Exception {
+        // Use an empty batch to verify scheduling without map/cache dependencies.
+        com.rs2.model.quest.event.ServerMaintenanceEventHook hook =
+                new com.rs2.model.quest.event.ServerMaintenanceEventHook(0, 0);
+        Field count = hook.getClass().getDeclaredField("clueMerchantCount");
+        count.setAccessible(true);
+        count.setInt(hook, 0);
+        com.rs2.model.quest.event.ClueMerchantSpawnTask spawn =
+                new com.rs2.model.quest.event.ClueMerchantSpawnTask(hook, 1500);
+        spawn.tick();
+        check(spawn.getRemainingTicks() == 1500, "first tick executes instead of waiting");
+        for (int tick = 0; tick < 1499; tick++) spawn.tick();
+        check(spawn.getRemainingTicks() == 1, "replacement waits for the full interval");
+        spawn.tick();
+        check(spawn.getRemainingTicks() == 1500, "replacement repeats every 1500 ticks");
+
         ServerSettings.clientBuild = 443;
         QuestDefinition.loadDefinitions();
         Player player = new Player(null);
