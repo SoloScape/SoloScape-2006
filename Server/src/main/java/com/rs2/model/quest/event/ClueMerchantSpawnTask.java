@@ -12,7 +12,8 @@ extends TickTask {
     private final ServerMaintenanceEventHook maintenanceHook;
 
     public ClueMerchantSpawnTask(ServerMaintenanceEventHook serverMaintenanceEventHook, int value2) {
-        super(1500);
+        // Spawn the first batch on the first server tick, then every 1500 ticks.
+        super(1500, true);
         this.maintenanceHook = serverMaintenanceEventHook;
     }
 
