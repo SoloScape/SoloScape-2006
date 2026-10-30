@@ -141,14 +141,7 @@ public final class AlKharidGateTollChecks {
         player.getInventoryManager().getContainer().setItem(0, new ItemStack(995, 20));
         player.setInteractionTargetId(borderGuardId);
 
-        System.out.println("Border Guard npc=" + guard.getNpcId()
-                + " player-overlaps=" + player.isOverlapping(guard)
-                + " line-of-sight=" + com.rs2.util.GameUtil.hasClearPath(
-                        player.getPosition(), guard.getPosition(), true)
-                + " player-moving=" + player.isMoving()
-                + " player-reach=" + player.isWithinReach(guard, 1)
-                + " npc-dead=" + guard.isDead()
-                + " npc-name=" + guard.getDefinition().getName());
+        require(player.isWithinReach(guard, 1), "Guard interaction is not within reach");
         new FirstNpcActionTask(1, true, player, player.nextActionSequence(), guard).execute();
         require(player.getDialogueManager().getDialogueId() == 9999,
                 "Talking to border guard did not open toll dialogue");
@@ -158,6 +151,17 @@ public final class AlKharidGateTollChecks {
                 "Border guard did not present dialogue options");
         require(DialogueManager.continueDialogue(player, 9999, 4, 2),
                 "Border guard did not explain where payment goes");
+        require(player.getInventoryManager().removeItem(new ItemStack(995, 20)),
+                "Could not empty test inventory for no-money dialogue");
+        require(DialogueManager.startDialogue(player, 9999), "Could not restart toll dialogue");
+        require(DialogueManager.continueDialogue(player, 9999, 2, 0),
+                "Border guard did not request payment with zero coins");
+        require(DialogueManager.continueDialogue(player, 9999, 7, 0),
+                "Border guard did not offer no-money dialogue choices");
+        require(DialogueManager.continueDialogue(player, 9999, 8, 2),
+                "Border guard did not acknowledge insufficient coins");
+        require(player.getDialogueManager().getDialogueStep() > 9000,
+                "Insufficient-funds reply did not finish the conversation");
     }
 
     private static void require(boolean condition, String message) {
