@@ -70,8 +70,6 @@ public final class CastleWarsTicketAndBucketChecks {
 
         // The already-owned ticket items do not create a free stack; these
         // tickets are non-stackable even when the inventory contains some.
-        require(player.getInventoryManager().addItem(new ItemStack(EMPTY, 3)),
-                "Could not restore the full inventory");
         require(player.getInventoryManager().getContainer().getFreeSlots() == 0,
                 "Test did not restore a full inventory");
         require(!CastleWarsManager.awardCastleWarsTickets(player, 2)
