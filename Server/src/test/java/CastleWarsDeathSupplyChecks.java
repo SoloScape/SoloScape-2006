@@ -6,6 +6,7 @@ import com.rs2.model.player.Player;
 public final class CastleWarsDeathSupplyChecks {
     public static void main(String[] args) {
         Player player = new Player(null);
+        player.isBot = true; // No live connection or outbound cipher in this check.
         int[] minigameItems = {
                 CastleWarsEngineeringManager.BRONZE_PICKAXE_ID,
                 CastleWarsEngineeringManager.TINDERBOX_ITEM_ID,
