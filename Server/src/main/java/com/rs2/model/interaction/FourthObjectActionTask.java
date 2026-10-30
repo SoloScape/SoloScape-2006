@@ -53,6 +53,13 @@ extends TickTask {
         if (objectDefinition != null) {
             this.player.getUpdateState().setFacePosition(((Position)worldObjectById).centerForSize(objectDefinition.getMaxDimension()));
         }
+        // Revision 443 puts "Pay-toll(10gp)" in option four (slot 3) on
+        // both Al Kharid gate leaves, not in option two.
+        if (AlKharidGateToll.isTollGate(this.objectId, this.objectX, this.objectY, this.objectPlane)) {
+            AlKharidGateToll.tryPass(this.player);
+            this.stop();
+            return;
+        }
         int value = this.objectY;
         int value2 = this.objectX;
         worldObjectById = this.player;
