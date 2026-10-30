@@ -409,6 +409,10 @@ public final class CastleWarsManager {
         returnCarriedFlagToBase(player);
         clearFlagWeapon(player);
         removeTemporaryCastleWarsInventoryItems(player);
+        // The identity-keyed issuance ledger cannot survive reconstruction of
+        // Player on login. Strip match consumables before character persistence.
+        removeBandages(player);
+        CastleWarsEngineeringManager.cleanupPlayerSupplies(player);
     }
 
     private static int reservedReconnectSlots(Team team, long now) {
@@ -1139,7 +1143,9 @@ public final class CastleWarsManager {
     }
 
     public static boolean isCarryingEnemyFlag(Player player) {
-        return isCarryingFlag(player);
+        Team playerTeam = gamePlayers.get(player);
+        Team carriedFlagTeam = getCarriedFlagTeam(player);
+        return playerTeam != null && carriedFlagTeam != null && carriedFlagTeam != playerTeam;
     }
 
     public static boolean isCarryingFlag(Player player) {
@@ -2712,9 +2718,28 @@ public final class CastleWarsManager {
                 getGamePlayerCountInternal(Team.ZAMORAK));
     }
 
+    /**
+     * Pre-2007 Castle Wars ticket schedule, documented by the archived Zybez
+     * RuneScape help guide: a shut-out win earns 3, an ordinary win 2,
+     * a 0-0 draw 2, a scored draw 1, and a loss 0.
+     * https://2007rshelp.com/minigame/4/castle-wars
+     */
+    public static int calculateCastleWarsTicketReward(int teamScore, int opposingScore) {
+        if (teamScore < 0 || opposingScore < 0) {
+            throw new IllegalArgumentException("Castle Wars scores cannot be negative");
+        }
+        if (teamScore > opposingScore) {
+            return opposingScore == 0 ? 3 : 2;
+        }
+        if (teamScore == opposingScore) {
+            return teamScore == 0 ? 2 : 1;
+        }
+        return 0;
+    }
+
     private static void endGame(long now) {
-        int saradominReward = saradominScore > zamorakScore ? 2 : saradominScore == zamorakScore ? 1 : 0;
-        int zamorakReward = zamorakScore > saradominScore ? 2 : saradominScore == zamorakScore ? 1 : 0;
+        int saradominReward = calculateCastleWarsTicketReward(saradominScore, zamorakScore);
+        int zamorakReward = calculateCastleWarsTicketReward(zamorakScore, saradominScore);
 
         if (saradominScore > zamorakScore) {
             recordTeamScoreboardVictory(Team.SARADOMIN);
@@ -3370,7 +3395,7 @@ public final class CastleWarsManager {
                     CastleWarsEngineeringManager.isHomeTunnelCollapsed(team, 1) ? "Collapsed" : "Cleared",
                     GAME_TUNNEL_TWO_TEXT_ID);
             player.getPacketSender().sendInterfaceText(
-                    CastleWarsEngineeringManager.isCatapultOperational(team) ? "Operational" : "Destroyed",
+                    CastleWarsEngineeringManager.getCatapultStatusText(team),
                     GAME_CATAPULT_TEXT_ID);
         }
     }
