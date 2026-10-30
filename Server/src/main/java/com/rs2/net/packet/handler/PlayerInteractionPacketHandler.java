@@ -248,6 +248,18 @@ implements PacketHandler {
                 player.setAttackRange(1);
                 player.setMovementTarget(target);
                 World.scheduleTickTask(new TradeRequestTask(null, 1, target, player, player.nextActionSequence()));
+            } else if (option == 4 && "Take from".equalsIgnoreCase(label)) {
+                if (!CastleWarsManager.canTakeEnemyFlagFromTeammate(
+                        player, target, System.currentTimeMillis())) {
+                    player.packetSender.sendGameMessage(
+                            "You can only take the enemy flag from a teammate who has held it for three minutes.");
+                    return;
+                }
+                player.setInteractionTarget(target);
+                player.setAttackRange(1);
+                player.setMovementTarget(target);
+                World.scheduleTickTask(new TakeFromTeammateFlagTask(
+                        player, target, player.nextActionSequence()));
             } else if ("Attack".equalsIgnoreCase(label) || "Challenge".equalsIgnoreCase(label)) {
                 player.setQueuedCombatSpell(null);
                 player.getUpdateState().setFaceEntity(target.getEncodedIndex());

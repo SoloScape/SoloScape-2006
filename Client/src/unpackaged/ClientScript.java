@@ -25,6 +25,8 @@ import java.awt.Component;
 
 public class ClientScript extends SubNode
 {
+    private static final JString CASTLE_WARS_TAKE_FROM =
+        Class39_Sub5_Sub9.createJstring("Take from");
     public static JString aClass3_1689;
     public static volatile boolean aBoolean1690 = true;
     public static JString aClass3_1691;
@@ -857,6 +859,13 @@ public class ClientScript extends SubNode
 	    } else {
 		for (int i_116_ = 4; i_116_ >= 0; i_116_--) {
 		    if (Class39_Sub14.aClass3Array1519[i_116_] != null) {
+			// "Take from" is only offered on the teammate holding the
+			// enemy standard. Its three-minute unlock is server-controlled.
+			if (Class39_Sub14.aClass3Array1519[i_116_]
+			        .method97(CASTLE_WARS_TAKE_FROM, -66)
+			    && !Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109
+			        .canTakeCastleWarsFlagFrom(class39_sub5_sub4_sub4_sub2))
+			    continue;
 			// Castle Wars teammates cannot attack one another. Hide the
 			// option rather than simply demoting it to right-click.
 			if (Cache.aClass39_Sub5_Sub4_Sub4_Sub2_109
