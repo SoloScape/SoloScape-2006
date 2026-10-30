@@ -4,11 +4,13 @@ on:
     branches: [main]
     paths:
       - 'Server/src/main/java/com/rs2/model/player/Player.java'
+      - 'Server/src/main/java/com/rs2/model/quest/event/ClueMerchantSpawnTask.java'
       - 'Server/src/test/java/ClueMerchantCommandChecks.java'
       - '.github/workflows/verify-clue-merchant-command.yml'
   pull_request:
     paths:
       - 'Server/src/main/java/com/rs2/model/player/Player.java'
+      - 'Server/src/main/java/com/rs2/model/quest/event/ClueMerchantSpawnTask.java'
       - 'Server/src/test/java/ClueMerchantCommandChecks.java'
   workflow_dispatch:
 permissions:
