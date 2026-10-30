@@ -1,0 +1,35 @@
+name: Verify Castle Wars Rewards and Buckets
+on:
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/interaction/FirstNpcActionTask.java'
+      - 'Server/src/test/java/CastleWarsTicketAndBucketChecks.java'
+      - '.github/workflows/verify-castlewars-rewards-and-buckets.yml'
+  push:
+    branches:
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/interaction/FirstNpcActionTask.java'
+      - 'Server/src/test/java/CastleWarsTicketAndBucketChecks.java'
+      - '.github/workflows/verify-castlewars-rewards-and-buckets.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and run reward and bucket checks
+        working-directory: Server
+        run: |
+          mkdir -p build-castlewars-reward-checks
+          find src/main/java -name '*.java' > /tmp/castlewars-reward-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-reward-checks @/tmp/castlewars-reward-sources.txt
+          javac -encoding UTF-8 -cp 'build-castlewars-reward-checks:lib/*' -d build-castlewars-reward-checks \
+            src/test/java/CastleWarsTicketAndBucketChecks.java
+          java -cp 'build-castlewars-reward-checks:lib/*' CastleWarsTicketAndBucketChecks
