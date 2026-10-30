@@ -647,7 +647,6 @@ public final class InterfaceBridge {
     private static Set<Integer> createCustomFlatGroups() {
         Set<Integer> ids = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
         ids.add(11877); // legacy snow overlay retained by the hybrid client
-        ids.add(19556); // custom God Wars kill-count overlay in client runtime cache
         ids.add(18890); // custom Grand Exchange offer overview
         ids.add(18939); // custom Grand Exchange offer editor
         ids.add(18984); // custom Grand Exchange offer status
@@ -659,7 +658,6 @@ public final class InterfaceBridge {
 
     private static Set<Integer> createCustomFlatComponents() {
         Set<Integer> ids = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
-        for (int id = 19557; id <= 19565; id++) ids.add(id);
         // Legacy quest-journal rows 19103 and 19497 do not exist in the stock
         // 443 widget cache. Sending either as a flat component makes the client
         // interpret it as group 0 with a huge child index and crash on login.

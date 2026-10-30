@@ -121,6 +121,13 @@ extends TickTask {
             this.stop();
             return;
         }
+        // The border guards use the existing toll dialogue, not the generic
+        // "not interested" fallback.
+        if (AlKharidGateToll.isBorderGuard(this.npc)) {
+            DialogueManager.startDialogue(this.player, 9999);
+            this.stop();
+            return;
+        }
         if (this.player.getSlayerManager().handleZygomiteSpawn(this.npc)) {
             this.stop();
             return;

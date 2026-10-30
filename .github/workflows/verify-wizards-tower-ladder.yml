@@ -1,0 +1,31 @@
+name: Verify Wizards Tower Ladder
+on:
+  push:
+    branches:
+      - fix/issue-4-wizards-tower-basement-ladder
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/combat/AttackStyleDefinition.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/FirstObjectActionTask.java'
+      - 'Server/src/main/java/com/rs2/model/objects/ObjectManager.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/InteractionDispatcher.java'
+      - 'Server/src/test/java/WizardsTowerLadderChecks.java'
+      - '.github/workflows/verify-wizards-tower-ladder.yml'
+  workflow_dispatch:
+jobs:
+  ladder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and check Wizards Tower ladder
+        working-directory: Server
+        run: |
+          mkdir -p wizard-ladder-test-classes
+          find src/main/java -name '*.java' > /tmp/wizard-ladder-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d wizard-ladder-test-classes @/tmp/wizard-ladder-sources.txt
+          javac -encoding UTF-8 -cp 'wizard-ladder-test-classes:lib/*' -d wizard-ladder-test-classes src/test/java/WizardsTowerLadderChecks.java
+          java -cp 'wizard-ladder-test-classes:lib/*' WizardsTowerLadderChecks

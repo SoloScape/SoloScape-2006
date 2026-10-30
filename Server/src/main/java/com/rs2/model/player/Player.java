@@ -43,7 +43,6 @@ import com.rs2.model.gameplay.duel.DuelController;
 import com.rs2.model.gameplay.duel.DuelInterfaceManager;
 import com.rs2.model.gameplay.duel.DuelSession;
 import com.rs2.model.gameplay.fightcave.FightCaveController;
-import com.rs2.model.gameplay.godwars.GodWarsDungeonManager;
 import com.rs2.model.gameplay.magetrainingarena.AlchemistPlaygroundController;
 import com.rs2.model.gameplay.magetrainingarena.CreatureGraveyardController;
 import com.rs2.model.gameplay.magetrainingarena.EnchantmentChamberController;
@@ -1361,7 +1360,6 @@ extends Entity {
                     }
                     if (!aggressive || !GameUtil.hasClearPath(this.getPosition(), npc.getPosition(), false)) continue;
                     int aggressionRange = npc.getDefinition().getAggressionRange();
-                    if (ServerSettings.content2007Enabled && (npc.getNpcId() != 6203 && npc.getNpcId() != 6204 && npc.getNpcId() != 6206 && npc.getNpcId() != 6208 && GodWarsDungeonManager.zamorakNpcIds.contains(npc.getNpcId()) && (this.hasEquippedItemNamePrefix("zamorak") || this.hasEquippedItemNamePrefix("unholy")) || npc.getNpcId() != 6247 && npc.getNpcId() != 6248 && npc.getNpcId() != 6250 && npc.getNpcId() != 6252 && GodWarsDungeonManager.saradominNpcIds.contains(npc.getNpcId()) && (this.hasEquippedItemNamePrefix("saradomin") || this.hasEquippedItemNamePrefix("holy")) || npc.getNpcId() != 6222 && npc.getNpcId() != 6223 && npc.getNpcId() != 6225 && npc.getNpcId() != 6227 && GodWarsDungeonManager.armadylNpcIds.contains(npc.getNpcId()) && this.hasEquippedItemNamePrefix("armadyl") || npc.getNpcId() != 6260 && npc.getNpcId() != 6261 && npc.getNpcId() != 6263 && npc.getNpcId() != 6265 && GodWarsDungeonManager.bandosNpcIds.contains(npc.getNpcId()) && this.hasEquippedItemNamePrefix("bandos"))) continue;
                     if (npc.getNpcId() == 912 && this.equipmentManager.getItemIdAtSlot(1) == 2414) {
                         if (GameUtil.isWithinDistance(npc.getSpawnPosition(), this.getPosition(), aggressionRange) && GameUtil.randomInt(4) == 0) {
                             npc.getUpdateState().setForcedText("Hail Zamorak!");
