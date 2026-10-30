@@ -90,10 +90,10 @@ public final class CastleWarsEngineeringManager {
     private static final int CATAPULT_AIM_LEFT_BUTTON_ID = 11324;
     private static final int CATAPULT_FIRE_BUTTON_ID = 11329;
     // Synthetic ids for the four native 443 3D digit widgets (group 54).
-    private static final int CATAPULT_443_X_TENS = 19660;
-    private static final int CATAPULT_443_X_ONES = 19661;
-    private static final int CATAPULT_443_Y_TENS = 19662;
-    private static final int CATAPULT_443_Y_ONES = 19663;
+    private static final int CATAPULT_443_X_TENS = 19700;
+    private static final int CATAPULT_443_X_ONES = 19701;
+    private static final int CATAPULT_443_Y_TENS = 19702;
+    private static final int CATAPULT_443_Y_ONES = 19703;
     private static final int CATAPULT_443_ZERO_MODEL = 4857;
     private static final int CATAPULT_MAX_AIM = 30;
     private static final int CATAPULT_AIM_SCALE = 2;
