@@ -50,27 +50,55 @@ public final class CastleWarsTicketAndBucketChecks {
                         && player.reservedSaveInt3 == 3,
                 "Multiple full-inventory rewards must accumulate");
         require(player.getInventoryManager().removeItem(new ItemStack(EMPTY, 1)),
-                "Could not free a space to claim tickets");
+                "Could not free one space to claim tickets");
+        // These legacy tickets are non-stackable. A single empty slot only
+        // delivers one ticket and the rest must stay pending.
+        require(!CastleWarsManager.claimPendingCastleWarsTickets(player)
+                        && player.reservedSaveInt3 == 2
+                        && player.getInventoryManager().getItemAmount(TICKETS) == 1,
+                "Partial claim must leave the remaining tickets pending");
+        require(player.getInventoryManager().removeItem(new ItemStack(EMPTY, 2)),
+                "Could not free the remaining ticket claim slots");
         require(CastleWarsManager.claimPendingCastleWarsTickets(player),
-                "Claiming pending tickets with free space failed");
+                "Claiming pending tickets with sufficient space failed");
         require(player.getInventoryManager().getItemAmount(TICKETS) == 3
                         && player.reservedSaveInt3 == 0,
-                "Claim did not deliver all tickets and clear pending balance"
-                        + " (tickets=" + player.getInventoryManager().getItemAmount(TICKETS)
-                        + ", pending=" + player.reservedSaveInt3
-                        + ", ticketStackable=" + new ItemStack(TICKETS, 1).getDefinition().isStackable()
-                        + ", freeSlots=" + player.getInventoryManager().getContainer().getFreeSlots() + ")");
+                "Claim did not deliver all tickets and clear pending balance");
         require(!CastleWarsManager.claimPendingCastleWarsTickets(player)
                         && player.getInventoryManager().getItemAmount(TICKETS) == 3,
                 "Repeated claim duplicated tickets");
 
-        // A ticket stack can accept additional rewards despite zero free slots.
-        player.getInventoryManager().addItem(new ItemStack(EMPTY, 1));
+        // The already-owned ticket items do not create a free stack; these
+        // tickets are non-stackable even when the inventory contains some.
+        require(player.getInventoryManager().addItem(new ItemStack(EMPTY, 3)),
+                "Could not restore the full inventory");
         require(player.getInventoryManager().getContainer().getFreeSlots() == 0,
                 "Test did not restore a full inventory");
-        require(CastleWarsManager.awardCastleWarsTickets(player, 2)
-                        && player.getInventoryManager().getItemAmount(TICKETS) == 5,
-                "Ticket stack did not receive reward in a full inventory");
+        require(!CastleWarsManager.awardCastleWarsTickets(player, 2)
+                        && player.reservedSaveInt3 == 2
+                        && player.getInventoryManager().getItemAmount(TICKETS) == 3,
+                "Reward was lost or duplicated in an already ticket-owning full inventory");
+        require(player.getInventoryManager().removeItem(new ItemStack(EMPTY, 2)),
+                "Could not free space for the second claim");
+        require(CastleWarsManager.claimPendingCastleWarsTickets(player)
+                        && player.getInventoryManager().getItemAmount(TICKETS) == 5
+                        && player.reservedSaveInt3 == 0,
+                "Second claim did not deliver every ticket");
+
+        // A partially successful match reward must also credit only its
+        // undelivered remainder, not all-or-nothing.
+        require(player.getInventoryManager().addItem(new ItemStack(EMPTY, 1)),
+                "Could not prepare one free inventory slot");
+        require(!CastleWarsManager.awardCastleWarsTickets(player, 2)
+                        && player.reservedSaveInt3 == 1
+                        && player.getInventoryManager().getItemAmount(TICKETS) == 6,
+                "Partial match reward was not correctly split into delivered and pending");
+        require(player.getInventoryManager().removeItem(new ItemStack(EMPTY, 1)),
+                "Could not free space for the last ticket");
+        require(CastleWarsManager.claimPendingCastleWarsTickets(player)
+                        && player.reservedSaveInt3 == 0
+                        && player.getInventoryManager().getItemAmount(TICKETS) == 7,
+                "Partial reward remainder could not be claimed");
 
         // The claimed balance is an existing versioned character-save field.
         // Verify the actual JSON codec retains a nonzero pending claim.
