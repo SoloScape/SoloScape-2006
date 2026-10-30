@@ -215,7 +215,27 @@ public final class CastleWarsTicketAndBucketChecks {
                     "Owner could not extinguish burning catapult");
             require(!burning.getBoolean(null)
                             && player.getInventoryManager().getItemAmount(EMPTY) == 1,
-                    "Catapult firefighting failed to return an empty bucket");
+                    "Saradomin catapult firefighting failed to return an empty bucket");
+
+            // Mirror the whole refill/extinguish action for Zamorak's catapult.
+            Field zamorakBurning = field(engine, "zamorakCatapultBurning");
+            boolean originalZamorakBurning = zamorakBurning.getBoolean(null);
+            try {
+                player.setPosition(CastleWarsEngineeringManager.ZAMORAK_CATAPULT.copy());
+                teams.put(player, Team.ZAMORAK);
+                require(player.getCookingManager().handleWaterSourceItem(EMPTY, 4482),
+                        "Zamorak team could not refill an empty bucket");
+                zamorakBurning.setBoolean(null, true);
+                require(CastleWarsEngineeringManager.extinguishOwnCatapult(
+                                player, CastleWarsEngineeringManager.ZAMORAK_BURNING_CATAPULT_ID),
+                        "Zamorak team could not extinguish its burning catapult");
+                require(!zamorakBurning.getBoolean(null)
+                                && player.getInventoryManager().getItemAmount(WATER) == 0
+                                && player.getInventoryManager().getItemAmount(EMPTY) == 1,
+                        "Zamorak catapult firefighting failed to return the bucket");
+            } finally {
+                zamorakBurning.setBoolean(null, originalZamorakBurning);
+            }
         } finally {
             burning.setBoolean(null, original);
             teams.remove(player);
