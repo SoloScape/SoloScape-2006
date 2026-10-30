@@ -1291,13 +1291,18 @@ public final class CastleWarsBotRoleAi {
             return false;
         }
         if (CastleWarsEngineeringManager.isRockslideCollapsed(rockIndex)) {
-            boolean cleared = bot.botPrimaryCombatStyle == 0
+            boolean started = bot.botPrimaryCombatStyle == 0
                     ? CastleWarsEngineeringManager.clearRockslideWithPickaxe(bot, rockIndex)
                     : CastleWarsEngineeringManager.clearRockslide(bot, rockIndex);
-            if (!cleared) {
+            if (!started) {
                 return false;
             }
             state.delayTicks = 2;
+            // Pickaxe clearing is asynchronous. Do not advance the bot's tunnel
+            // route until the passage actually opens; repeated calls only wait.
+            if (CastleWarsEngineeringManager.isRockslideCollapsed(rockIndex)) {
+                return false;
+            }
             CastleWarsBotChat.sayUnderground(bot);
         }
         return true;

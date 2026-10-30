@@ -21,6 +21,9 @@ import com.rs2.model.player.Player;
 import com.rs2.model.skill.GatheringToolDefinition;
 import com.rs2.model.skill.ItemCombinationHandler;
 import com.rs2.model.skill.SkillActionHelper;
+import com.rs2.model.task.CycleEvent;
+import com.rs2.model.task.CycleEventContainer;
+import com.rs2.model.task.CycleEventHandler;
 import com.rs2.util.GameUtil;
 import com.rs2.util.path.ProjectileCollisionMap;
 import com.rs2.util.path.WalkingCollisionMap;
@@ -127,6 +130,10 @@ public final class CastleWarsEngineeringManager {
     private static final Map<String, ClimbingRopeState> climbingRopes =
             new HashMap<String, ClimbingRopeState>();
     private static final boolean[] rockslideCollapsed = new boolean[]{true, true, true, true};
+    // Reject mining completions if another player or explosive has changed this rockslide.
+    private static final int[] rockslideRevisions = new int[ROCKSLIDE_POSITIONS.length];
+    private static final Map<Player, RockslideMiningTask> activeRockslideMining =
+            new IdentityHashMap<Player, RockslideMiningTask>();
     private static boolean saradominCatapultOperational = true;
     private static boolean zamorakCatapultOperational = true;
     private static boolean saradominCatapultBurning;
@@ -188,6 +195,7 @@ public final class CastleWarsEngineeringManager {
     public static void resetForGame() {
         clearAllBarricades();
         clearAllClimbingRopes();
+        cancelAllRockslideMining();
         resetBucketSupplies();
         for (int i = 0; i < ROCKSLIDE_POSITIONS.length; ++i) {
             setRockslideState(i, true);
@@ -205,6 +213,7 @@ public final class CastleWarsEngineeringManager {
     public static void cleanupAfterGame() {
         clearAllBarricades();
         clearAllClimbingRopes();
+        cancelAllRockslideMining();
         clearBucketSupplies();
         for (int i = 0; i < ROCKSLIDE_POSITIONS.length; ++i) {
             setRockslideState(i, true);
@@ -1882,78 +1891,74 @@ public final class CastleWarsEngineeringManager {
     }
 
     public static boolean clearRockslide(Player player, int index) {
-        if (!isRockslideCollapsed(index) || index < 0 || index >= ROCKSLIDE_POSITIONS.length) {
+        if (player == null || !CastleWarsManager.isInGame(player)
+                || !isRockslideCollapsed(index)) {
             return false;
         }
         Position position = ROCKSLIDE_POSITIONS[index];
-        if (GameUtil.getDistance(player.getPosition(), position) > 3) {
+        if (player.getPosition().getPlane() != position.getPlane()
+                || GameUtil.getDistance(player.getPosition(), position) > 3) {
             return false;
         }
 
         if (player.getInventoryManager().getItemAmount(EXPLOSIVE_POTION_ID) > 0) {
+            cancelRockslideMining(player);
             player.getInventoryManager().removeItem(new ItemStack(EXPLOSIVE_POTION_ID, 1));
             player.getPacketSender().sendStillGraphicToNearbyPlayers(176,
                     position.getX(), position.getY(), 0, 0);
-        } else {
-            GatheringToolDefinition pickaxe =
-                    ItemCombinationHandler.findUsableGatheringTool(player, 14);
-            if (pickaxe == null) {
-                return false;
-            }
-            player.getUpdateState().setAnimation(pickaxe.getGatherAnimationId());
+            setRockslideState(index, false);
+            return true;
         }
 
-        setRockslideState(index, false);
-        return true;
+        GatheringToolDefinition pickaxe =
+                ItemCombinationHandler.findUsableGatheringTool(player, 14);
+        return pickaxe != null
+                && useRockslidePickaxe(player, index, pickaxe.getToolItemId(), false);
     }
 
     public static boolean clearRockslideWithPickaxe(Player player, int index) {
-        if (player == null || !isRockslideCollapsed(index)
-                || index < 0 || index >= ROCKSLIDE_POSITIONS.length) {
+        if (player == null || !CastleWarsManager.isInGame(player)
+                || !isRockslideCollapsed(index)) {
             return false;
         }
-
         Position position = ROCKSLIDE_POSITIONS[index];
-        if (GameUtil.getDistance(player.getPosition(), position) > 3) {
+        if (player.getPosition().getPlane() != position.getPlane()
+                || GameUtil.getDistance(player.getPosition(), position) > 3) {
             return false;
         }
 
         GatheringToolDefinition pickaxe =
                 ItemCombinationHandler.findUsableGatheringTool(player, 14);
-        if (pickaxe == null) {
-            return false;
-        }
-
-        player.getUpdateState().setAnimation(pickaxe.getGatherAnimationId());
-        setRockslideState(index, false);
-        return true;
+        return pickaxe != null
+                && useRockslidePickaxe(player, index, pickaxe.getToolItemId(), false);
     }
 
     public static boolean collapseRockslide(Player player, int index) {
-        if (index < 0 || index >= ROCKSLIDE_POSITIONS.length || isRockslideCollapsed(index)) {
+        if (player == null || !CastleWarsManager.isInGame(player)
+                || index < 0 || index >= ROCKSLIDE_POSITIONS.length
+                || isRockslideCollapsed(index)) {
             return false;
         }
         Position position = ROCKSLIDE_POSITIONS[index];
-        if (GameUtil.getDistance(player.getPosition(), position) > 4) {
+        if (player.getPosition().getPlane() != position.getPlane()
+                || GameUtil.getDistance(player.getPosition(), position) > 4) {
             return false;
         }
 
         if (player.getInventoryManager().getItemAmount(EXPLOSIVE_POTION_ID) > 0) {
+            cancelRockslideMining(player);
             player.getInventoryManager().removeItem(new ItemStack(EXPLOSIVE_POTION_ID, 1));
             player.getPacketSender().sendStillGraphicToNearbyPlayers(176,
                     position.getX(), position.getY(), 0, 0);
-        } else {
-            GatheringToolDefinition pickaxe =
-                    ItemCombinationHandler.findUsableGatheringTool(player, 14);
-            if (pickaxe == null) {
-                return false;
-            }
-            player.getUpdateState().setAnimation(pickaxe.getGatherAnimationId());
+            setRockslideState(index, true);
+            crushPlayersAtRockslide(position);
+            return true;
         }
 
-        setRockslideState(index, true);
-        crushPlayersAtRockslide(position);
-        return true;
+        GatheringToolDefinition pickaxe =
+                ItemCombinationHandler.findUsableGatheringTool(player, 14);
+        return pickaxe != null
+                && useRockslidePickaxe(player, index, pickaxe.getToolItemId(), true);
     }
 
     private static boolean useRockslideExplosive(Player player, int index,
@@ -1962,7 +1967,8 @@ public final class CastleWarsEngineeringManager {
             return false;
         }
         Position position = ROCKSLIDE_POSITIONS[index];
-        if (GameUtil.getDistance(player.getPosition(), position) > 4
+        if (player.getPosition().getPlane() != position.getPlane()
+                || GameUtil.getDistance(player.getPosition(), position) > 4
                 || player.getInventoryManager().getItemAmount(EXPLOSIVE_POTION_ID) <= 0) {
             return false;
         }
@@ -1973,6 +1979,7 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
+        cancelRockslideMining(player);
         player.getInventoryManager().removeItem(new ItemStack(EXPLOSIVE_POTION_ID, 1));
         player.getPacketSender().sendStillGraphicToNearbyPlayers(
                 176, position.getX(), position.getY(), 0, 0);
@@ -1988,19 +1995,27 @@ public final class CastleWarsEngineeringManager {
 
     private static boolean useRockslidePickaxe(Player player, int index, int itemId,
                                                 boolean collapse) {
-        if (index < 0 || index >= ROCKSLIDE_POSITIONS.length) {
+        if (player == null || !CastleWarsManager.isInGame(player)
+                || index < 0 || index >= ROCKSLIDE_POSITIONS.length) {
             return false;
+        }
+        RockslideMiningTask pending = activeRockslideMining.get(player);
+        if (pending != null && pending.index == index && pending.collapse == collapse
+                && player.isCurrentActionSequence(pending.actionSequence)
+                && !pending.cancelled) {
+            return true; // Bots retry this operation while waiting; don't restart the timer.
         }
         GatheringToolDefinition pickaxe = getPickaxeDefinition(itemId);
         if (pickaxe == null) {
             return false;
         }
         Position position = ROCKSLIDE_POSITIONS[index];
-        if (GameUtil.getDistance(player.getPosition(), position) > 4) {
+        if (player.getPosition().getPlane() != position.getPlane()
+                || GameUtil.getDistance(player.getPosition(), position) > 4) {
             return false;
         }
         if (player.getInventoryManager().getItemAmount(itemId) <= 0
-                && (player.getEquipmentManager().getContainer().getItemAmount(itemId) <= 0)) {
+                && player.getEquipmentManager().getContainer().getItemAmount(itemId) <= 0) {
             return true;
         }
         if (player.getSkillManager().getCurrentLevels()[14] < pickaxe.getRequiredLevel()) {
@@ -2016,18 +2031,120 @@ public final class CastleWarsEngineeringManager {
             return true;
         }
 
+        cancelRockslideMining(player);
+        // The existing pickaxe speeds are 8 ticks for bronze down to 3 for rune.
+        // Explosives remain instant; only mining waits for these swings to finish.
+        int durationTicks = Math.max(3, (int) Math.ceil(pickaxe.getToolSpeed()));
+        int sequence = player.nextActionSequence();
+        player.beginInterruptibleAction();
+        RockslideMiningTask task = new RockslideMiningTask(player, sequence, index,
+                collapse, itemId, pickaxe.getGatherAnimationId(), durationTicks,
+                rockslideRevisions[index]);
+        activeRockslideMining.put(player, task);
         player.getPacketSender().sendGameMessage(collapse
                 ? "You attempt to collapse the passage..."
                 : "You attempt to mine the rocks...");
         player.getUpdateState().setAnimation(pickaxe.getGatherAnimationId());
-        setRockslideState(index, collapse);
-        if (collapse) {
-            crushPlayersAtRockslide(position);
-            player.getPacketSender().sendGameMessage("You collapse the tunnel.");
-        } else {
-            player.getPacketSender().sendGameMessage("You clear the fallen rocks.");
-        }
+        CycleEventHandler.getInstance().schedule(player, task, 1);
         return true;
+    }
+
+    private static void cancelRockslideMining(Player player) {
+        RockslideMiningTask task = activeRockslideMining.get(player);
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private static void cancelAllRockslideMining() {
+        for (RockslideMiningTask task : new ArrayList<RockslideMiningTask>(
+                activeRockslideMining.values())) {
+            task.cancel();
+        }
+    }
+
+    private static final class RockslideMiningTask extends CycleEvent {
+        private final Player player;
+        private final Position startingPosition;
+        private final int actionSequence;
+        private final int index;
+        private final boolean collapse;
+        private final int itemId;
+        private final int animationId;
+        private final int revision;
+        private int remainingTicks;
+        private boolean cancelled;
+
+        private RockslideMiningTask(Player player, int actionSequence, int index,
+                                    boolean collapse, int itemId, int animationId,
+                                    int durationTicks, int revision) {
+            this.player = player;
+            this.startingPosition = player.getPosition().copy();
+            this.actionSequence = actionSequence;
+            this.index = index;
+            this.collapse = collapse;
+            this.itemId = itemId;
+            this.animationId = animationId;
+            this.remainingTicks = durationTicks;
+            this.revision = revision;
+        }
+
+        @Override
+        public void execute(CycleEventContainer container) {
+            Position position = player.getPosition();
+            GatheringToolDefinition pickaxe = getPickaxeDefinition(itemId);
+            if (cancelled || activeRockslideMining.get(player) != this
+                    || !player.isCurrentActionSequence(actionSequence)
+                    || !player.isInterruptibleActionActive()
+                    || !CastleWarsManager.isInGame(player) || player.isDead()
+                    || player.isStunned() || player.isMoving()
+                    || player.getCombatTarget() != null
+                    || position.getX() != startingPosition.getX()
+                    || position.getY() != startingPosition.getY()
+                    || position.getPlane() != startingPosition.getPlane()
+                    || GameUtil.getDistance(position, ROCKSLIDE_POSITIONS[index]) > 4
+                    || rockslideRevisions[index] != revision
+                    || rockslideCollapsed[index] == collapse
+                    || pickaxe == null
+                    || (player.getInventoryManager().getItemAmount(itemId) <= 0
+                        && player.getEquipmentManager().getContainer().getItemAmount(itemId) <= 0)
+                    || player.getSkillManager().getCurrentLevels()[14] < pickaxe.getRequiredLevel()) {
+                container.stop();
+                return;
+            }
+
+            if (--remainingTicks > 0) {
+                if (remainingTicks % 3 == 0) {
+                    player.getUpdateState().setAnimation(animationId);
+                }
+                return;
+            }
+
+            Position rock = ROCKSLIDE_POSITIONS[index];
+            setRockslideState(index, collapse);
+            if (collapse) {
+                crushPlayersAtRockslide(rock);
+                player.getPacketSender().sendGameMessage("You collapse the tunnel.");
+            } else {
+                player.getPacketSender().sendGameMessage("You clear the fallen rocks.");
+            }
+            container.stop();
+        }
+
+        private void cancel() {
+            cancelled = true;
+            if (activeRockslideMining.get(player) == this) {
+                activeRockslideMining.remove(player);
+                if (player.isCurrentActionSequence(actionSequence)) {
+                    player.getUpdateState().setAnimation(-1);
+                }
+            }
+        }
+
+        @Override
+        public void onStop() {
+            cancel();
+        }
     }
 
     public static boolean handleRockslideObjectAction(Player player, int objectId,
@@ -2403,6 +2520,9 @@ public final class CastleWarsEngineeringManager {
                     position.getX(), position.getY(), 0, 0, 10, false);
             ProjectileCollisionMap.addObjectCollision(CLEARED_ROCK_OBJECT_ID,
                     position.getX(), position.getY(), 0, 0, 10, false);
+        }
+        if (rockslideCollapsed[index] != collapsed) {
+            ++rockslideRevisions[index];
         }
         rockslideCollapsed[index] = collapsed;
     }
