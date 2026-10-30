@@ -1,0 +1,39 @@
+name: Verify Castle Wars Issued Supply Ownership
+
+on:
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/test/java/CastleWarsDeathSupplyChecks.java'
+      - 'Server/src/test/java/com/rs2/model/gameplay/castlewars/CastleWarsSupplyOwnershipChecks.java'
+      - '.github/workflows/verify-castlewars-supply-ownership.yml'
+  push:
+    branches:
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/test/java/CastleWarsDeathSupplyChecks.java'
+      - 'Server/src/test/java/com/rs2/model/gameplay/castlewars/CastleWarsSupplyOwnershipChecks.java'
+      - '.github/workflows/verify-castlewars-supply-ownership.yml'
+  workflow_dispatch:
+
+jobs:
+  supply-ownership:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and run Castle Wars supply ownership checks
+        working-directory: Server
+        run: |
+          mkdir -p build-castlewars-supply-checks
+          find src/main/java -name '*.java' > /tmp/soloscape-castlewars-supply-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-supply-checks @/tmp/soloscape-castlewars-supply-sources.txt
+          javac -encoding UTF-8 -cp 'build-castlewars-supply-checks:lib/*' -d build-castlewars-supply-checks \
+            src/test/java/CastleWarsDeathSupplyChecks.java \
+            src/test/java/com/rs2/model/gameplay/castlewars/CastleWarsSupplyOwnershipChecks.java
+          java -cp 'build-castlewars-supply-checks:lib/*' CastleWarsDeathSupplyChecks
+          java -cp 'build-castlewars-supply-checks:lib/*' com.rs2.model.gameplay.castlewars.CastleWarsSupplyOwnershipChecks
