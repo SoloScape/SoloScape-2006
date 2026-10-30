@@ -39,8 +39,8 @@ public final class WizardsTowerLadderChecks {
         player.setQuestState(0, 100);
         player.setPosition(new Position(3105, 3162, 0));
 
-        climb(player, 2147, 3104, 3162, 3104, 9576);
-        climb(player, 2148, 3103, 9576, 3105, 3162);
+        climb(player, 2147, 3104, 3162, 3104, 9576, 827);
+        climb(player, 2148, 3103, 9576, 3105, 3162, 828);
         System.out.println("Wizards' Tower ladder round trip passed.");
         System.exit(0);
     }
@@ -54,7 +54,7 @@ public final class WizardsTowerLadderChecks {
     }
 
     private static void climb(Player player, int id, int x, int y,
-                              int targetX, int targetY) {
+                              int targetX, int targetY, int expectedAnimation) {
         LoadedWorldObject object = WorldObjectLookup.findObjectByIdAt(id, x, y, 0);
         player.setInteractionTargetId(id);
         player.setInteractionTargetX(x);
@@ -76,6 +76,9 @@ public final class WizardsTowerLadderChecks {
         int sequence = player.nextActionSequence();
         new FirstObjectActionTask(1, true, player, sequence, id, x, y, 0, "ladder").execute();
         require(player.isActionLocked(), "Ladder " + id + " click did not begin climb");
+        require(player.getUpdateState().getAnimationId() == expectedAnimation,
+                "Ladder " + id + " played animation "
+                + player.getUpdateState().getAnimationId() + " instead of " + expectedAnimation);
         for (int tick = 0; tick < 4; tick++) CycleEventHandler.getInstance().process();
         require(player.getPosition().getX() == targetX
                 && player.getPosition().getY() == targetY
