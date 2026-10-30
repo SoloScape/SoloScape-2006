@@ -1,0 +1,36 @@
+name: Verify Castle Wars Reconnection
+on:
+  push:
+    branches:
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/Server.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/player/Player.java'
+      - 'Server/src/test/java/CastleWarsReconnectChecks.java'
+      - '.github/workflows/verify-castlewars-reconnect.yml'
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/Server.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
+      - 'Server/src/main/java/com/rs2/model/player/Player.java'
+      - 'Server/src/test/java/CastleWarsReconnectChecks.java'
+      - '.github/workflows/verify-castlewars-reconnect.yml'
+  workflow_dispatch:
+jobs:
+  castlewars-reconnect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and verify Castle Wars reconnection policy
+        working-directory: Server
+        run: |
+          mkdir -p build-castlewars-reconnect-checks
+          find src/main/java -name '*.java' > /tmp/soloscape-castlewars-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-reconnect-checks @/tmp/soloscape-castlewars-sources.txt
+          javac -encoding UTF-8 -cp 'build-castlewars-reconnect-checks:lib/*' -d build-castlewars-reconnect-checks src/test/java/CastleWarsReconnectChecks.java
+          java -cp 'build-castlewars-reconnect-checks:lib/*' CastleWarsReconnectChecks
