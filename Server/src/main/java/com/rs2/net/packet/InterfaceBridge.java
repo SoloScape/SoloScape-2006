@@ -26,7 +26,6 @@ public final class InterfaceBridge {
         mappings.put(19018, 503);
         mappings.put(19101, 504);
         mappings.put(19103, 505); // developer item search
-        mappings.put(19556, 506); // runtime God Wars kill-count overlay
         mappings.put(3917, 320); // skills
         mappings.put(8714, 308); // legacy skill guide -> revision 443 skill guide
         mappings.put(638, 274);  // quest journal
@@ -127,7 +126,6 @@ public final class InterfaceBridge {
 
     private static Map<Integer, Integer> createComponentMappings() {
         Map<Integer, Integer> mappings = new LinkedHashMap<Integer, Integer>();
-        putRange(mappings, 19557, 506, 1, 9); // God Wars labels and kill counts
         // Native Castle Wars HUD (group 59): stock text components.
         // Score and flag icons are driven by varps 377/378 instead.
         put(mappings, 11346, 59, 1);  // Saradomin score label

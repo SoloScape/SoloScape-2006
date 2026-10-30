@@ -75,7 +75,6 @@ public class Class37
     }
     
     public static Widget getWidget(int widgetHash) {
-        GodWarsWidgets.load(widgetHash >>> 16);
 	GrandExchangeWidgets.load(widgetHash >>> 16);
 	int child = widgetHash & 0xffff;
 	int parent = widgetHash >> 16;

@@ -41,6 +41,7 @@ import javax.swing.SwingConstants;
 public final class ConfigEditorPanel extends JPanel {
     private static final Set<String> SERVER_EXCLUDED_KEYS = new HashSet<String>(Arrays.asList(
         "CACHE_VERSION",
+        "CLUE_MERCHANT",
         "WILDY_BOTS",
         "HOTZONES_FOR_WILDYBOTS",
         "SKILLING_BOTS",
@@ -63,7 +64,6 @@ public final class ConfigEditorPanel extends JPanel {
 
     private static final ConfigEntry[] ADDITIONAL_SERVER_ENTRIES = new ConfigEntry[]{
         new ConfigEntry("2007_CONTENT", "0", "1 = enable 2007 content, 0 = disable."),
-        new ConfigEntry("CLUE_MERCHANT", "0;1;50", "1 = enable, 0 = disable; clue level; price in coins."),
         new ConfigEntry("WILDERNESS_SLAYER", "0", "1 = enable Wilderness Slayer, 0 = disable.")
     };
 
