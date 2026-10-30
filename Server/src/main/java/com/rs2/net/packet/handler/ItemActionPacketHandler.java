@@ -2024,7 +2024,7 @@ implements PacketHandler {
                     return;
                 }
                 player.getUpdateState().setAnimation(829);
-                player.heal(player.getMaxHitpoints() / 10);
+                player.heal(CastleWarsManager.calculateBandageHealing(player.getMaxHitpoints()));
                 player.addRunEnergyPercent(30);
                 player.packetSender.sendRunEnergy();
                 player.setPoisonDamage(0.0);
