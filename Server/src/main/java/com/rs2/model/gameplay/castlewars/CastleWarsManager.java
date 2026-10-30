@@ -2753,9 +2753,7 @@ public final class CastleWarsManager {
             restorePlayerAfterCastleWars(player);
 
             int reward = team == Team.SARADOMIN ? saradominReward : zamorakReward;
-            if (reward > 0) {
-                player.getInventoryManager().addItem(new ItemStack(CASTLE_WARS_TICKET_ID, reward));
-            }
+            boolean rewardDelivered = awardCastleWarsTickets(player, reward);
 
             if (saradominScore == zamorakScore) {
                 player.getPacketSender().sendGameMessage("The Castle Wars game ended in a draw.");
@@ -2765,7 +2763,7 @@ public final class CastleWarsManager {
             } else {
                 player.getPacketSender().sendGameMessage("Your team lost the Castle Wars game.");
             }
-            if (reward > 0) {
+            if (reward > 0 && rewardDelivered) {
                 player.getPacketSender().sendGameMessage("You receive " + reward + " Castle Wars ticket" + (reward == 1 ? "." : "s."));
             }
             moveToLobby(player);
@@ -2775,6 +2773,58 @@ public final class CastleWarsManager {
         nextGameStartMillis = hasMinimumPlayersToStartInternal()
             ? now + WAITING_DURATION_SECONDS * 1000L
             : -1L;
+    }
+
+    /**
+     * Persist uncollected match tickets in the existing versioned character
+     * save slot (reservedSaveInt3). It is saved to JSON through the legacy
+     * serializer and restored on login, rather than stored in a transient map.
+     * This slot is dedicated to Castle Wars ticket claims.
+     *
+     * @return true only when every ticket reached the player's inventory.
+     */
+    public static boolean awardCastleWarsTickets(Player player, int amount) {
+        if (player == null || amount <= 0) {
+            return false;
+        }
+        if (player.getInventoryManager().addItem(new ItemStack(CASTLE_WARS_TICKET_ID, amount))) {
+            return true;
+        }
+        // addItem is all-or-nothing for stackable tickets. No inventory space
+        // must never turn a victory into a silent loss of rewards.
+        int pending = Math.max(0, player.reservedSaveInt3);
+        if (pending > Integer.MAX_VALUE - amount) {
+            throw new IllegalStateException("Castle Wars pending ticket balance overflow");
+        }
+        player.reservedSaveInt3 = pending + amount;
+        player.getPacketSender().sendGameMessage(
+                "Your inventory is full. Lanthus will hold " + amount
+                        + " Castle Wars ticket" + (amount == 1 ? "" : "s")
+                        + " for you. Make room and talk to him to claim them.");
+        return false;
+    }
+
+    /**
+     * Invoked when talking to Lanthus. A failed inventory insertion leaves
+     * the pending balance intact; successful delivery clears it exactly once.
+     */
+    public static boolean claimPendingCastleWarsTickets(Player player) {
+        if (player == null || player.reservedSaveInt3 <= 0) {
+            return false;
+        }
+        int pending = player.reservedSaveInt3;
+        if (!player.getInventoryManager().addItem(
+                new ItemStack(CASTLE_WARS_TICKET_ID, pending))) {
+            player.getPacketSender().sendGameMessage(
+                    "You have " + pending
+                            + " Castle Wars tickets waiting. Free an inventory slot to claim them.");
+            return false;
+        }
+        player.reservedSaveInt3 = 0;
+        player.getPacketSender().sendGameMessage(
+                "Lanthus gives you your " + pending + " unclaimed Castle Wars ticket"
+                        + (pending == 1 ? "." : "s."));
+        return true;
     }
 
     /**
