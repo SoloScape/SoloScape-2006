@@ -123,7 +123,13 @@ public final class CastleWarsEngineeringManager {
     private static final long CATAPULT_BURN_DURATION_MILLIS = 20L * 1000L;
     private static final int BUCKET_RESPAWN_DELAY_TICKS = (int) GameUtil.secondsToTicks(30L);
 
-    private static final Position[] BUCKET_SPAWN_POSITIONS = new Position[0];
+    // One respawning empty bucket per castle, beside the established team
+    // spawn-room tiles on floor 1. The generic water-source item handler fills
+    // bucket 1925 into 1929, which extinguishes burning barricades/catapults.
+    private static final Position[] BUCKET_SPAWN_POSITIONS = new Position[]{
+        new Position(2425, 3077, 1), // Saradomin team spawn room
+        new Position(2372, 3130, 1)  // Zamorak team spawn room
+    };
 
     private static final Position[] ROCKSLIDE_POSITIONS = new Position[]{
         new Position(2391, 9501, 0),

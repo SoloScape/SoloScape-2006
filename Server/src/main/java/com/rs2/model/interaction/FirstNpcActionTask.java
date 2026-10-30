@@ -75,6 +75,9 @@ extends TickTask {
             return;
         }
         if (this.npc.getNpcId() == CastleWarsManager.LANTHUS_NPC_ID) {
+            // Lanthus keeps any match tickets that could not fit at game end.
+            // Players can collect them as soon as they make inventory space.
+            CastleWarsManager.claimPendingCastleWarsTickets(this.player);
             this.npc.setInteractionTarget(this.player);
             this.player.setInteractionTarget(this.npc);
             this.player.getUpdateState().setFaceEntity(this.npc.getEncodedIndex());
