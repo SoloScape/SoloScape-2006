@@ -3,6 +3,7 @@ import com.rs2.model.interaction.FirstObjectActionTask;
 import com.rs2.model.interaction.InteractionDispatcher;
 import com.rs2.model.objects.LoadedWorldObject;
 import com.rs2.model.objects.ObjectDefinition;
+import com.rs2.model.objects.ObjectManager;
 import com.rs2.model.objects.WorldObjectLookup;
 import com.rs2.model.player.Player;
 import com.rs2.model.quest.QuestDefinition;
@@ -59,6 +60,15 @@ public final class WizardsTowerLadderChecks {
         player.setInteractionTargetX(x);
         player.setInteractionTargetY(y);
         player.setInteractionTargetPlane(0);
+        ObjectManager.prepareObjectInteractionMovement(player, id, x, y);
+        System.out.println("Ladder " + id + " orientation=" + object.getOrientation()
+                + " exact approach=" + player.interactionApproachX + ","
+                + player.interactionApproachY);
+        if (id == 2148) {
+            require(player.interactionApproachX == 3104
+                    && player.interactionApproachY == 9576,
+                    "Basement ladder approach must be its reachable east-side tile");
+        }
         boolean reachable = InteractionDispatcher.canReachObjectInteraction(player, object.getWorldObject());
         System.out.println("Ladder " + id + " reachability from "
                 + player.getPosition().getX() + "," + player.getPosition().getY()
