@@ -98,6 +98,13 @@ extends TickTask {
             }
             return;
         }
+        if (CastleWarsEngineeringManager.isBarricadeObject(this.objectId)) {
+            if (!CastleWarsEngineeringManager.attackBarricade(this.player, this.objectId,
+                    new Position(this.objectX, this.objectY, this.objectPlane))) {
+                this.stop();
+            }
+            return;
+        }
         if (this.objectId == CastleWarsManager.STEPPING_STONE_ID
                 && this.objectPlane == 0
                 && GameUtil.isWithinDistance(this.player.getPosition().getX(),
