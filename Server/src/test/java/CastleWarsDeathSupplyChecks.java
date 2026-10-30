@@ -2,7 +2,7 @@ import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.item.ItemStack;
 import com.rs2.model.player.Player;
 
-/** Castle Wars deaths must purge temporary engineering supplies. */
+/** Castle Wars cleanup must not purge supplies that the match never issued. */
 public final class CastleWarsDeathSupplyChecks {
     public static void main(String[] args) {
         Player player = new Player(null);
@@ -23,10 +23,10 @@ public final class CastleWarsDeathSupplyChecks {
         }
         CastleWarsEngineeringManager.cleanupPlayerSupplies(player);
         for (int itemId : minigameItems) {
-            require(player.getInventoryManager().getItemAmount(itemId) == 0,
-                    "Temporary supply was retained after cleanup: " + itemId);
+            require(player.getInventoryManager().getItemAmount(itemId) == 1,
+                    "Player-owned item was deleted by cleanup: " + itemId);
         }
-        System.out.println("Castle Wars engineering supply cleanup checks passed");
+        System.out.println("Castle Wars player-owned supply cleanup checks passed");
     }
 
     private static void require(boolean condition, String message) {
