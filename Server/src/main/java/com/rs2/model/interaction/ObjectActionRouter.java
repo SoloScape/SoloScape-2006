@@ -12,6 +12,10 @@ public final class ObjectActionRouter {
         if (definition == null) return null;
         String action = definition.getAction(slot);
         if (action == null) return null;
+        // Barricade Attack may occupy a different cache option slot. Route
+        // every Attack label through the same continuous melee interaction.
+        if ((definition.getObjectId() == 4421 || definition.getObjectId() == 4422)
+                && "Attack".equalsIgnoreCase(action)) return InteractionType.FIRST_OBJECT;
         if ("bank booth".equalsIgnoreCase(definition.getName())) {
             if ("Use".equalsIgnoreCase(action)) return InteractionType.FIRST_OBJECT;
             if ("Use-quickly".equalsIgnoreCase(action)) return InteractionType.SECOND_OBJECT;
