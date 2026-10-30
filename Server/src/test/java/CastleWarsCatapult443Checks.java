@@ -39,6 +39,16 @@ public final class CastleWarsCatapult443Checks {
                     "Wrong native digit model mapping " + i);
         }
 
+        // Group 54 renders the two coordinates with model IDs 4857..4866
+        // for digits 0..9, not with legacy text widget updates.
+        java.lang.reflect.Method digitModel = CastleWarsEngineeringManager.class
+                .getDeclaredMethod("catapultDigitModelId", int.class);
+        digitModel.setAccessible(true);
+        for (int digit = 0; digit <= 9; digit++) {
+            require((Integer) digitModel.invoke(null, digit) == 4857 + digit,
+                    "Incorrect native catapult digit model " + digit);
+        }
+
         Player player = new Player(null);
         player.isBot = true; // This test requires no network connection.
         player.setOpenInterfaceId(ROOT);
