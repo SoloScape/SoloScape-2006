@@ -979,6 +979,36 @@ public final class CastleWarsEngineeringManager {
         return getMainDoorState(team).hitpoints;
     }
 
+    /** Whether a large gate is still shut; both leaves share one state. */
+    public static boolean isMainDoorClosed(CastleWarsManager.Team team) {
+        return team != null && getMainDoorState(team).mode == MainDoorMode.CLOSED;
+    }
+
+    /**
+     * An opaque wall must block movement even when its cache definition
+     * advertises no clipping. Gate models are separate from pathfinding,
+     * so provide an explicit collision footprint while the leaves are shut.
+     */
+    public static boolean isClosedMainDoorTile(int x, int y, int plane) {
+        if (plane != MAIN_DOOR_PLANE) {
+            return false;
+        }
+        return isClosedMainDoorLeafTile(saradominMainDoor, x, y)
+                || isClosedMainDoorLeafTile(zamorakMainDoor, x, y);
+    }
+
+    private static boolean isClosedMainDoorLeafTile(MainDoorState door, int x, int y) {
+        if (door.mode != MainDoorMode.CLOSED) {
+            return false;
+        }
+        for (MainDoorLeaf leaf : door.leaves) {
+            if (leaf.closedX == x && leaf.closedY == y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isMainDoorBroken(CastleWarsManager.Team team) {
         return getMainDoorState(team).mode == MainDoorMode.BROKEN;
     }
