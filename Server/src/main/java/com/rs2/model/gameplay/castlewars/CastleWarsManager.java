@@ -2129,6 +2129,12 @@ public final class CastleWarsManager {
             if (CastleWarsEngineeringManager.tryHandleMainDoorForBot(player, castleTeam)) {
                 return true;
             }
+            // Do not queue an interior route through a closed double gate.
+            // Melee attackers may be on cooldown between door hits, while
+            // ranged/magic bots wait for their melee teammates to break it.
+            if (CastleWarsEngineeringManager.isMainDoorClosed(castleTeam)) {
+                return true;
+            }
 
             if (samePosition(player.getPosition(), interior)) {
                 return true;
@@ -2156,6 +2162,9 @@ public final class CastleWarsManager {
         }
 
         if (CastleWarsEngineeringManager.tryHandleMainDoorForBot(player, castleTeam)) {
+            return true;
+        }
+        if (CastleWarsEngineeringManager.isMainDoorClosed(castleTeam)) {
             return true;
         }
 
