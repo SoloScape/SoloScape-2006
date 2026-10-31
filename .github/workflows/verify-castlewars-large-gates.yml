@@ -1,0 +1,45 @@
+name: Verify Castle Wars Large Gates
+
+on:
+  push:
+    branches:
+      - fix/castlewars-main-gates-interaction-collision
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsManager.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/ObjectActionRouter.java'
+      - 'Server/src/main/java/com/rs2/util/path/WalkingCollisionMap.java'
+      - 'Server/src/test/java/CastleWarsLargeGateRoutingCollisionChecks.java'
+      - '.github/workflows/verify-castlewars-large-gates.yml'
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsEngineeringManager.java'
+      - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/CastleWarsManager.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/ObjectActionRouter.java'
+      - 'Server/src/main/java/com/rs2/util/path/WalkingCollisionMap.java'
+      - 'Server/src/test/java/CastleWarsLargeGateRoutingCollisionChecks.java'
+      - '.github/workflows/verify-castlewars-large-gates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  main-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and test gate action/collision invariants
+        working-directory: Server
+        run: |
+          mkdir -p /tmp/cw-large-gates
+          find src/main/java -name '*.java' > /tmp/cw-large-gate-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d /tmp/cw-large-gates @/tmp/cw-large-gate-sources.txt
+          javac -encoding UTF-8 -cp '/tmp/cw-large-gates:lib/*' -d /tmp/cw-large-gates src/test/java/CastleWarsLargeGateRoutingCollisionChecks.java src/test/java/CastleWarsMainDoorInteractionChecks.java
+          java -Djava.awt.headless=true -cp '/tmp/cw-large-gates:lib/*' CastleWarsLargeGateRoutingCollisionChecks
+          java -Djava.awt.headless=true -cp '/tmp/cw-large-gates:lib/*' CastleWarsMainDoorInteractionChecks
