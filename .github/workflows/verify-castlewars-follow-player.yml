@@ -1,0 +1,40 @@
+name: Verify Castle Wars Follow Player
+
+on:
+  push:
+    branches:
+      - fix/castlewars-follow-player-not-whack
+      - Audit/Castlewars
+    paths:
+      - 'Server/src/main/java/com/rs2/net/packet/handler/FollowPlayerTask.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/PlayerInteractionPacketHandler.java'
+      - 'Server/src/test/java/com/rs2/net/packet/handler/FollowPlayerTaskChecks.java'
+      - '.github/workflows/verify-castlewars-follow-player.yml'
+  pull_request:
+    paths:
+      - 'Server/src/main/java/com/rs2/net/packet/handler/FollowPlayerTask.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/PlayerInteractionPacketHandler.java'
+      - 'Server/src/test/java/com/rs2/net/packet/handler/FollowPlayerTaskChecks.java'
+      - '.github/workflows/verify-castlewars-follow-player.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  follow-player:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and run follow-player regression
+        working-directory: Server
+        run: |
+          mkdir -p /tmp/castlewars-follow-classes
+          find src/main/java -name '*.java' > /tmp/castlewars-follow-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d /tmp/castlewars-follow-classes @/tmp/castlewars-follow-sources.txt
+          javac -encoding UTF-8 -cp '/tmp/castlewars-follow-classes:lib/*' -d /tmp/castlewars-follow-classes src/test/java/com/rs2/net/packet/handler/FollowPlayerTaskChecks.java
+          java -Djava.awt.headless=true -cp '/tmp/castlewars-follow-classes:lib/*' com.rs2.net.packet.handler.FollowPlayerTaskChecks
