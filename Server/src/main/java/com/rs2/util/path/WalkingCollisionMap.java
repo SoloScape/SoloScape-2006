@@ -7,6 +7,7 @@ import com.rs2.cache.js5.WorldMaps;
 import com.rs2.model.GameplayHelper;
 import com.rs2.model.Position;
 import com.rs2.model.World;
+import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.objects.LoadedWorldObject;
 import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.objects.WorldObjectRegionIndex;
@@ -431,16 +432,24 @@ public final class WalkingCollisionMap {
 
     public static int getTileFlags(int x, int y, int plane) {
         WalkingCollisionMap region = getRegionForTile(x, y);
+        int flags = 0;
         if (region == null) {
-            return 0x200000;
+            flags = 0x200000;
+        } else {
+            plane &= 3;
+            if (region.tileFlags[plane] != null) {
+                flags = region.tileFlags[plane][x & 63][y & 63];
+            }
         }
 
-        plane &= 3;
-        if (region.tileFlags[plane] == null) {
-            return 0;
+        // Castle Wars double-gate leaves are walls, not walkable floor tiles.
+        // Their cached definition may not provide collision on the server.
+        // Make all movement and bot pathfinding honor the visible closed gate,
+        // without permanently modifying terrain or adjacent wall flags.
+        if (CastleWarsEngineeringManager.isClosedMainDoorTile(x, y, plane)) {
+            flags |= 0x100;
         }
-
-        return region.tileFlags[plane][x & 63][y & 63];
+        return flags;
     }
 
     public static boolean canTravelBetween(int startX, int startY,
