@@ -12,6 +12,18 @@ public final class ObjectActionRouter {
         if (definition == null) return null;
         String action = definition.getAction(slot);
         if (action == null) return null;
+        // Revision-443 cache layouts can place "Open", "Close" or "Attack"
+        // in a different option slot from the old cache. Keep every Castle
+        // Wars main-gate click mapped to the intended gameplay action.
+        int objectId = definition.getObjectId();
+        if (objectId >= 4423 && objectId <= 4434) {
+            if ("Open".equalsIgnoreCase(action) || "Close".equalsIgnoreCase(action)) {
+                return InteractionType.FIRST_OBJECT;
+            }
+            if ("Attack".equalsIgnoreCase(action)) {
+                return InteractionType.SECOND_OBJECT;
+            }
+        }
         // Barricade Attack may occupy a different cache option slot. Route
         // every Attack label through the same continuous melee interaction.
         if ((definition.getObjectId() == 4421 || definition.getObjectId() == 4422)
