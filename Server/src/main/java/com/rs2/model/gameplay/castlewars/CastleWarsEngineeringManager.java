@@ -124,12 +124,16 @@ public final class CastleWarsEngineeringManager {
     private static final long CATAPULT_BURN_DURATION_MILLIS = 20L * 1000L;
     private static final int BUCKET_RESPAWN_DELAY_TICKS = (int) GameUtil.secondsToTicks(30L);
 
-    // One respawning empty bucket per castle, beside the established team
-    // spawn-room tiles on floor 1. The generic water-source item handler fills
-    // bucket 1925 into 1929, which extinguishes burning barricades/catapults.
+    // Supply pickups belong on the castle's ground floor, never inside the
+    // first-floor respawn/barrier room. Zamorak has two bucket pickups.
+    // The generic water-source handler fills bucket 1925 into 1929.
     private static final Position[] BUCKET_SPAWN_POSITIONS = new Position[]{
-        new Position(2425, 3077, 1), // Saradomin team spawn room
-        new Position(2372, 3130, 1)  // Zamorak team spawn room
+        new Position(2425, 3077, 0), // Saradomin ground floor
+        new Position(2371, 3127, 0), // Zamorak ground floor, south pickup
+        new Position(2368, 3131, 0)  // Zamorak ground floor, north pickup
+    };
+    private static final Position[] TINDERBOX_SPAWN_POSITIONS = new Position[]{
+        new Position(2368, 3135, 0)  // Zamorak ground floor
     };
 
     private static final Position[] ROCKSLIDE_POSITIONS = new Position[]{
@@ -141,6 +145,7 @@ public final class CastleWarsEngineeringManager {
 
     private static final Map<String, BarricadeState> barricades = new HashMap<String, BarricadeState>();
     private static final ArrayList<GroundItem> bucketSupplySpawns = new ArrayList<GroundItem>();
+    private static final ArrayList<GroundItem> tinderboxSupplySpawns = new ArrayList<GroundItem>();
     private static final Map<String, ClimbingRopeState> climbingRopes =
             new HashMap<String, ClimbingRopeState>();
     private static final boolean[] rockslideCollapsed = new boolean[]{true, true, true, true};
@@ -1389,14 +1394,19 @@ public final class CastleWarsEngineeringManager {
     private static void resetBucketSupplies() {
         clearBucketSupplies();
         for (Position position : BUCKET_SPAWN_POSITIONS) {
-            GroundItem groundItem = new GroundItem(
-                    new ItemStack(EMPTY_BUCKET_ITEM_ID, 1),
-                    position,
-                    BUCKET_RESPAWN_DELAY_TICKS,
-                    true);
-            bucketSupplySpawns.add(groundItem);
-            GroundItemManager.getInstance().spawn(groundItem);
+            spawnRespawningSupply(EMPTY_BUCKET_ITEM_ID, position, bucketSupplySpawns);
         }
+        for (Position position : TINDERBOX_SPAWN_POSITIONS) {
+            spawnRespawningSupply(TINDERBOX_ITEM_ID, position, tinderboxSupplySpawns);
+        }
+    }
+
+    private static void spawnRespawningSupply(int itemId, Position position,
+                                              ArrayList<GroundItem> trackedSpawns) {
+        GroundItem groundItem = new GroundItem(
+                new ItemStack(itemId, 1), position, BUCKET_RESPAWN_DELAY_TICKS, true);
+        trackedSpawns.add(groundItem);
+        GroundItemManager.getInstance().spawn(groundItem);
     }
 
     private static void clearBucketSupplies() {
@@ -1407,6 +1417,12 @@ public final class CastleWarsEngineeringManager {
             }
         }
         bucketSupplySpawns.clear();
+        for (GroundItem groundItem : tinderboxSupplySpawns) {
+            if (manager.contains(groundItem)) {
+                manager.remove(groundItem);
+            }
+        }
+        tinderboxSupplySpawns.clear();
     }
 
     private static boolean isSupplyItem(int itemId) {
