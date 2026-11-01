@@ -1,0 +1,44 @@
+name: Verify Grand Exchange Prop Exclusions
+
+on:
+  push:
+    branches:
+      - Audit/Castlewars
+    paths:
+      - 'Server/data/content/grandExchangeItems2006.tsv'
+      - 'Server/src/main/java/com/rs2/model/grandexchange/**'
+      - 'Server/src/test/java/GrandExchangePropCatalogChecks.java'
+      - 'Client/src/assets/grand-exchange/catalog.txt'
+      - 'Client/src/unpackaged/GrandExchangeCatalog.java'
+      - '.github/workflows/verify-grand-exchange-props.yml'
+  pull_request:
+    paths:
+      - 'Server/data/content/grandExchangeItems2006.tsv'
+      - 'Server/src/main/java/com/rs2/model/grandexchange/**'
+      - 'Server/src/test/java/GrandExchangePropCatalogChecks.java'
+      - 'Client/src/assets/grand-exchange/catalog.txt'
+      - 'Client/src/unpackaged/GrandExchangeCatalog.java'
+      - '.github/workflows/verify-grand-exchange-props.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile server and verify GE item catalogue
+        working-directory: Server
+        run: |
+          mkdir -p build-ge-prop-checks
+          find src/main/java -name '*.java' > /tmp/ge-prop-sources.txt
+          javac -encoding UTF-8 -cp 'lib/*' -d build-ge-prop-checks @/tmp/ge-prop-sources.txt
+          javac -encoding UTF-8 -cp 'build-ge-prop-checks:lib/*' -d build-ge-prop-checks src/test/java/GrandExchangePropCatalogChecks.java
+          java -cp 'build-ge-prop-checks:lib/*' GrandExchangePropCatalogChecks
+      - name: Compile client Grand Exchange catalogue
+        run: |
+          mkdir -p build-ge-client
+          javac -encoding UTF-8 -d build-ge-client Client/src/unpackaged/GrandExchangeCatalog.java
