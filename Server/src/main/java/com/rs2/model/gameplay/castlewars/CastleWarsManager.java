@@ -53,6 +53,10 @@ public final class CastleWarsManager {
     public static final int ZAMORAK_SPAWN_TRAPDOOR_ID = 4472;
     // Revision-443 opened trapdoor model: Climb-down / Close.
     private static final int OPEN_TRAPDOOR_ID = 1570;
+    // Cache models 1568, 4471, 4472 and 1570 are all loc type 22
+    // (ground decoration). Using generic fallback type 10 creates a second
+    // scene object instead of replacing the original trapdoor.
+    private static final int CASTLE_WARS_TRAPDOOR_LOC_TYPE = 22;
     public static final int STEPPING_STONE_ID = 4411;
 
     public static final int SARADOMIN_HOOD_ID = 4513;
@@ -1771,10 +1775,13 @@ public final class CastleWarsManager {
         }
         int orientation = com.rs2.model.skill.SkillActionHelper.getObjectOrientation(
                 id, x, y, plane);
-        int type = com.rs2.model.skill.SkillActionHelper.getObjectType(id, x, y, plane);
+        // Use the cache's actual loc shape, not SkillActionHelper's type-10
+        // fallback when a map-static object is missing from the server index.
+        // The client's scene replacement is keyed by shape/category.
         // The closed 4471/4472 and 1568 trapdoors advertise Open; the real
         // open model (1570) advertises Climb-down and Close.
-        new DynamicObject(OPEN_TRAPDOOR_ID, x, y, plane, orientation, type,
+        new DynamicObject(OPEN_TRAPDOOR_ID, x, y, plane, orientation,
+                CASTLE_WARS_TRAPDOOR_LOC_TYPE,
                 id, 999999999, false);
         openTrapdoors.put(key, new OpenCastleWarsTrapdoor(
                 id, new Position(x, y, plane), destination));
