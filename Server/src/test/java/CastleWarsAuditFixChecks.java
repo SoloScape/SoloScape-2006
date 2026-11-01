@@ -36,6 +36,7 @@ public final class CastleWarsAuditFixChecks {
         int itemId = 4151; // An ordinary equipped/inventory item, never match-issued.
         int deathCount = player.deathCount;
         player.setIndex(playerIndex);
+        player.setEncodedIndex(32768 + playerIndex);
         World.players[playerIndex] = player;
         try {
             require(player.getInventoryManager().addItemPartial(new ItemStack(itemId, 1)) == 1,
