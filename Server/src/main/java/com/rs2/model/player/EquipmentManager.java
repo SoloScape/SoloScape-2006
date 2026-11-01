@@ -663,8 +663,14 @@ public final class EquipmentManager {
         int index = 0;
         while (index < ((WeaponProfile)((Object)value)).getInterfaceDefinition().getAttackStyles().length) {
             if (buttonId == ((WeaponProfile)((Object)value)).getInterfaceDefinition().getAttackStyles()[index].getButtonId()) {
-                this.player.disableAutocast();
+                // The 443 autocast reset also sends varp 43. Record the new
+                // stance first so the client receives the selected style, not
+                // the previous stance (which left its highlight out of sync).
                 this.player.setFightMode(index);
+                this.player.disableAutocast();
+                if (ServerSettings.clientBuild != 443) {
+                    this.player.packetSender.sendConfig(43, index);
+                }
                 return true;
             }
             ++index;
