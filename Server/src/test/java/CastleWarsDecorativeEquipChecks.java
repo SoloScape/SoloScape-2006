@@ -66,6 +66,11 @@ public final class CastleWarsDecorativeEquipChecks {
                 player.setOutboundCipher(new IsaacCipher(new int[4]));
                 player.setPlayerRights(2); // Bypass unrelated membership requirements.
                 player.setQuestState(0, 42); // Tutorial equipment lesson complete.
+                // Higher decorative armour tiers can impose combat requirements.
+                for (int skill = 0; skill < 22; skill++) {
+                    player.getSkillManager().getExperience()[skill] = 13034431.0;
+                    player.getSkillManager().setCurrentLevel(skill, 99);
+                }
                 int[][] items = {
                     {4069, 4}, {4070, 7}, {4504, 4},
                     {4505, 7}, {4509, 4}, {4510, 7}
@@ -73,6 +78,11 @@ public final class CastleWarsDecorativeEquipChecks {
                 for (int[] pair : items) {
                     int itemId = pair[0], slot = pair[1];
                     player.getInventoryManager().getContainer().setItem(0, new ItemStack(itemId));
+                    System.out.println("LANTHUS-WEAR before item=" + itemId
+                            + " slot=" + slot + " owns="
+                            + player.getInventoryManager().getItemAmount(itemId)
+                            + " isMember=" + player.isMember()
+                            + " quest0=" + player.getQuestState(0));
                     player.getEquipmentManager().equipFromInventorySlot(0);
                     if (player.getEquipmentManager().getItemIdAtSlot(slot) != itemId) {
                         throw new AssertionError("Wear did not equip decorative reward " + itemId
