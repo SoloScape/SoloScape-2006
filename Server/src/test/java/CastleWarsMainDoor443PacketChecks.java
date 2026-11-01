@@ -86,6 +86,40 @@ public final class CastleWarsMainDoor443PacketChecks {
         System.out.println("GATE-PACKET ATTACK started immediately id=" + objectId
                 + " pos=" + player.getPosition());
         attack.execute();
+        // Regression: after the first hit the pathfinder may step a tile
+        // closer, onto the closed leaf's own wall tile. The repeating attack
+        // must keep swinging instead of trying to cross the closed gate.
+        player.setPosition(new Position(objectX, objectY, 0));
+        require(CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                        player, objectId, objectX, objectY),
+                "Standing on the large-door leaf must be a valid melee position");
+        int expectedExteriorY = team == CastleWarsManager.Team.SARADOMIN
+                ? objectY - 1 : objectY + 1;
+        require(CastleWarsEngineeringManager.getMainDoorInteractionApproach(
+                        player, objectId, objectX, objectY)
+                        .equals(new Position(objectX, expectedExteriorY, 0)),
+                "Gate-wall approach unexpectedly points through the door");
+        ready.put(player, Long.valueOf(0L));
+        attack.execute();
+        require(ready.get(player) != null && ready.get(player).longValue()
+                        > System.currentTimeMillis(),
+                "Continuous enemy gate melee never landed another timed swing");
+        require(attack.isActive(),
+                "The gate attack stopped after stepping onto the leaf tile");
+        require(player.getPosition().equals(new Position(objectX, objectY, 0)),
+                "The attack task tried to move through the gate after the first hit");
+        // The adjacent, parallel gate leaf must also count as melee range
+        // when the attacker is on its wall tile.
+        player.setPosition(new Position(
+                objectX == 2373 ? 2372 : objectX == 2426 ? 2427 : objectX, objectY, 0));
+        require(CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                        player, objectId, objectX, objectY),
+                "Adjacent leaf of the double gate no longer accepts melee");
+        ready.put(player, Long.valueOf(0L));
+        attack.execute();
+        require(ready.get(player).longValue() > System.currentTimeMillis()
+                        && attack.isActive(),
+                "Attacking alongside the other gate leaf stopped unexpectedly");
         int after = CastleWarsEngineeringManager.getMainDoorHitpoints(
                 team == CastleWarsManager.Team.SARADOMIN
                     ? CastleWarsManager.Team.ZAMORAK : CastleWarsManager.Team.SARADOMIN);
