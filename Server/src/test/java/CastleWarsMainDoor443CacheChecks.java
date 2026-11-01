@@ -9,6 +9,7 @@ public final class CastleWarsMainDoor443CacheChecks {
         ServerSettings.clientBuild = 443;
         ObjectDefinition.loadRevision443();
         int[] inspectIds = {1568, 1747, 4911, 4471, 4472, 6280, 6281};
+        for (int id = 4471; id <= 4480; id++) printDefinition(id);
         for (int id : inspectIds) printDefinition(id);
         for (int id = 4418; id <= 4435; ++id) printDefinition(id);
     }
