@@ -16,8 +16,7 @@ public final class CastleWarsMainDoor443CacheChecks {
             byte[] bytes = raw.get(id);
             if (bytes == null) continue;
             String shapes = modelShapes(bytes);
-            System.out.println("TRAPDOOR-MODEL id=" + id + " firstOpcode=" + first
-                    + " shapes=" + shapes);
+            System.out.println("TRAPDOOR-MODEL id=" + id + " shapes=" + shapes);
         }
         int[] inspectIds = {1568, 1747, 4911, 4471, 4472, 6280, 6281};
         for (int id = 1568; id <= 1577; id++) printDefinition(id);
