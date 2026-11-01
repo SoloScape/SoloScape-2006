@@ -4,6 +4,7 @@ import com.rs2.ServerSettings;
 import com.rs2.bot.BotTradeAdvertManager;
 import com.rs2.model.GameplayHelper;
 import com.rs2.model.World;
+import com.rs2.model.grandexchange.GrandExchangeCatalog;
 import com.rs2.model.grandexchange.GrandExchangePriceSample;
 import com.rs2.model.item.ItemDefinition;
 import com.rs2.model.player.CharacterFileRecord;
@@ -69,6 +70,11 @@ public final class GrandExchangeOffer {
         value3 = (GameplayHelper)((ArrayList)value3).get(value4);
         value4 = BotTradeAdvertManager.tradeAdvertOfferPool.indexOf(value3);
         int tradeAdvertItemId = ((GameplayHelper)BotTradeAdvertManager.tradeAdvertOfferPool.get(value4)).getTradeAdvertItemId();
+        // This pool also contains scene/minigame props: never generate
+        // server-side GE orders for items absent from the trade catalogue.
+        if (!GrandExchangeCatalog.isExchangeable(tradeAdvertItemId)) {
+            return;
+        }
         ItemDefinition.forId(tradeAdvertItemId);
         double guidePrice = GrandExchangeManager.getGuidePrice(tradeAdvertItemId);
         if (guidePrice < 1.0) {
