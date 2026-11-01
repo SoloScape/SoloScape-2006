@@ -34,6 +34,7 @@ public final class CastleWarsMainDoor443PacketChecks {
         player.isBot = true;
         player.setIndex(70);
         player.setEncodedIndex(32768 + 70); // Combat must classify the fixture as a player.
+        for (int bonus = 0; bonus < 14; ++bonus) player.getCombatBonuses().put(bonus, 0);
         World.players[70] = player;
         try {
             // Exterior approach, attacking the other team's pair.
