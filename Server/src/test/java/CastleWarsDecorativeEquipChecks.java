@@ -50,10 +50,13 @@ public final class CastleWarsDecorativeEquipChecks {
             }
         }
         boolean previousDebug = ServerSettings.debugModeEnabled;
+        boolean previousFreeWorld = ServerSettings.freeToPlayWorld;
         ServerSettings.debugModeEnabled = true;
+        ServerSettings.freeToPlayWorld = false;
         try {
             checkWearAndRemove();
         } finally {
+            ServerSettings.freeToPlayWorld = previousFreeWorld;
             ServerSettings.debugModeEnabled = previousDebug;
         }
         System.out.println("Castle Wars Lanthus decorative equipment checks passed");
