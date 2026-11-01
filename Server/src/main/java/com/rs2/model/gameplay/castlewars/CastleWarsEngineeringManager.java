@@ -1232,6 +1232,59 @@ public final class CastleWarsEngineeringManager {
         return null;
     }
 
+    /** All large Castle Wars gate models, including open and destroyed leaves. */
+    public static boolean isMainDoorObject(int objectId) {
+        return objectId >= SARADOMIN_MAIN_DOOR_LEFT_CLOSED_ID
+                && objectId <= ZAMORAK_MAIN_DOOR_RIGHT_BROKEN_ID;
+    }
+
+    /**
+     * A client can keep a closed static gate model after the server opened it.
+     * Re-send both leaves if an option targets a model that is no longer live,
+     * rather than silently waiting for an object that no longer exists.
+     */
+    public static boolean resyncStaleMainDoorClick(Player player, int objectId,
+                                                    int objectX, int objectY) {
+        if (player == null || !isMainDoorObject(objectId)) {
+            return false;
+        }
+        MainDoorState door = findMainDoor(objectId, objectX, objectY);
+        if (door == null) {
+            return false;
+        }
+        for (MainDoorLeaf leaf : door.leaves) {
+            if (!leaf.matches(objectId, objectX, objectY)) {
+                continue;
+            }
+            boolean live = door.mode == MainDoorMode.CLOSED && objectId == leaf.closedId
+                    || door.mode == MainDoorMode.OPEN && objectId == leaf.openId
+                    || door.mode == MainDoorMode.BROKEN && objectId == leaf.brokenId;
+            if (live) {
+                return false;
+            }
+            sendMainDoorStateToPlayer(player, door);
+            return true;
+        }
+        return false;
+    }
+
+    private static void sendMainDoorStateToPlayer(Player player, MainDoorState door) {
+        for (MainDoorLeaf leaf : door.leaves) {
+            if (door.mode == MainDoorMode.CLOSED) {
+                player.getPacketSender().sendObjectCreate(leaf.closedId, leaf.closedX,
+                        leaf.closedY, MAIN_DOOR_PLANE, leaf.closedOrientation, 0);
+                player.getPacketSender().sendObjectCreate(ServerSettings.placeholderObjectId,
+                        leaf.openX, leaf.openY, MAIN_DOOR_PLANE, leaf.openOrientation, 0);
+            } else {
+                player.getPacketSender().sendObjectCreate(ServerSettings.placeholderObjectId,
+                        leaf.closedX, leaf.closedY, MAIN_DOOR_PLANE, leaf.closedOrientation, 0);
+                int visibleId = door.mode == MainDoorMode.OPEN ? leaf.openId : leaf.brokenId;
+                player.getPacketSender().sendObjectCreate(visibleId, leaf.openX,
+                        leaf.openY, MAIN_DOOR_PLANE, leaf.openOrientation, 0);
+            }
+        }
+    }
+
     public static boolean isClosedMainDoorObject(int objectId) {
         return objectId == SARADOMIN_MAIN_DOOR_LEFT_CLOSED_ID
                 || objectId == SARADOMIN_MAIN_DOOR_RIGHT_CLOSED_ID
@@ -1314,6 +1367,14 @@ public final class CastleWarsEngineeringManager {
                         leaf.openId, leaf.openX, leaf.openY, MAIN_DOOR_PLANE,
                         leaf.openOrientation, 0, false);
             }
+            // Door definitions in some 443 caches are not solid. Enforce the
+            // two physical gate edges independently of the cache definition, so
+            // bots cannot path through the closed model and players are not
+            // blocked by an opened or destroyed gate.
+            WalkingCollisionMap.setCastleWarsGateEdge(leaf.closedX, leaf.closedY,
+                    MAIN_DOOR_PLANE, leaf.closedOrientation, mode == MainDoorMode.CLOSED);
+            ProjectileCollisionMap.setCastleWarsGateEdge(leaf.closedX, leaf.closedY,
+                    MAIN_DOOR_PLANE, leaf.closedOrientation, mode == MainDoorMode.CLOSED);
             // Broken gates intentionally add no wall collision so the opening is
             // fully passable even if the broken-door model itself has clipping.
         }
