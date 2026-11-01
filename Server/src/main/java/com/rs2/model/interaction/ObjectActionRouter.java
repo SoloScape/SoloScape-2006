@@ -1,5 +1,6 @@
 package com.rs2.model.interaction;
 
+import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.objects.ObjectDefinition;
 import com.rs2.model.skill.mining.MiningManager;
 import com.rs2.model.skill.woodcutting.TreeDefinition;
@@ -12,6 +13,10 @@ public final class ObjectActionRouter {
         if (definition == null) return null;
         String action = definition.getAction(slot);
         if (action == null) return null;
+        // Castle Wars main gates may put Open/Close and Attack into different
+        // 443 cache slots. Always route by action label, not menu position.
+        InteractionType gateRoute = castleWarsMainDoorRoute(definition.getObjectId(), action);
+        if (gateRoute != null) return gateRoute;
         // Barricade Attack may occupy a different cache option slot. Route
         // every Attack label through the same continuous melee interaction.
         if ((definition.getObjectId() == 4421 || definition.getObjectId() == 4422)
@@ -24,6 +29,21 @@ public final class ObjectActionRouter {
         if (("Chop down".equalsIgnoreCase(action) || "Chop-down".equalsIgnoreCase(action))
                 && TreeDefinition.forObjectId(definition.getObjectId()) != null) return InteractionType.FIRST_OBJECT;
         if ("Mine".equalsIgnoreCase(action) && MiningManager.isMineableRockObjectId(definition.getObjectId())) {
+            return InteractionType.FIRST_OBJECT;
+        }
+        return null;
+    }
+
+    /** Revision-443 Castle Wars gate options are semantic, not ordinal. */
+    public static InteractionType castleWarsMainDoorRoute(int objectId, String action) {
+        if (!CastleWarsEngineeringManager.isMainDoorObject(objectId) || action == null) {
+            return null;
+        }
+        if ("Attack".equalsIgnoreCase(action)) {
+            return InteractionType.SECOND_OBJECT;
+        }
+        if ("Open".equalsIgnoreCase(action) || "Close".equalsIgnoreCase(action)
+                || "Repair".equalsIgnoreCase(action)) {
             return InteractionType.FIRST_OBJECT;
         }
         return null;
