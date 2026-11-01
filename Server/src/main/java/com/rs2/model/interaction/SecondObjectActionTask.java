@@ -96,6 +96,11 @@ extends TickTask {
             PathFinder.getInstance();
             if (!PathFinder.findPath(this.player, approach.getX(), approach.getY(),
                     false, 0, 0)) {
+                GameplayTrace.logInteraction(this.player,
+                        "castle-wars main gate attack unreachable objectId=" + this.objectId
+                                + " x=" + this.objectX + " y=" + this.objectY);
+                this.player.getPacketSender().sendGameMessage(
+                        "You can't reach the main doors from here.");
                 this.stop();
             }
             return;
