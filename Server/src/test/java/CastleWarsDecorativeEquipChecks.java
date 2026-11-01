@@ -13,7 +13,6 @@ public final class CastleWarsDecorativeEquipChecks {
 
     public static void main(String[] args) throws Exception {
         ServerSettings.clientBuild = 443;
-        ServerSettings.cacheVersion = 443;
         QuestDefinition.loadDefinitions();
         ItemDefinition.loadDefinitions();
         int mismatches = 0;
