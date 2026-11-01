@@ -89,6 +89,9 @@ public final class CastleWarsLadderTrapdoorChecks {
         DynamicObject opened = ObjectManager.findDynamicObjectAt(x, y, plane);
         require(opened != null && opened.getWorldObject().getObjectId() == 1570,
                 "Open action did not spawn Climb-down/Close model: " + id);
+        require(opened.getWorldObject().getType() == 22,
+                "Opened trapdoor used a different scene slot from its type-22"
+                        + " closed model, causing overlapping trapdoor/ladder graphics: " + id);
         require(CastleWarsManager.handleFirstObjectAction(player, 1570, x, y),
                 "Climb-down not handled for open trapdoor");
         require(player.getPosition().equals(destination),
