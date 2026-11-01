@@ -64,7 +64,7 @@ public final class CastleWarsDecorativeEquipChecks {
                 socket.setAccessible(true);
                 socket.set(player, channel);
                 player.setOutboundCipher(new IsaacCipher(new int[4]));
-                player.playerRights = 2; // Bypass unrelated membership requirements.
+                player.setPlayerRights(2); // Bypass unrelated membership requirements.
                 player.setQuestState(0, 42); // Tutorial equipment lesson complete.
                 int[][] items = {
                     {4069, 4}, {4070, 7}, {4504, 4},
