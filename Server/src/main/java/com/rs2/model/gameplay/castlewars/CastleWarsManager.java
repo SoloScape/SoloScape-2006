@@ -2879,6 +2879,9 @@ public final class CastleWarsManager {
             return;
         }
 
+        // An attack queued one tick before the whistle must not land after
+        // the player has left the safe arena and enter normal death handling.
+        CombatManager.cancelQueuedCombatForPlayer(player);
         player.clearCombatEffectTasks(PoisonEffect.class);
         player.setPoisonDamage(0.0);
         player.resetCombatState();
