@@ -516,6 +516,15 @@ public class ItemDefinition {
         }
         // Server metadata uses the later black axe requirement; revision 443 used level 6.
         definitionsById[1361].requiredLevels[8] = 6;
+        // The legacy metadata incorrectly marks Lanthus's decorative platebodies
+        // and platelegs as non-equipment (slot -1), despite their 443 Wear action.
+        // Each tier shares the same body/legs slots as ordinary plate armour.
+        for (int id : new int[]{4069, 4504, 4509}) {
+            definitionsById[id].equipmentSlot = 4; // body
+        }
+        for (int id : new int[]{4070, 4505, 4510}) {
+            definitionsById[id].equipmentSlot = 7; // legs
+        }
         // These Christmas assets postdate the legacy server metadata. Snowballs are
         // weapons, shards/tree are inventory items, and the hat has no combat bonuses.
         definitionsById[10501].equipmentSlot = 3;
