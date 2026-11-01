@@ -841,10 +841,12 @@ public final class CastleWarsEngineeringManager {
         // The main doors sit east-west, so crossing them is a Y-axis change.
         int approachY;
         if (door.team == CastleWarsManager.Team.SARADOMIN) {
-            approachY = player.getPosition().getY() <= objectY
+            // A character ON the closed wall tile is still on the exterior
+            // approach for an enemy attack. Don't route through its clipping.
+            approachY = player.getPosition().getY() < objectY
                     ? objectY - 1 : objectY + 1;
         } else {
-            approachY = player.getPosition().getY() >= objectY
+            approachY = player.getPosition().getY() > objectY
                     ? objectY + 1 : objectY - 1;
         }
         return new Position(objectX, approachY, MAIN_DOOR_PLANE);
