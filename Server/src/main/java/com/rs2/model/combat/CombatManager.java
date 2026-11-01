@@ -612,6 +612,21 @@ extends TickTask {
         return instance;
     }
 
+    /** Discard hits still travelling when a Castle Wars participant exits.
+     * Otherwise a queued final blow can land after the safe match boundary. */
+    public static void cancelQueuedCombatForPlayer(Player player) {
+        if (player == null || instance == null) {
+            return;
+        }
+        Iterator iterator = instance.pendingActions.iterator();
+        while (iterator.hasNext()) {
+            CombatAction action = (CombatAction) iterator.next();
+            if (action.getTarget() == player || action.getAttacker() == player) {
+                iterator.remove();
+            }
+        }
+    }
+
     public final void queueAction(CombatAction combatAction) {
         if (GameplayTrace.enabled()) {
             GameplayTrace.log("combat manager queue-action attacker=" + GameplayTrace.describe(combatAction.getAttacker()) + " target=" + GameplayTrace.describe(combatAction.getTarget()) + " damage=" + combatAction.getDamage());
