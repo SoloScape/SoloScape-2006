@@ -761,6 +761,13 @@ implements ActionListener {
             }
             catch (Exception exception) {}
         }
+        // Castle Wars audit: enable full debugging even if an older settings.dat
+        // saved the Debug Mode checkbox as off. -Dprs.debugMode=false disables it.
+        boolean debugMode = Boolean.parseBoolean(System.getProperty("prs.debugMode", "true"));
+        debugModeCheckbox.setSelected(debugMode);
+        ServerSettings.debugModeEnabled = debugMode;
+        System.out.println("[config] Debug Mode " + (debugMode ? "enabled" : "disabled")
+                + " (Audit/Castlewars)");
         this.worldMapFrame.setVisible(true);
     }
 
