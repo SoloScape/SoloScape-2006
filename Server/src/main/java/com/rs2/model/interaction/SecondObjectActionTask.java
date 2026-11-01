@@ -26,6 +26,7 @@ import com.rs2.model.skill.thieving.ThievingObjectHandler;
 import com.rs2.model.task.CycleEventHandler;
 import com.rs2.model.task.TickTask;
 import com.rs2.util.GameUtil;
+import com.rs2.util.GameplayTrace;
 import com.rs2.util.path.PathFinder;
 
 public final class SecondObjectActionTask
