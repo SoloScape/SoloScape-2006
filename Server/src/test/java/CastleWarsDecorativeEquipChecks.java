@@ -64,7 +64,7 @@ public final class CastleWarsDecorativeEquipChecks {
                 socket.setAccessible(true);
                 socket.set(player, channel);
                 player.setOutboundCipher(new IsaacCipher(new int[4]));
-                player.setPlayerRights(2); // Bypass unrelated membership requirements.
+                player.isBot = true; // Test account is a member even when local mode disables subscriptions.
                 player.setQuestState(0, 42); // Tutorial equipment lesson complete.
                 // Higher decorative armour tiers can impose combat requirements.
                 for (int skill = 0; skill < 22; skill++) {
