@@ -5,7 +5,9 @@ import com.rs2.model.EntityUpdateState;
 import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.combat.WeaponProfile;
+import com.rs2.model.ground.GroundItemManager;
 import com.rs2.model.item.ItemStack;
+import com.rs2.model.objects.ObjectManager;
 import com.rs2.net.packet.AccessMode;
 import com.rs2.net.packet.ByteOrder;
 import com.rs2.net.packet.ByteTransform;
@@ -111,6 +113,15 @@ public final class ModernPlayerUpdateTask {
         packet.finishVariableShortPacket();
         player.writePacketBuffer(packet.getBuffer());
         player.publicChatUpdatePending = false;
+        // Revision 443 must perform the same floor-change scene refresh as
+        // the legacy player updater. moveTo() clears the old floor's ground
+        // items, but without this refresh none of the new floor's pickups
+        // (including Castle Wars buckets/tinderboxes) ever appear.
+        if (player.planeChangeRefreshPending) {
+            ObjectManager.getInstance().refreshDynamicObjectsForPlayer(player);
+            GroundItemManager.getInstance().refreshForPlayer(player);
+            player.planeChangeRefreshPending = false;
+        }
     }
     private static boolean isWithinViewport(Player viewer, Player other) {
         return other.getPosition().isWithinViewport(viewer.getPosition());
