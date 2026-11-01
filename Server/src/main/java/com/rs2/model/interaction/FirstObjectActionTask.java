@@ -152,6 +152,11 @@ extends TickTask {
                     castleWarsMainDoorApproach.getX(), castleWarsMainDoorApproach.getY(),
                     false, 0, 0);
             if (!foundPath) {
+                GameplayTrace.logInteraction(this.player,
+                        "castle-wars main gate unreachable objectId=" + this.objectId
+                                + " x=" + this.objectX + " y=" + this.objectY);
+                this.player.getPacketSender().sendGameMessage(
+                        "You can't reach the main doors from here.");
                 this.stop();
             }
             return;
