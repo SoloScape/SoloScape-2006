@@ -51,6 +51,8 @@ public final class CastleWarsManager {
     public static final int ZAMORAK_SPAWN_LADDER_ID = 6281;
     public static final int SARADOMIN_SPAWN_TRAPDOOR_ID = 4471;
     public static final int ZAMORAK_SPAWN_TRAPDOOR_ID = 4472;
+    // Revision-443 opened trapdoor model: Climb-down / Close.
+    private static final int OPEN_TRAPDOOR_ID = 1570;
     public static final int STEPPING_STONE_ID = 4411;
 
     public static final int SARADOMIN_HOOD_ID = 4513;
@@ -300,6 +302,8 @@ public final class CastleWarsManager {
 
     private static final Map<Player, Team> waitingPlayers = new IdentityHashMap<Player, Team>();
     private static final Map<Player, Team> gamePlayers = new IdentityHashMap<Player, Team>();
+    private static final Map<String, OpenCastleWarsTrapdoor> openTrapdoors =
+            new HashMap<String, OpenCastleWarsTrapdoor>();
     private static final Map<String, DisconnectedParticipant> disconnectedParticipants =
             new HashMap<String, DisconnectedParticipant>();
     private static long gameGeneration;
@@ -566,6 +570,9 @@ public final class CastleWarsManager {
     }
 
     public static boolean handleFirstObjectAction(Player player, int objectId, int objectX, int objectY) {
+        if (handleCastleWarsTrapdoorFirstAction(player, objectId, objectX, objectY)) {
+            return true;
+        }
         // The main gate has a dedicated live state machine and never needs
         // Castle Wars portal initialization or generic world-object handling.
         if (CastleWarsEngineeringManager.isMainDoorObject(objectId)
@@ -619,14 +626,6 @@ public final class CastleWarsManager {
             useSpawnRoomLadder(player, Team.ZAMORAK, true);
             return true;
         }
-        if (objectId == SARADOMIN_SPAWN_TRAPDOOR_ID) {
-            useSpawnRoomLadder(player, Team.SARADOMIN, false);
-            return true;
-        }
-        if (objectId == ZAMORAK_SPAWN_TRAPDOOR_ID) {
-            useSpawnRoomLadder(player, Team.ZAMORAK, false);
-            return true;
-        }
         if (objectId == 4900 || objectId == 4902 || objectId == 4377) {
             handleFlagObject(player, Team.SARADOMIN);
             return true;
@@ -642,6 +641,9 @@ public final class CastleWarsManager {
     }
 
     public static boolean handleSecondObjectAction(Player player, int objectId, int objectX, int objectY) {
+        if (handleCastleWarsTrapdoorClose(player, objectId, objectX, objectY)) {
+            return true;
+        }
         if (objectId == SCOREBOARD_OBJECT_ID) {
             showPlayerScoreboardStats(player);
             return true;
@@ -1694,6 +1696,115 @@ public final class CastleWarsManager {
         player.getPacketSender().sendGameMessage("You cannot pass the barrier from here.");
     }
 
+    private static final class OpenCastleWarsTrapdoor {
+        private final int closedId;
+        private final Position position;
+        private final Position destination;
+
+        private OpenCastleWarsTrapdoor(int closedId, Position position, Position destination) {
+            this.closedId = closedId;
+            this.position = position.copy();
+            this.destination = destination.copy();
+        }
+    }
+
+    private static String trapdoorKey(int x, int y, int plane) {
+        return x + ":" + y + ":" + plane;
+    }
+
+    private static Position castleWarsTrapdoorDestination(Player player, int id,
+                                                            int x, int y, int plane) {
+        if (player == null || !isInGame(player)) {
+            return null;
+        }
+        Team team = getGameTeam(player);
+        if (plane == 2 && id == SARADOMIN_SPAWN_TRAPDOOR_ID
+                && team == Team.SARADOMIN) {
+            return new Position(2429, 3075, 1);
+        }
+        if (plane == 2 && id == ZAMORAK_SPAWN_TRAPDOOR_ID
+                && team == Team.ZAMORAK) {
+            return new Position(2370, 3132, 1);
+        }
+        if (plane == 0 && id == 1568) {
+            if (x == 2399 && y == 3099) return new Position(2399, 9500, 0);
+            if (x == 2400 && y == 3108) return new Position(2400, 9507, 0);
+        }
+        return null;
+    }
+
+    /** Open and Climb-down are separate native 443 object actions. */
+    private static boolean handleCastleWarsTrapdoorFirstAction(Player player,
+                                                                  int id, int x, int y) {
+        if (player == null) return false;
+        int plane = player.getPosition().getPlane();
+        if (id == OPEN_TRAPDOOR_ID) {
+            OpenCastleWarsTrapdoor opened = openTrapdoors.get(trapdoorKey(x, y, plane));
+            if (opened == null) return false;
+            if (!isInGame(player)) {
+                player.getPacketSender().sendGameMessage(
+                        "You can only use this trapdoor during Castle Wars.");
+                return true;
+            }
+            player.getUpdateState().setAnimation(827);
+            moveThroughCastleWarsStairs(player, opened.destination.copy());
+            return true;
+        }
+        if (id != 1568 && id != SARADOMIN_SPAWN_TRAPDOOR_ID
+                && id != ZAMORAK_SPAWN_TRAPDOOR_ID) {
+            return false;
+        }
+        Position destination = castleWarsTrapdoorDestination(player, id, x, y, plane);
+        if (destination == null) {
+            if (id == 1568 && plane == 0
+                    && !((x == 2399 && y == 3099) || (x == 2400 && y == 3108))) {
+                return false; // Not one of the Castle Wars tunnel trapdoors.
+            }
+            player.getPacketSender().sendGameMessage(
+                    "You cannot open this trapdoor from here.");
+            return true;
+        }
+        String key = trapdoorKey(x, y, plane);
+        if (openTrapdoors.containsKey(key)) {
+            player.getPacketSender().sendGameMessage("The trapdoor is already open.");
+            return true;
+        }
+        int orientation = com.rs2.model.skill.SkillActionHelper.getObjectOrientation(
+                id, x, y, plane);
+        int type = com.rs2.model.skill.SkillActionHelper.getObjectType(id, x, y, plane);
+        // The closed 4471/4472 and 1568 trapdoors advertise Open; the real
+        // open model (1570) advertises Climb-down and Close.
+        new DynamicObject(OPEN_TRAPDOOR_ID, x, y, plane, orientation, type,
+                id, 999999999, false);
+        openTrapdoors.put(key, new OpenCastleWarsTrapdoor(
+                id, new Position(x, y, plane), destination));
+        player.getPacketSender().sendGameMessage("You open the trapdoor.");
+        return true;
+    }
+
+    private static boolean handleCastleWarsTrapdoorClose(Player player,
+                                                            int id, int x, int y) {
+        if (player == null || id != OPEN_TRAPDOOR_ID) return false;
+        String key = trapdoorKey(x, y, player.getPosition().getPlane());
+        OpenCastleWarsTrapdoor opened = openTrapdoors.get(key);
+        if (opened == null) return false;
+        if (!isInGame(player)) return true;
+        ObjectManager.getInstance().removeDynamicObjectAt(
+                x, y, player.getPosition().getPlane(), 0);
+        openTrapdoors.remove(key);
+        player.getPacketSender().sendGameMessage("You close the trapdoor.");
+        return true;
+    }
+
+    private static void resetCastleWarsTrapdoors() {
+        for (OpenCastleWarsTrapdoor opened : openTrapdoors.values()) {
+            ObjectManager.getInstance().removeDynamicObjectAt(
+                    opened.position.getX(), opened.position.getY(),
+                    opened.position.getPlane(), 0);
+        }
+        openTrapdoors.clear();
+    }
+
     private static void useSpawnRoomLadder(Player player, Team ladderTeam, boolean climbUp) {
         player.getUpdateState().setAnimation(climbUp ? 828 : 827);
         if (ladderTeam == Team.SARADOMIN) {
@@ -2570,19 +2681,6 @@ public final class CastleWarsManager {
             }
         }
 
-        // Surface trapdoors to the central tunnels.
-        if (objectId == 1568 && plane == 0) {
-            player.getUpdateState().setAnimation(827);
-            if (objectX == 2399 && objectY == 3099) {
-                player.moveTo(new Position(2399, 9500, 0));
-            } else if (objectX == 2400 && objectY == 3108) {
-                player.moveTo(new Position(2400, 9507, 0));
-            } else {
-                return false;
-            }
-            return true;
-        }
-
         return false;
     }
 
@@ -2696,6 +2794,7 @@ public final class CastleWarsManager {
 
         saradominScore = 0;
         zamorakScore = 0;
+        resetCastleWarsTrapdoors();
         CastleWarsEngineeringManager.resetForGame();
         saradominFlagHolder = null;
         zamorakFlagHolder = null;
@@ -2810,6 +2909,7 @@ public final class CastleWarsManager {
             moveToLobby(player);
         }
 
+        resetCastleWarsTrapdoors();
         CastleWarsEngineeringManager.cleanupAfterGame();
         nextGameStartMillis = hasMinimumPlayersToStartInternal()
             ? now + WAITING_DURATION_SECONDS * 1000L
