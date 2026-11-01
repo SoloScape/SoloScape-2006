@@ -82,6 +82,24 @@ public final class ProjectileCollisionMap {
         }
     }
 
+    /** Keep Castle Wars main-gate projectile clipping aligned with walking. */
+    public static void setCastleWarsGateEdge(int x, int y, int plane,
+                                              int orientation, boolean closed) {
+        if (regions == null || (orientation != 1 && orientation != 3)) {
+            return;
+        }
+        int neighbourY = orientation == 1 ? y + 1 : y - 1;
+        int onDoor = orientation == 1 ? 2 : 32;
+        int onNeighbour = orientation == 1 ? 32 : 2;
+        if (closed) {
+            setTileFlag(x, y, plane, onDoor);
+            setTileFlag(x, neighbourY, plane, onNeighbour);
+        } else {
+            clearTileFlag(x, y, plane, onDoor);
+            clearTileFlag(x, neighbourY, plane, onNeighbour);
+        }
+    }
+
     public static void removeWallCollision(int x, int y, int plane, int wallType, int orientation, boolean x2) {
         if (wallType == 0) {
             if (orientation == 0) {
