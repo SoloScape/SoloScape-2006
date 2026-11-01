@@ -63,21 +63,28 @@ public final class CastleWarsMainDoor443PacketChecks {
                     ? CastleWarsManager.Team.ZAMORAK : CastleWarsManager.Team.SARADOMIN);
         click(player, 1, objectId, objectX, objectY);
         require(player.getInteractionTargetId() == objectId, "Open packet decoded wrong object");
-        TickTask open = lastTask();
-        require(open instanceof FirstObjectActionTask, "Open did not schedule first object task");
-        System.out.println("GATE-PACKET OPEN id=" + objectId + " pos="
-                + player.getPosition() + " moving=" + player.isMoving()
-                + " recentMove=" + player.hasMovedWithinTicks(1));
-        open.execute();
+        // Enemy Open is denied immediately rather than silently waiting on
+        // a path task. No gate state, location or scheduled task may change.
+        require(World.getTaskScheduler().getTasks().isEmpty(),
+                "Adjacent enemy Open was deferred instead of denied");
+        System.out.println("GATE-PACKET OPEN denied immediately id=" + objectId);
 
         World.getTaskScheduler().getTasks().clear();
+        Field readyField = CastleWarsEngineeringManager.class.getDeclaredField(
+                "mainDoorAttackReadyAt");
+        readyField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<Player, Long> ready = (Map<Player, Long>) readyField.get(null);
+        ready.remove(player);
         click(player, 2, objectId, objectX, objectY);
         require(player.getInteractionTargetId() == objectId, "Attack packet decoded wrong object");
+        require(ready.containsKey(player),
+                "Adjacent enemy Attack never started melee combat");
         TickTask attack = lastTask();
-        require(attack instanceof SecondObjectActionTask, "Attack did not schedule second object task");
-        System.out.println("GATE-PACKET ATTACK id=" + objectId + " pos="
-                + player.getPosition() + " moving=" + player.isMoving()
-                + " recentMove=" + player.hasMovedWithinTicks(1));
+        require(attack instanceof SecondObjectActionTask,
+                "Enemy gate did not schedule follow-up melee strikes");
+        System.out.println("GATE-PACKET ATTACK started immediately id=" + objectId
+                + " pos=" + player.getPosition());
         attack.execute();
         int after = CastleWarsEngineeringManager.getMainDoorHitpoints(
                 team == CastleWarsManager.Team.SARADOMIN
