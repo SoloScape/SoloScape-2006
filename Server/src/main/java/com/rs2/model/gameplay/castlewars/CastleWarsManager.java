@@ -4,6 +4,7 @@ import com.rs2.bot.combat.BotCombatHelper;
 import com.rs2.model.Position;
 import com.rs2.model.EntityTargetMovement;
 import com.rs2.model.GameplayHelper;
+import com.rs2.model.combat.CombatManager;
 import com.rs2.model.combat.CombatType;
 import com.rs2.model.combat.effect.PoisonEffect;
 import com.rs2.model.World;
