@@ -206,6 +206,29 @@ public final class WalkingCollisionMap {
         }
     }
 
+    /**
+     * Canonical collision for the two Castle Wars main-gate leaves. The closed
+     * doors are Y-axis barriers (orientations 1 and 3); some 443 object
+     * definitions don't mark them solid, so generic loc clipping is unreliable.
+     * Remove both halves of each edge as soon as a gate opens or breaks.
+     */
+    public static void setCastleWarsGateEdge(int x, int y, int plane,
+                                              int orientation, boolean closed) {
+        if (orientation != 1 && orientation != 3) {
+            return;
+        }
+        int neighbourY = orientation == 1 ? y + 1 : y - 1;
+        int onDoor = orientation == 1 ? 2 : 32;
+        int onNeighbour = orientation == 1 ? 32 : 2;
+        if (closed) {
+            setTileFlag(x, y, plane, onDoor);
+            setTileFlag(x, neighbourY, plane, onNeighbour);
+        } else {
+            clearTileFlag(x, y, plane, onDoor);
+            clearTileFlag(x, neighbourY, plane, onNeighbour);
+        }
+    }
+
     public static void removeStraightWallCollision(int x, int y, int plane, int wallType) {
         WalkingCollisionMap.removeWallCollision(x, y, plane, 0, wallType, true);
     }
