@@ -566,6 +566,12 @@ public final class CastleWarsManager {
     }
 
     public static boolean handleFirstObjectAction(Player player, int objectId, int objectX, int objectY) {
+        // The main gate has a dedicated live state machine and never needs
+        // Castle Wars portal initialization or generic world-object handling.
+        if (CastleWarsEngineeringManager.isMainDoorObject(objectId)
+                && CastleWarsEngineeringManager.handleMainDoor(player, objectId, objectX, objectY)) {
+            return true;
+        }
         if (objectId == SCOREBOARD_OBJECT_ID) {
             showScoreboard(player);
             return true;
@@ -595,9 +601,6 @@ public final class CastleWarsManager {
             return true;
         }
         if (CastleWarsEngineeringManager.handleSideDoor(player, objectId, objectX, objectY)) {
-            return true;
-        }
-        if (CastleWarsEngineeringManager.handleMainDoor(player, objectId, objectX, objectY)) {
             return true;
         }
         if (objectId == SARADOMIN_ENERGY_BARRIER_ID) {
