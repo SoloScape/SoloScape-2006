@@ -8,13 +8,23 @@ on:
     paths:
       - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
       - 'Server/src/main/java/com/rs2/model/interaction/SecondObjectActionTask.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/ObjectActionRouter.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/ObjectInteractionPacketHandler.java'
+      - 'Server/src/main/java/com/rs2/util/path/WalkingCollisionMap.java'
+      - 'Server/src/main/java/com/rs2/util/path/ProjectileCollisionMap.java'
       - 'Server/src/test/java/CastleWarsAuditFixChecks.java'
+      - 'Server/src/test/java/CastleWarsMainDoorInteractionChecks.java'
       - '.github/workflows/verify-castlewars-audit-fixes.yml'
   pull_request:
     paths:
       - 'Server/src/main/java/com/rs2/model/gameplay/castlewars/**'
       - 'Server/src/main/java/com/rs2/model/interaction/SecondObjectActionTask.java'
+      - 'Server/src/main/java/com/rs2/model/interaction/ObjectActionRouter.java'
+      - 'Server/src/main/java/com/rs2/net/packet/handler/ObjectInteractionPacketHandler.java'
+      - 'Server/src/main/java/com/rs2/util/path/WalkingCollisionMap.java'
+      - 'Server/src/main/java/com/rs2/util/path/ProjectileCollisionMap.java'
       - 'Server/src/test/java/CastleWarsAuditFixChecks.java'
+      - 'Server/src/test/java/CastleWarsMainDoorInteractionChecks.java'
       - '.github/workflows/verify-castlewars-audit-fixes.yml'
   workflow_dispatch:
 
@@ -33,5 +43,6 @@ jobs:
           mkdir -p build-castlewars-audit-checks
           find src/main/java -name '*.java' > /tmp/castlewars-audit-sources.txt
           javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-audit-checks @/tmp/castlewars-audit-sources.txt
-          javac -encoding UTF-8 -cp 'build-castlewars-audit-checks:lib/*' -d build-castlewars-audit-checks src/test/java/CastleWarsAuditFixChecks.java
+          javac -encoding UTF-8 -cp 'build-castlewars-audit-checks:lib/*' -d build-castlewars-audit-checks src/test/java/CastleWarsAuditFixChecks.java src/test/java/CastleWarsMainDoorInteractionChecks.java
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsAuditFixChecks
+          java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsMainDoorInteractionChecks
