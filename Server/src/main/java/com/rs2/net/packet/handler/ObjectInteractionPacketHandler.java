@@ -228,6 +228,18 @@ implements PacketHandler {
                         + GameplayTrace.describe(player) + " objectId=" + (objectId & 0xFFFF)
                         + " x=" + (x & 0xFFFF) + " y=" + (y & 0xFFFF));
             }
+            // A closed gate can remain on a 443 client's scene after its
+            // server-side state changed. Re-send the live leaves instead of
+            // queuing an interaction against an object that no longer exists.
+            if (CastleWarsEngineeringManager.resyncStaleMainDoorClick(player,
+                    objectId & 0xFFFF, x & 0xFFFF, y & 0xFFFF)) {
+                if (GameplayTrace.enabled()) {
+                    GameplayTrace.log("443 castle-wars gate stale-model refreshed player="
+                            + GameplayTrace.describe(player) + " objectId=" + (objectId & 0xFFFF)
+                            + " x=" + (x & 0xFFFF) + " y=" + (y & 0xFFFF));
+                }
+                return;
+            }
             EntityTargetMovement.clearMovementTarget(player);
             ObjectManager.prepareObjectInteractionMovement(player, player.getInteractionTargetId(),
                     player.getInteractionTargetX(), player.getInteractionTargetY());
