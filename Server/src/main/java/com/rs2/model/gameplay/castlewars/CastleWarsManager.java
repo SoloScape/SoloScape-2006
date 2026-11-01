@@ -2250,6 +2250,18 @@ public final class CastleWarsManager {
             return new Position(2370, 3133, 1);
         }
 
+        // Floor-0 Castle Wars ladders: always approach from the inner/south
+        // tile, not the north side that leads to (2378,3135,0) without climbing.
+        if ((objectId == 1747 && plane == 0)
+                || (objectId == 4911 && plane == 1)) {
+            if (objectX == 2378 && objectY == 3134) {
+                return new Position(2378, 3133, plane);
+            }
+            if (objectX == 2421 && objectY == 3073) {
+                return new Position(2421, 3074, plane);
+            }
+        }
+
         // Saradomin ground stairs.
         if (objectId == 4419 && objectX == 2417 && objectY == 3074 && plane == 0) {
             Position outside = new Position(2416, 3074, 0);
@@ -2505,7 +2517,7 @@ public final class CastleWarsManager {
             }
             if (objectX == 2378 && objectY == 3134) {
                 player.getUpdateState().setAnimation(827);
-                player.moveTo(new Position(2378, 3133, 0));
+                moveThroughCastleWarsStairs(player, new Position(2378, 3133, 0));
                 return true;
             }
         }
@@ -2517,7 +2529,7 @@ public final class CastleWarsManager {
             }
             if (objectX == 2378 && objectY == 3134) {
                 player.getUpdateState().setAnimation(828);
-                player.moveTo(new Position(2378, 3133, 1));
+                moveThroughCastleWarsStairs(player, new Position(2378, 3133, 1));
                 return true;
             }
         }
