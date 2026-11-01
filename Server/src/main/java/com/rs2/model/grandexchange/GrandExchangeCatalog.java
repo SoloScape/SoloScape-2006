@@ -20,18 +20,18 @@ public final class GrandExchangeCatalog {
 
     public static boolean isExchangeable(int itemId) {
         ensureLoaded();
-        if (isHistoricalCutsceneProp(itemId)) return false;
+        if (isNonTradeableProp(itemId)) return false;
         int id = unnoted(itemId);
         return id >= 0 && id < exchangeable.length
-                && !isHistoricalCutsceneProp(id) && exchangeable[id];
+                && !isNonTradeableProp(id) && exchangeable[id];
     }
 
     public static int getGuidePrice(int itemId) {
         ensureLoaded();
-        if (isHistoricalCutsceneProp(itemId)) return -1;
+        if (isNonTradeableProp(itemId)) return -1;
         int id = unnoted(itemId);
         return id >= 0 && id < guidePrices.length
-                && !isHistoricalCutsceneProp(id) && exchangeable[id] ? guidePrices[id] : -1;
+                && !isNonTradeableProp(id) && exchangeable[id] ? guidePrices[id] : -1;
     }
 
     public static int size() {
@@ -39,11 +39,42 @@ public final class GrandExchangeCatalog {
         return count;
     }
 
-    /** Unobtainable props used by the My Arm's Big Adventure cutscene.
-     * They share names/models with real items but must never be GE offers. */
-    public static boolean isHistoricalCutsceneProp(int itemId) {
-        return itemId == 2513 || itemId == 4178 || itemId == 4180
-                || itemId == 6967 || itemId == 6968 || itemId == 6969;
+    /** Unobtainable cutscene, world-scene, scrapped and minigame-only props.
+     * These can share names and models with actual tradeable equipment.
+     * Keep their definitions for historical content; never list GE offers. */
+    public static boolean isNonTradeableProp(int itemId) {
+        switch (itemId) {
+            case 740:
+            case 1867:
+            case 2422:
+            case 2513:
+            case 2529:
+            case 3006:
+            case 4178:
+            case 4180:
+            case 4182:
+            case 4692:
+            case 4838:
+            case 5356:
+            case 5551:
+            case 6561:
+            case 6796:
+            case 6820:
+            case 6888:
+            case 6893:
+            case 6894:
+            case 6895:
+            case 6896:
+            case 6897:
+            case 6903:
+            case 6964:
+            case 6967:
+            case 6968:
+            case 6969:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static int unnoted(int itemId) {
@@ -67,7 +98,7 @@ public final class GrandExchangeCatalog {
                 int id = Integer.parseInt(parts[0]);
                 int price = Integer.parseInt(parts[1]);
                 if (id < 0 || id >= MAX_ITEMS) throw new IllegalStateException("GE item id out of range: " + id);
-                if (isHistoricalCutsceneProp(id)) continue;
+                if (isNonTradeableProp(id)) continue;
                 if (allowed[id]) throw new IllegalStateException("Duplicate GE item id: " + id);
                 allowed[id] = true;
                 prices[id] = price;
