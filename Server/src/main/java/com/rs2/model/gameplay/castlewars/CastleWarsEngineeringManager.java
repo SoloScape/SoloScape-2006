@@ -128,11 +128,14 @@ public final class CastleWarsEngineeringManager {
     // first-floor respawn/barrier room. Zamorak has two bucket pickups.
     // The generic water-source handler fills bucket 1925 into 1929.
     private static final Position[] BUCKET_SPAWN_POSITIONS = new Position[]{
-        new Position(2425, 3077, 0), // Saradomin ground floor
+        new Position(2431, 3076, 0), // Saradomin ground floor, south pickup
+        new Position(2428, 3079, 0), // Saradomin ground floor, north pickup
         new Position(2371, 3127, 0), // Zamorak ground floor, south pickup
         new Position(2368, 3131, 0)  // Zamorak ground floor, north pickup
     };
     private static final Position[] TINDERBOX_SPAWN_POSITIONS = new Position[]{
+        new Position(2431, 3072, 0), // Saradomin ground floor
+        new Position(2423, 3080, 1), // Saradomin first floor near the barrier
         new Position(2368, 3135, 0)  // Zamorak ground floor
     };
 
@@ -796,7 +799,10 @@ public final class CastleWarsEngineeringManager {
     }
 
     /** Both halves of a large door share one opening. A player alongside either
-     * closed leaf can operate the pair without stepping across the doorway. */
+     * closed leaf can operate the pair without stepping across the doorway.
+     * The wall loc sits ON its tile: clipped walking can leave a player at
+     * the closed leaf's own X/Y, not just at Y +/- 1. That tile is also a
+     * valid melee position; never path through the gate to leave it. */
     public static boolean isAtMainDoorInteractionApproach(Player player,
                                                           int objectId,
                                                           int objectX,
@@ -811,7 +817,7 @@ public final class CastleWarsEngineeringManager {
         }
         for (MainDoorLeaf leaf : door.leaves) {
             if (player.getPosition().getX() == leaf.closedX
-                    && Math.abs(player.getPosition().getY() - leaf.closedY) == 1) {
+                    && Math.abs(player.getPosition().getY() - leaf.closedY) <= 1) {
                 return true;
             }
         }
