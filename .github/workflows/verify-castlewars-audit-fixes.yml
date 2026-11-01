@@ -21,6 +21,11 @@ on:
       - 'Server/src/main/java/com/rs2/model/player/ModernPlayerUpdateTask.java'
       - 'Server/src/test/java/CastleWarsLadderTrapdoorChecks.java'
       - 'Server/src/test/java/CastleWarsSupplyFloorRefreshChecks.java'
+      - 'Server/src/test/java/RuneScimitar443CombatStyleChecks.java'
+      - 'Server/src/main/java/com/rs2/model/combat/WeaponInterfaceDefinition.java'
+      - 'Server/src/main/java/com/rs2/model/combat/WeaponProfile.java'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Server/src/main/java/com/rs2/model/player/EquipmentManager.java'
       - '.github/workflows/verify-castlewars-audit-fixes.yml'
   pull_request:
     paths:
@@ -39,6 +44,11 @@ on:
       - 'Server/src/main/java/com/rs2/model/player/ModernPlayerUpdateTask.java'
       - 'Server/src/test/java/CastleWarsLadderTrapdoorChecks.java'
       - 'Server/src/test/java/CastleWarsSupplyFloorRefreshChecks.java'
+      - 'Server/src/test/java/RuneScimitar443CombatStyleChecks.java'
+      - 'Server/src/main/java/com/rs2/model/combat/WeaponInterfaceDefinition.java'
+      - 'Server/src/main/java/com/rs2/model/combat/WeaponProfile.java'
+      - 'Server/src/main/java/com/rs2/net/packet/InterfaceBridge.java'
+      - 'Server/src/main/java/com/rs2/model/player/EquipmentManager.java'
       - '.github/workflows/verify-castlewars-audit-fixes.yml'
   workflow_dispatch:
 
@@ -57,7 +67,7 @@ jobs:
           mkdir -p build-castlewars-audit-checks
           find src/main/java -name '*.java' > /tmp/castlewars-audit-sources.txt
           javac -encoding UTF-8 -cp 'lib/*' -d build-castlewars-audit-checks @/tmp/castlewars-audit-sources.txt
-          javac -encoding UTF-8 -cp 'build-castlewars-audit-checks:lib/*' -d build-castlewars-audit-checks src/test/java/CastleWarsAuditFixChecks.java src/test/java/CastleWarsMainDoorInteractionChecks.java src/test/java/CastleWarsDecorativeEquipChecks.java src/test/java/CastleWarsMainDoor443CacheChecks.java src/test/java/CastleWarsMainDoor443PacketChecks.java src/test/java/CastleWarsLadderTrapdoorChecks.java src/test/java/CastleWarsSupplyFloorRefreshChecks.java
+          javac -encoding UTF-8 -cp 'build-castlewars-audit-checks:lib/*' -d build-castlewars-audit-checks src/test/java/CastleWarsAuditFixChecks.java src/test/java/CastleWarsMainDoorInteractionChecks.java src/test/java/CastleWarsDecorativeEquipChecks.java src/test/java/CastleWarsMainDoor443CacheChecks.java src/test/java/CastleWarsMainDoor443PacketChecks.java src/test/java/CastleWarsLadderTrapdoorChecks.java src/test/java/CastleWarsSupplyFloorRefreshChecks.java src/test/java/RuneScimitar443CombatStyleChecks.java
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsAuditFixChecks
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsMainDoorInteractionChecks
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsDecorativeEquipChecks
@@ -65,3 +75,4 @@ jobs:
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsMainDoor443PacketChecks
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsLadderTrapdoorChecks
           java -cp 'build-castlewars-audit-checks:lib/*' CastleWarsSupplyFloorRefreshChecks
+          java -cp 'build-castlewars-audit-checks:lib/*' RuneScimitar443CombatStyleChecks
