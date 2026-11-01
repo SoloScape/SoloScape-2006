@@ -130,17 +130,29 @@ public final class CastleWarsTicketAndBucketChecks {
         Class<?> engine = CastleWarsEngineeringManager.class;
         Field positionsField = field(engine, "BUCKET_SPAWN_POSITIONS");
         Position[] positions = (Position[]) positionsField.get(null);
-        require(positions.length >= 2, "Each team needs an empty-bucket supply");
-        require(inside(positions[0], 2424, 2428, 3075, 3078, 1),
-                "Saradomin bucket not in the team spawn-room area");
-        require(inside(positions[1], 2370, 2374, 3128, 3131, 1),
-                "Zamorak bucket not in the team spawn-room area");
+        require(positions.length == 3, "Expected one Saradomin and two Zamorak bucket pickups");
+        require(positions[0].equals(new Position(2425, 3077, 0)),
+                "Saradomin bucket must be downstairs, not in the respawn room");
+        require(positions[1].equals(new Position(2371, 3127, 0)),
+                "First Zamorak bucket must spawn at 2371,3127,0");
+        require(positions[2].equals(new Position(2368, 3131, 0)),
+                "Second Zamorak bucket must spawn at 2368,3131,0");
+        Field tinderboxPositionsField = field(engine, "TINDERBOX_SPAWN_POSITIONS");
+        Position[] tinderboxPositions = (Position[]) tinderboxPositionsField.get(null);
+        require(tinderboxPositions.length == 1
+                        && tinderboxPositions[0].equals(new Position(2368, 3135, 0)),
+                "Zamorak tinderbox must spawn at 2368,3135,0");
+        for (Position position : positions) {
+            require(position.getPlane() == 0,
+                    "No bucket may respawn in the upstairs team barrier/death area");
+        }
 
         Method reset = engine.getDeclaredMethod("resetBucketSupplies");
         reset.setAccessible(true);
         Method clear = engine.getDeclaredMethod("clearBucketSupplies");
         clear.setAccessible(true);
         Field spawnsField = field(engine, "bucketSupplySpawns");
+        Field tinderboxSpawnsField = field(engine, "tinderboxSupplySpawns");
         try {
             reset.invoke(null);
             List<GroundItem> spawns = (List<GroundItem>) spawnsField.get(null);
@@ -150,6 +162,13 @@ public final class CastleWarsTicketAndBucketChecks {
                                 && GroundItemManager.getInstance().contains(spawned),
                         "Empty bucket was not available on the ground");
             }
+            List<GroundItem> tinderboxes = (List<GroundItem>) tinderboxSpawnsField.get(null);
+            require(tinderboxes.size() == 1, "Wrong tinderbox spawn count");
+            require(tinderboxes.get(0).getItem().getId()
+                            == CastleWarsEngineeringManager.TINDERBOX_ITEM_ID
+                    && tinderboxes.get(0).getPosition().equals(new Position(2368, 3135, 0))
+                    && GroundItemManager.getInstance().contains(tinderboxes.get(0)),
+                    "Respawning ground-floor tinderbox missing");
         } finally {
             clear.invoke(null);
         }
