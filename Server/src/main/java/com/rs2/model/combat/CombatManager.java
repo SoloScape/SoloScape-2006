@@ -357,7 +357,17 @@ extends TickTask {
     }
 
     public static void finishDeath(Entity entity, Entity killer, boolean dropItems) {
-        boolean castleWarsDeath = entity.isPlayer() && CastleWarsManager.isInGame((Player)entity);
+        finishDeath(entity, killer, dropItems, false);
+    }
+
+    /**
+     * A Castle Wars death must remain safe even if its delayed cleanup runs
+     * after endGame() removed the victim from gamePlayers.
+     */
+    public static void finishDeath(Entity entity, Entity killer, boolean dropItems,
+                                   boolean castleWarsDeathAtHit) {
+        boolean castleWarsDeath = entity.isPlayer()
+                && (castleWarsDeathAtHit || CastleWarsManager.isInGame((Player) entity));
         SpellDefinition retainedAutocastSpell = null;
         if (castleWarsDeath) {
             Player player = (Player)entity;
@@ -558,8 +568,18 @@ extends TickTask {
         }
         if (entity.isPlayer()) {
             Player player = (Player)entity;
-            if (CastleWarsManager.isInGame(player)) {
-                CastleWarsManager.respawnPlayer(player);
+            if (castleWarsDeath) {
+                // If the match is still running, respawn inside the team castle.
+                // Otherwise endGame()/leaveGame() already returned this player
+                // to the lobby. Keep them there and never drop items or count
+                // this as a normal Lumbridge death.
+                if (CastleWarsManager.isInGame(player)) {
+                    CastleWarsManager.respawnPlayer(player);
+                }
+                if (GameplayTrace.enabled() && !CastleWarsManager.isInGame(player)) {
+                    GameplayTrace.log("castle-wars deferred death safely finished after exit player="
+                            + GameplayTrace.describe(player));
+                }
                 player.getRecentCombatTimer().setDelayTicks(0);
                 player.getRecentCombatTimer().reset();
                 player.getSingleCombatTimer().setDelayTicks(0);
