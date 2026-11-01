@@ -240,6 +240,49 @@ implements PacketHandler {
                 }
                 return;
             }
+            // A player already beside a Castle Wars gate must get an immediate
+            // Open/Attack response. Previously both actions depended on a
+            // scheduled interaction that could be cancelled by path movement
+            // or another tick before the gate handler ever ran.
+            int gateId = objectId & 0xFFFF;
+            int gateX = x & 0xFFFF;
+            int gateY = y & 0xFFFF;
+            if (CastleWarsEngineeringManager.isClosedMainDoorObject(gateId)
+                    && CastleWarsEngineeringManager.isAtMainDoorInteractionApproach(
+                            player, gateId, gateX, gateY)
+                    && !player.isMoving() && !player.isStunned() && !player.isDead()) {
+                InteractionType gateOption = ObjectActionRouter.semanticRoute(
+                        ObjectDefinition.forId(gateId), option - 1);
+                if (gateOption == InteractionType.FIRST_OBJECT
+                        && CastleWarsManager.handleFirstObjectAction(
+                                player, gateId, gateX, gateY)) {
+                    GameplayTrace.logInteraction(player, "castle-wars gate immediate open"
+                            + " objectId=" + gateId + " x=" + gateX + " y=" + gateY);
+                    return;
+                }
+                if (gateOption == InteractionType.SECOND_OBJECT) {
+                    if (CastleWarsManager.getGameTeam(player) == null) {
+                        player.getPacketSender().sendGameMessage(
+                                "You can only attack the main doors during Castle Wars.");
+                        return;
+                    }
+                    if (CastleWarsManager.handleSecondObjectAction(
+                            player, gateId, gateX, gateY)) {
+                        GameplayTrace.logInteraction(player, "castle-wars gate immediate attack"
+                                + " objectId=" + gateId + " x=" + gateX + " y=" + gateY);
+                        // Keep the normal repeating melee action after the
+                        // immediate first swing. Its cooldown prevents a double hit.
+                        if (CastleWarsEngineeringManager.canContinueMainDoorAttack(
+                                player, gateId, gateX, gateY)) {
+                            EntityTargetMovement.clearMovementTarget(player);
+                            InteractionDispatcher.setCurrentInteractionType(
+                                    InteractionType.SECOND_OBJECT);
+                            InteractionDispatcher.dispatchCurrentInteraction(player);
+                        }
+                        return;
+                    }
+                }
+            }
             EntityTargetMovement.clearMovementTarget(player);
             ObjectManager.prepareObjectInteractionMovement(player, player.getInteractionTargetId(),
                     player.getInteractionTargetX(), player.getInteractionTargetY());
