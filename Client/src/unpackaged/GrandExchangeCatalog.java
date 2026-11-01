@@ -14,13 +14,45 @@ public final class GrandExchangeCatalog {
 
     public static boolean contains(int itemId) {
         return itemId >= 0 && itemId < allowed.length
-                && !isHistoricalCutsceneProp(itemId) && allowed[itemId];
+                && !isNonTradeableProp(itemId) && allowed[itemId];
     }
 
-    /** 2006 cutscene prop IDs look like real dragon gear but are unobtainable. */
-    private static boolean isHistoricalCutsceneProp(int itemId) {
-        return itemId == 2513 || itemId == 4178 || itemId == 4180
-                || itemId == 6967 || itemId == 6968 || itemId == 6969;
+    /** Unobtainable cutscene, world-scene, scrapped and minigame-only props.
+     * These can share names and models with actual tradeable equipment.
+     * Keep their definitions for historical content; never list GE offers. */
+    private static boolean isNonTradeableProp(int itemId) {
+        switch (itemId) {
+            case 740:
+            case 1867:
+            case 2422:
+            case 2513:
+            case 2529:
+            case 3006:
+            case 4178:
+            case 4180:
+            case 4182:
+            case 4692:
+            case 4838:
+            case 5356:
+            case 5551:
+            case 6561:
+            case 6796:
+            case 6820:
+            case 6888:
+            case 6893:
+            case 6894:
+            case 6895:
+            case 6896:
+            case 6897:
+            case 6903:
+            case 6964:
+            case 6967:
+            case 6968:
+            case 6969:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static boolean[] load() {
@@ -35,7 +67,7 @@ public final class GrandExchangeCatalog {
                 if (line.isEmpty() || line.charAt(0) == '#') continue;
                 int id = Integer.parseInt(line);
                 if (id < 0 || id >= result.length) throw new IllegalStateException("GE item id out of range: " + id);
-                if (!isHistoricalCutsceneProp(id)) result[id] = true;
+                if (!isNonTradeableProp(id)) result[id] = true;
             }
         } catch (Exception e) {
             throw new IllegalStateException("Unable to load Grand Exchange catalogue", e);
