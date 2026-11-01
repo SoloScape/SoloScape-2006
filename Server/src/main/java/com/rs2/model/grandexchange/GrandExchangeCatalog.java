@@ -20,19 +20,30 @@ public final class GrandExchangeCatalog {
 
     public static boolean isExchangeable(int itemId) {
         ensureLoaded();
+        if (isHistoricalCutsceneProp(itemId)) return false;
         int id = unnoted(itemId);
-        return id >= 0 && id < exchangeable.length && exchangeable[id];
+        return id >= 0 && id < exchangeable.length
+                && !isHistoricalCutsceneProp(id) && exchangeable[id];
     }
 
     public static int getGuidePrice(int itemId) {
         ensureLoaded();
+        if (isHistoricalCutsceneProp(itemId)) return -1;
         int id = unnoted(itemId);
-        return id >= 0 && id < guidePrices.length && exchangeable[id] ? guidePrices[id] : -1;
+        return id >= 0 && id < guidePrices.length
+                && !isHistoricalCutsceneProp(id) && exchangeable[id] ? guidePrices[id] : -1;
     }
 
     public static int size() {
         ensureLoaded();
         return count;
+    }
+
+    /** Unobtainable props used by the My Arm's Big Adventure cutscene.
+     * They share names/models with real items but must never be GE offers. */
+    public static boolean isHistoricalCutsceneProp(int itemId) {
+        return itemId == 2513 || itemId == 4178 || itemId == 4180
+                || itemId == 6967 || itemId == 6968 || itemId == 6969;
     }
 
     private static int unnoted(int itemId) {
@@ -56,6 +67,7 @@ public final class GrandExchangeCatalog {
                 int id = Integer.parseInt(parts[0]);
                 int price = Integer.parseInt(parts[1]);
                 if (id < 0 || id >= MAX_ITEMS) throw new IllegalStateException("GE item id out of range: " + id);
+                if (isHistoricalCutsceneProp(id)) continue;
                 if (allowed[id]) throw new IllegalStateException("Duplicate GE item id: " + id);
                 allowed[id] = true;
                 prices[id] = price;
