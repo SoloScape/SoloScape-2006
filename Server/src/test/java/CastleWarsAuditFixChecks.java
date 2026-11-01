@@ -1,6 +1,7 @@
 import com.rs2.model.Position;
 import com.rs2.model.World;
 import com.rs2.model.combat.AttackBonusType;
+import com.rs2.model.combat.DeathCleanupTask;
 import com.rs2.model.gameplay.castlewars.CastleWarsEngineeringManager;
 import com.rs2.model.gameplay.castlewars.CastleWarsManager;
 import com.rs2.model.gameplay.castlewars.CastleWarsManager.Team;
@@ -14,12 +15,55 @@ import java.util.Map;
 public final class CastleWarsAuditFixChecks {
     public static void main(String[] args) throws Exception {
         testLogoutRemovesMatchIssuedSupplies();
+        testDeferredCastleWarsDeathAfterMatch();
         testEnemyVersusOwnFlagClassification();
         testContinuousDoorAttackState();
         testAttackStyleDoorDamage();
         testHistoricalTicketOutcomes();
         testCatapultBurningStatus();
         System.out.println("Castle Wars audit fix checks passed");
+    }
+
+    /** A death from the arena must remain safe even after endGame clears gamePlayers. */
+    @SuppressWarnings("unchecked")
+    private static void testDeferredCastleWarsDeathAfterMatch() throws Exception {
+        Player player = newPlayer(new Position(2426, 3087, 0));
+        Map<Player, Team> participants =
+                (Map<Player, Team>) field(CastleWarsManager.class, "gamePlayers").get(null);
+        int playerIndex = 32;
+        Player previous = World.players[playerIndex];
+        Position lobby = new Position(2440, 3090, 0);
+        int itemId = 4151; // An ordinary equipped/inventory item, never match-issued.
+        int deathCount = player.deathCount;
+        player.setIndex(playerIndex);
+        World.players[playerIndex] = player;
+        try {
+            require(player.getInventoryManager().addItemPartial(new ItemStack(itemId, 1)) == 1,
+                    "Could not give player an item before Castle Wars death");
+            participants.put(player, Team.SARADOMIN);
+            require(CastleWarsManager.isInGame(player), "Player should be an active participant");
+            player.setDead(true);
+            player.setCurrentHitpoints(0);
+            DeathCleanupTask pendingDeath = new DeathCleanupTask(1, player, null);
+
+            // Match ends during death animation: gamePlayers no longer has the
+            // victim and endGame already teleported them to the Castle Wars lobby.
+            participants.remove(player);
+            player.setPosition(lobby.copy());
+            require(!CastleWarsManager.isInGame(player), "Match must be over for regression");
+            pendingDeath.execute();
+            require(player.getPosition().equals(lobby), "Safe death moved player out of lobby");
+            require(player.getInventoryManager().getItemAmount(itemId) == 1,
+                    "Deferred Castle Wars death lost an ordinary inventory item");
+            require(!player.isDead(), "Deferred safe-death cleanup left player dead");
+            require(player.getCurrentHitpoints() == player.getMaxHitpoints(),
+                    "Deferred safe-death cleanup did not restore health");
+            require(player.deathCount == deathCount, "Deferred Castle Wars death counted as a normal death");
+        } finally {
+            participants.remove(player);
+            World.players[playerIndex] = previous;
+            player.setIndex(-1);
+        }
     }
 
     @SuppressWarnings("unchecked")
