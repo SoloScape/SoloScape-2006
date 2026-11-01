@@ -49,7 +49,13 @@ public final class CastleWarsDecorativeEquipChecks {
                 throw new AssertionError("Lanthus action routing missing: " + itemId);
             }
         }
-        checkWearAndRemove();
+        boolean previousDebug = ServerSettings.debugModeEnabled;
+        ServerSettings.debugModeEnabled = true;
+        try {
+            checkWearAndRemove();
+        } finally {
+            ServerSettings.debugModeEnabled = previousDebug;
+        }
         System.out.println("Castle Wars Lanthus decorative equipment checks passed");
     }
 
