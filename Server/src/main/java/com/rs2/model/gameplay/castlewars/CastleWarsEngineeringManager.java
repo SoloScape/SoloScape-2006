@@ -732,23 +732,31 @@ public final class CastleWarsEngineeringManager {
         return true;
     }
 
-    /** Both halves of a large door share one opening. A player alongside either
-     * closed leaf can operate the pair without stepping across the doorway. */
+    /** Both leaves share one opening. The closed and open models occupy
+     * different tiles, so each state needs its own reachable approach. */
     public static boolean isAtMainDoorInteractionApproach(Player player,
                                                           int objectId,
                                                           int objectX,
                                                           int objectY) {
-        if (player == null || !isClosedMainDoorObject(objectId)
-                || player.getPosition().getPlane() != MAIN_DOOR_PLANE) {
+        if (player == null || player.getPosition().getPlane() != MAIN_DOOR_PLANE) {
             return false;
         }
         MainDoorState door = findMainDoor(objectId, objectX, objectY);
-        if (door == null || door.mode != MainDoorMode.CLOSED) {
+        if (door == null || !isCurrentMainDoorObject(door, objectId, objectX, objectY)) {
             return false;
         }
         for (MainDoorLeaf leaf : door.leaves) {
-            if (player.getPosition().getX() == leaf.closedX
-                    && Math.abs(player.getPosition().getY() - leaf.closedY) == 1) {
+            if (player.getPosition().getX() != leaf.closedX) {
+                continue;
+            }
+            int playerY = player.getPosition().getY();
+            if (door.mode == MainDoorMode.CLOSED
+                    && Math.abs(playerY - leaf.closedY) == 1) {
+                return true;
+            }
+            if (door.mode == MainDoorMode.OPEN
+                    && (playerY == Math.min(leaf.closedY, leaf.openY) - 1
+                    || playerY == Math.max(leaf.closedY, leaf.openY) + 1)) {
                 return true;
             }
         }
@@ -759,19 +767,28 @@ public final class CastleWarsEngineeringManager {
                                                           int objectId,
                                                           int objectX,
                                                           int objectY) {
-        if (player == null || !isClosedMainDoorObject(objectId)) {
+        if (player == null || player.getPosition().getPlane() != MAIN_DOOR_PLANE) {
             return null;
         }
         MainDoorState door = findMainDoor(objectId, objectX, objectY);
-        if (door == null || door.mode != MainDoorMode.CLOSED
-                || player.getPosition().getPlane() != MAIN_DOOR_PLANE) {
+        if (door == null || !isCurrentMainDoorObject(door, objectId, objectX, objectY)
+                || door.mode == MainDoorMode.BROKEN) {
             return null;
         }
 
-        // Keep the interaction on the side the player is already standing on.
-        // The main doors sit east-west, so crossing them is a Y-axis change.
         int approachY;
-        if (door.team == CastleWarsManager.Team.SARADOMIN) {
+        if (door.mode == MainDoorMode.OPEN) {
+            // The open model has moved onto the adjacent tile. Stand beyond
+            // both the open leaf and the original doorway before closing it,
+            // rather than closing it on top of the interacting player.
+            MainDoorLeaf leaf = door.leaves[0];
+            int lowY = Math.min(leaf.closedY, leaf.openY) - 1;
+            int highY = Math.max(leaf.closedY, leaf.openY) + 1;
+            int playerY = player.getPosition().getY();
+            approachY = Math.abs(playerY - lowY) <= Math.abs(playerY - highY)
+                    ? lowY : highY;
+        } else if (door.team == CastleWarsManager.Team.SARADOMIN) {
+            // Closed gate: preserve the original same-side interaction path.
             approachY = player.getPosition().getY() <= objectY
                     ? objectY - 1 : objectY + 1;
         } else {
@@ -783,7 +800,7 @@ public final class CastleWarsEngineeringManager {
 
     public static boolean handleMainDoor(Player player, int objectId, int objectX, int objectY) {
         MainDoorState door = findMainDoor(objectId, objectX, objectY);
-        if (door == null) {
+        if (door == null || !isCurrentMainDoorObject(door, objectId, objectX, objectY)) {
             return false;
         }
         CastleWarsManager.Team team = CastleWarsManager.getGameTeam(player);
@@ -1137,6 +1154,28 @@ public final class CastleWarsEngineeringManager {
             return zamorakMainDoor;
         }
         return null;
+    }
+
+    private static boolean isCurrentMainDoorObject(MainDoorState door,
+                                                   int objectId, int objectX, int objectY) {
+        for (MainDoorLeaf leaf : door.leaves) {
+            if (door.mode == MainDoorMode.CLOSED
+                    && objectId == leaf.closedId
+                    && objectX == leaf.closedX && objectY == leaf.closedY) {
+                return true;
+            }
+            if (door.mode == MainDoorMode.OPEN
+                    && objectId == leaf.openId
+                    && objectX == leaf.openX && objectY == leaf.openY) {
+                return true;
+            }
+            if (door.mode == MainDoorMode.BROKEN
+                    && objectId == leaf.brokenId
+                    && objectX == leaf.openX && objectY == leaf.openY) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isClosedMainDoorObject(int objectId) {
